@@ -5,6 +5,7 @@
 import {Album} from "client/model/Album";
 import {Artist} from "client/model/Artist";
 import {Genre} from "client/model/Genre";
+import {Explicitness, TrackStorageOrigin} from "client/utils/Types";
 
 /**
  * A Track represents a single instance of a song (or whatever)
@@ -13,13 +14,13 @@ export class Track
 {
   private _name: string;
 
-  private _explicit: boolean;
+  private _explicit: Explicitness;
 
   private _length: number; // seconds
 
   private _popularity: number; // integer 0 - 100
 
-  private _local: boolean;
+  private _local: TrackStorageOrigin;
 
   private _discNumber: number;
 
@@ -32,10 +33,10 @@ export class Track
   private _artists: Artist[];
 
   constructor(name: string,
-              explicit: boolean,
+              explicit: Explicitness,
               length: number,
               popularity: number,
-              local: boolean,
+              local: TrackStorageOrigin,
               discNumber: number,
               trackNumber: number,
               album: Album,
@@ -50,8 +51,8 @@ export class Track
     this._discNumber = discNumber;
     this._trackNumber = trackNumber;
     this._album = album;
-    this._genres = genres;
-    this._artists = artists;
+    this._genres = genres.slice();
+    this._artists = artists.slice();
   }
 
   public get name(): string
@@ -59,7 +60,7 @@ export class Track
     return this._name;
   }
 
-  public get explicit(): boolean
+  public get explicit(): Explicitness
   {
     return this._explicit;
   }
@@ -74,7 +75,7 @@ export class Track
     return this._popularity;
   }
 
-  public get local(): boolean
+  public get local(): TrackStorageOrigin
   {
     return this._local;
   }

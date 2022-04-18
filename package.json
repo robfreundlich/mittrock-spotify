@@ -22,9 +22,9 @@
   },
   "scripts": {
     "clean": "rm -rf dist/*",
-    "prepare": "if not exist \"dist\" mkdir \"dist\"",
-    "build:dev": "npm run prepare && copy src\\index.html dist\\index.html && webpack --mode development",
-    "build:prod": "npm run prepare && copy src\\index.html dist\\index.html && webpack --mode production",
+    "prepare": "if [ ! -d \"./dist/\" ]; then mkdir dist ; fi",
+    "build:dev": "npm run prepare && cp src/index.html dist/index.html && webpack --mode development",
+    "build:prod": "npm run prepare && cp src/index.html dist/index.html && webpack --mode production",
     "start": "webpack-dev-server --mode development"
   },
   "dependencies": {
