@@ -14,12 +14,16 @@
       "es2017",
       "dom"
     ],
-    "baseUrl": "src",
+    "baseUrl": "./src",
     "paths": {
-      "*": ["*"]
+      "*": [
+        "*"
+      ]
     }
   },
   "include": [
-    "./src/**/*"
+    "./src/**/*",
+    "./cypress/integration/**/*",
+    "node_modules/cypress/types/cypress-expect.d.ts"
   ]
 }
