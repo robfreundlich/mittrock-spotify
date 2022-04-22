@@ -4,9 +4,13 @@
 
 export class ArrayUtils
 {
-  public static pushIfMissing<T>(values: T[], value: T): boolean
+  public static pushIfMissing<T>(values: T[], value: T, equalityCheck?: (a: T, b: T) => boolean): boolean
   {
-    if (values.indexOf(value) === -1)
+    let index = equalityCheck
+                ? values.findIndex((entry: T) => equalityCheck(entry, value))
+                : values.indexOf(value);
+
+    if (index === -1)
     {
       values.push(value);
       return true;
@@ -15,8 +19,8 @@ export class ArrayUtils
     return false;
   }
 
-  public static pushAllMissing<T>(target: T[], source: T[]): void
+  public static pushAllMissing<T>(target: T[], source: T[], equalityCheck?: (a: T, b: T) => boolean): void
   {
-    source.forEach((value: T) => ArrayUtils.pushIfMissing(target, value));
+    source.forEach((value: T) => ArrayUtils.pushIfMissing(target, value, equalityCheck));
   }
 }

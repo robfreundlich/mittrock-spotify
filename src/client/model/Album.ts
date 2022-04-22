@@ -3,11 +3,14 @@
  */
 
 import {Artist} from "client/model/Artist";
+import {IdentifiedObject} from "client/model/IdentifiedObject";
 import {Track} from "client/model/Track";
 import {AlbumType, ReleaseDataPrecision} from "client/utils/Types";
 
-export class Album
+export class Album implements IdentifiedObject
 {
+  private _id: string;
+
   private _name: string;
 
   private _type: AlbumType;
@@ -28,6 +31,11 @@ export class Album
     this._releaseDate = releaseDate;
     this._releaseDatePrecision = releaseDatePrecision;
     this._artists = artists;
+  }
+
+  public get id(): string
+  {
+    return this._id;
   }
 
   public get name(): string

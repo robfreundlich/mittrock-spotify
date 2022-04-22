@@ -3,9 +3,12 @@
  */
 
 import {Genre} from "client/model/Genre";
+import {IdentifiedObject} from "client/model/IdentifiedObject";
 
-export class Artist
+export class Artist implements IdentifiedObject
 {
+  private _id: string;
+
   private _name: string;
 
   private _genres: Genre[];
@@ -17,6 +20,11 @@ export class Artist
     this._name = name;
     this._genres = genres;
     this._popularity = popularity;
+  }
+
+  public get id(): string
+  {
+    return this._id;
   }
 
   public get name(): string

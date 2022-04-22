@@ -5,13 +5,16 @@
 import {Album} from "client/model/Album";
 import {Artist} from "client/model/Artist";
 import {Genre} from "client/model/Genre";
+import {IdentifiedObject} from "client/model/IdentifiedObject";
 import {Explicitness, TrackStorageOrigin} from "client/utils/Types";
 
 /**
  * A Track represents a single instance of a song (or whatever)
  */
-export class Track
+export class Track implements IdentifiedObject
 {
+  private _id: string;
+
   private _name: string;
 
   private _explicit: Explicitness;
@@ -53,6 +56,11 @@ export class Track
     this._album = album;
     this._genres = genres.slice();
     this._artists = artists.slice();
+  }
+
+  public get id(): string
+  {
+    return this._id;
   }
 
   public get name(): string

@@ -5,6 +5,7 @@
 import {Album} from "client/model/Album";
 import {Artist} from "client/model/Artist";
 import {Genre} from "client/model/Genre";
+import {areIdentifiedObjectsSame, IdentifiedObject} from "client/model/IdentifiedObject";
 import {Track} from "client/model/Track";
 import {ArrayUtils} from "client/utils/ArrayUtils";
 import {Explicitness, TrackStorageOrigin} from "client/utils/Types";
@@ -12,8 +13,10 @@ import {Explicitness, TrackStorageOrigin} from "client/utils/Types";
 /**
  * A title represents all <code>{@link Track}</code>s that have the same name.
  */
-export class Title
+export class Title implements IdentifiedObject
 {
+  private _id: string;
+
   private _name: string;
 
   private _album: Album[];
@@ -51,6 +54,11 @@ export class Title
     this._popularities = popularities;
     this._locals = locals;
     this._tracks = tracks;
+  }
+
+  public get id(): string
+  {
+    return this._id;
   }
 
   public get name(): string
@@ -100,10 +108,10 @@ export class Title
 
   public addTrack(track: Track): void
   {
-    if (ArrayUtils.pushIfMissing(this._tracks, track))
+    if (ArrayUtils.pushIfMissing(this._tracks, track, areIdentifiedObjectsSame))
     {
-      ArrayUtils.pushAllMissing(this._genres, track.genres);
-      ArrayUtils.pushAllMissing(this._artists, track.artists);
+      ArrayUtils.pushAllMissing(this._genres, track.genres, areIdentifiedObjectsSame);
+      ArrayUtils.pushAllMissing(this._artists, track.artists, areIdentifiedObjectsSame);
       ArrayUtils.pushIfMissing(this._explicits, track.explicit);
       ArrayUtils.pushIfMissing(this._lengths, track.length);
       ArrayUtils.pushIfMissing(this._popularities, track.popularity);
