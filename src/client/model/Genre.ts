@@ -10,8 +10,9 @@ export class Genre implements IdentifiedObject
 
   private _name: string;
 
-  constructor(name: string)
+  constructor(id: string, name: string)
   {
+    this._id = id;
     this._name = name;
   }
 

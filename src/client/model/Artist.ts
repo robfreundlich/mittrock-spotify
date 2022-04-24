@@ -15,8 +15,9 @@ export class Artist implements IdentifiedObject
 
   private _popularity: number; // 0 to 100
 
-  constructor(name: string, popularity: number, genres: Genre[])
+  constructor(id: string, name: string, popularity: number, genres: Genre[])
   {
+    this._id = id;
     this._name = name;
     this._genres = genres;
     this._popularity = popularity;

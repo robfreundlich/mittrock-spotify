@@ -19,7 +19,7 @@ export class Title implements IdentifiedObject
 
   private _name: string;
 
-  private _album: Album[];
+  private _albums: Album[];
 
   private _genres: Genre[];
 
@@ -35,8 +35,9 @@ export class Title implements IdentifiedObject
 
   private _tracks: Track[];
 
-  constructor(name: string,
-              album: Album[],
+  constructor(id: string,
+              name: string,
+              albums: Album[],
               genres: Genre[],
               artists: Artist[],
               explicits: Explicitness[],
@@ -45,8 +46,9 @@ export class Title implements IdentifiedObject
               locals: TrackStorageOrigin[],
               tracks: Track[])
   {
+    this._id = id;
     this._name = name;
-    this._album = album;
+    this._albums = albums;
     this._genres = genres;
     this._artists = artists;
     this._explicits = explicits;
@@ -66,9 +68,9 @@ export class Title implements IdentifiedObject
     return this._name;
   }
 
-  public get album(): Album[]
+  public get albums(): Album[]
   {
-    return this._album;
+    return this._albums;
   }
 
   public get genres(): Genre[]

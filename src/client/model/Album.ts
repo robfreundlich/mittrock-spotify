@@ -23,8 +23,9 @@ export class Album implements IdentifiedObject
 
   private _artists: Artist[];
 
-  constructor(name: string, type: AlbumType, tracks: Track[], releaseDate: string, releaseDatePrecision: ReleaseDataPrecision, artists: Artist[])
+  constructor(id: string, name: string, type: AlbumType, tracks: Track[], releaseDate: string, releaseDatePrecision: ReleaseDataPrecision, artists: Artist[])
   {
+    this._id = id;
     this._name = name;
     this._type = type;
     this._tracks = tracks;

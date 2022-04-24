@@ -35,7 +35,8 @@ export class Track implements IdentifiedObject
 
   private _artists: Artist[];
 
-  constructor(name: string,
+  constructor(id: string,
+              name: string,
               explicit: Explicitness,
               length: number,
               popularity: number,
@@ -46,6 +47,7 @@ export class Track implements IdentifiedObject
               genres: Genre[],
               artists: Artist[])
   {
+    this._id = id;
     this._name = name;
     this._explicit = explicit;
     this._length = length;

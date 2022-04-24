@@ -205,8 +205,6 @@ dist
 package-lock.json
 
 #Cypress stuff
-/cypress/downloads/
-/cypress/screenshots/
-/cypress/videos/
-
-
+/src/test/cypress/downloads/
+/src/test/cypress/screenshots/
+/src/test/cypress/videos/
