@@ -112,6 +112,7 @@ export class Title implements IdentifiedObject
   {
     if (ArrayUtils.pushIfMissing(this._tracks, track, areIdentifiedObjectsSame))
     {
+      ArrayUtils.pushIfMissing(this._albums, track.album, areIdentifiedObjectsSame);
       ArrayUtils.pushAllMissing(this._genres, track.genres, areIdentifiedObjectsSame);
       ArrayUtils.pushAllMissing(this._artists, track.artists, areIdentifiedObjectsSame);
       ArrayUtils.pushIfMissing(this._explicits, track.explicit);

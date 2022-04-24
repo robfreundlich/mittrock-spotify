@@ -48,6 +48,20 @@ describe("Tests the ArrayUtils library", () => {
   });
 
   describe("Tests pushAllIfMissing", () => {
+    it("Pushes a null array", () => {
+      const array: string[] = ["a", "b", "c", "d", "e"];
+      ArrayUtils.pushAllMissing(array, null!);
+
+      expect(array).to.have.ordered.members(["a", "b", "c", "d", "e"]);
+    });
+
+    it("Pushes an undefined array", () => {
+      const array: string[] = ["a", "b", "c", "d", "e"];
+      ArrayUtils.pushAllMissing(array, undefined!);
+
+      expect(array).to.have.ordered.members(["a", "b", "c", "d", "e"]);
+    });
+
     it("Pushes a mix of values", () => {
       const array: string[] = ["a", "b", "c", "d", "e"];
       ArrayUtils.pushAllMissing(array, ["a", "f", "c", "d", "g"]);

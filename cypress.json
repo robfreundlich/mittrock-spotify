@@ -1,5 +1,13 @@
 {
-  "integrationFolder": "cypress/integration",
-  "fixturesFolder": "cypress/fixtures",
-  "testFiles": "**/*.spec.ts"
+  "integrationFolder": "./",
+  "componentFolder": "src/test/cypress/folders",
+  "downloadsFolder": "src/test/cypress/downloads",
+  "screenshotsFolder": "src/test/cypress/screenshots",
+  "videosFolder": "src/test/cypress/videos",
+  "fixturesFolder": "src/test/cypress/fixtures",
+  "pluginsFile": "src/test/cypress/plugins/index.js",
+  "testFiles": [
+    "src/client/**/*.spec.ts",
+    "src/test/cypress/integration/**/*.spec.ts"
+  ]
 }

@@ -21,6 +21,11 @@ export class ArrayUtils
 
   public static pushAllMissing<T>(target: T[], source: T[], equalityCheck?: (a: T, b: T) => boolean): void
   {
+    if (!source)
+    {
+      return;
+    }
+
     source.forEach((value: T) => ArrayUtils.pushIfMissing(target, value, equalityCheck));
   }
 }
