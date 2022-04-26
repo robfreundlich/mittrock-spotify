@@ -2,13 +2,13 @@
  * Copyright (c) 2022. Rob Freundlich <rob@freundlichs.com> - All rights reserved.
  */
 
-import {Album} from "client/model/Album";
-import {Artist} from "client/model/Artist";
-import {Genre} from "client/model/Genre";
-import {areIdentifiedObjectsSame, IdentifiedObject} from "client/model/IdentifiedObject";
-import {Track} from "client/model/Track";
-import {ArrayUtils} from "client/utils/ArrayUtils";
-import {Explicitness, TrackStorageOrigin} from "client/utils/Types";
+import {Album} from "app/client/model/Album";
+import {Artist} from "app/client/model/Artist";
+import {areGenresSame, Genre} from "app/client/model/Genre";
+import {areIdentifiedObjectsSame, IdentifiedObject} from "app/client/model/IdentifiedObject";
+import {Track} from "app/client/model/Track";
+import {ArrayUtils} from "app/client/utils/ArrayUtils";
+import {Explicitness, TrackStorageOrigin} from "app/client/utils/Types";
 
 /**
  * A title represents all <code>{@link Track}</code>s that have the same name.
@@ -113,7 +113,7 @@ export class Title implements IdentifiedObject
     if (ArrayUtils.pushIfMissing(this._tracks, track, areIdentifiedObjectsSame))
     {
       ArrayUtils.pushIfMissing(this._albums, track.album, areIdentifiedObjectsSame);
-      ArrayUtils.pushAllMissing(this._genres, track.genres, areIdentifiedObjectsSame);
+      ArrayUtils.pushAllMissing(this._genres, track.genres, areGenresSame);
       ArrayUtils.pushAllMissing(this._artists, track.artists, areIdentifiedObjectsSame);
       ArrayUtils.pushIfMissing(this._explicits, track.explicit);
       ArrayUtils.pushIfMissing(this._lengths, track.length);

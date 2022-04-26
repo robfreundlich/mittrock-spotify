@@ -28,10 +28,13 @@
       "es2017",
       "dom"
     ],
-    "baseUrl": "./src",
+    "baseUrl": ".",
     "paths": {
       "*": [
         "*"
+      ],
+      "app/*": [
+        "src/*"
       ],
       "test/*": [
         "test/*"
@@ -40,7 +43,7 @@
   },
   "include": [
     "./src/**/*",
-    "./cypress/integration/**/*",
+    "./test/**/*",
     "node_modules/cypress/types/cypress-expect.d.ts"
   ]
 }

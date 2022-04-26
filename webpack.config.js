@@ -1,16 +1,19 @@
 const path = require('path');
 
 module.exports = {
+  target: "web",
+  mode: "development",
   entry: [
     './src/index.tsx',
     'react-hot-loader/patch',
   ],
+  devtool: "inline-source-map",
   devServer: {
     static: {
-      directory: path.join(__dirname, "dist"),
-    }
+      directory: path.resolve(__dirname, "src"),
+    },
+    hot: true
   },
-  devtool: "inline-source-map",
   module: {
     rules: [
       {
@@ -20,11 +23,16 @@ module.exports = {
       },
     ],
   },
-  resolve: {
-    extensions: ['.tsx', '.ts', '.js'],
-  },
   output: {
     filename: 'bundle.js',
     path: path.resolve(__dirname, 'dist'),
+    publicPath: "/dist/",
+  },
+  resolve: {
+    extensions: ['.tsx', '.ts', '.js'],
+    alias: {
+      "app": path.resolve(__dirname, "src/"),
+      "test": path.resolve(__dirname, "test/"),
+    }
   },
 };

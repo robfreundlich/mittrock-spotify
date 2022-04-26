@@ -2,11 +2,11 @@
  * Copyright (c) 2022. Rob Freundlich <rob@freundlichs.com> - All rights reserved.
  */
 
-import {Album} from "client/model/Album";
-import {Artist} from "client/model/Artist";
-import {Genre} from "client/model/Genre";
-import {IdentifiedObject} from "client/model/IdentifiedObject";
-import {Explicitness, TrackStorageOrigin} from "client/utils/Types";
+import {Album} from "app/client/model/Album";
+import {Artist} from "app/client/model/Artist";
+import {Genre} from "app/client/model/Genre";
+import {IdentifiedObject} from "app/client/model/IdentifiedObject";
+import {Explicitness, TrackStorageOrigin} from "app/client/utils/Types";
 
 /**
  * A Track represents a single instance of a song (or whatever)

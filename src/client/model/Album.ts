@@ -2,10 +2,10 @@
  * Copyright (c) 2022. Rob Freundlich <rob@freundlichs.com> - All rights reserved.
  */
 
-import {Artist} from "client/model/Artist";
-import {IdentifiedObject} from "client/model/IdentifiedObject";
-import {Track} from "client/model/Track";
-import {AlbumType, ReleaseDataPrecision} from "client/utils/Types";
+import {Artist} from "app/client/model/Artist";
+import {IdentifiedObject} from "app/client/model/IdentifiedObject";
+import {Track} from "app/client/model/Track";
+import {AlbumType, ReleaseDataPrecision} from "app/client/utils/Types";
 
 export class Album implements IdentifiedObject
 {

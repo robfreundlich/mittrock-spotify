@@ -30,7 +30,8 @@
     "prepare": "if [ ! -d \"./dist/\" ]; then mkdir dist ; fi",
     "build:dev": "npm run prepare && cp src/index.html dist/index.html && webpack --mode development",
     "build:prod": "npm run prepare && cp src/index.html dist/index.html && webpack --mode production",
-    "start": "webpack-dev-server --mode development"
+    "start": "webpack-dev-server --mode development --open",
+    "watch": "webpack --watch"
   },
   "dependencies": {
     "async-mutex": "^0.3.2",

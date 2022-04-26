@@ -2,14 +2,15 @@
  * Copyright (c) 2022. Rob Freundlich <rob@freundlichs.com> - All rights reserved.
  */
 
-import {Album} from "client/model/Album";
-import {Artist} from "client/model/Artist";
-import {Genre} from "client/model/Genre";
-import {areIdentifiedObjectsSame, IdentifiedObject} from "client/model/IdentifiedObject";
-import {Title} from "client/model/Title";
-import {Track} from "client/model/Track";
-import {ArrayUtils} from "client/utils/ArrayUtils";
-import {Explicitness, TrackStorageOrigin} from "client/utils/Types";
+import {Album} from "app/client/model/Album";
+import {Artist} from "app/client/model/Artist";
+import {areGenresSame, Genre} from "app/client/model/Genre";
+import {areIdentifiedObjectsSame, IdentifiedObject} from "app/client/model/IdentifiedObject";
+import {Title} from "app/client/model/Title";
+import {Track} from "app/client/model/Track";
+import {ArrayUtils} from "app/client/utils/ArrayUtils";
+import {ModelUtils} from "app/client/utils/ModelUtils";
+import {Explicitness, TrackStorageOrigin} from "app/client/utils/Types";
 
 export class DataStore implements IdentifiedObject
 {
@@ -76,7 +77,7 @@ export class DataStore implements IdentifiedObject
     });
 
     genres.forEach((genre: Genre) => {
-      ArrayUtils.pushIfMissing(this._genres, genre, areIdentifiedObjectsSame);
+      ArrayUtils.pushIfMissing(this._genres, genre, areGenresSame);
     });
 
     const titleIndex: number = this._titles.findIndex((title: Title) => {
@@ -86,7 +87,8 @@ export class DataStore implements IdentifiedObject
     let title: Title;
     if (titleIndex === -1)
     {
-      title = new Title(track.name,
+      title = new Title(ModelUtils.generateId(),
+                        track.name,
                         [track.album],
                         track.genres,
                         track.artists,

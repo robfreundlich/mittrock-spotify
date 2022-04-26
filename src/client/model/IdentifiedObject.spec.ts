@@ -2,7 +2,7 @@
  * Copyright (c) 2022. Rob Freundlich <rob@freundlichs.com> - All rights reserved.
  */
 
-import {areIdentifiedObjectsSame, IdentifiedObject} from "client/model/IdentifiedObject";
+import {areIdentifiedObjectsSame, IdentifiedObject} from "app/client/model/IdentifiedObject";
 
 class TestObject implements IdentifiedObject
 {

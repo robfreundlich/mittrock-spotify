@@ -2,7 +2,7 @@
  * Copyright (c) 2022. Rob Freundlich <rob@freundlichs.com> - All rights reserved.
  */
 
-import {ArrayUtils} from "client/utils/ArrayUtils";
+import {ArrayUtils} from "app/client/utils/ArrayUtils";
 
 describe("Tests the ArrayUtils library", () => {
   describe("Tests pushIfMissing", () => {

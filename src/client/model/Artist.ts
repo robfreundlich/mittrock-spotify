@@ -2,8 +2,8 @@
  * Copyright (c) 2022. Rob Freundlich <rob@freundlichs.com> - All rights reserved.
  */
 
-import {Genre} from "client/model/Genre";
-import {IdentifiedObject} from "client/model/IdentifiedObject";
+import {Genre} from "app/client/model/Genre";
+import {IdentifiedObject} from "app/client/model/IdentifiedObject";
 
 export class Artist implements IdentifiedObject
 {
