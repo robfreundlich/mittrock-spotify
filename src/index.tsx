@@ -4,5 +4,14 @@ import * as React from 'react';
 import * as ReactDOM from "react-dom";
 
 var mountNode = document.getElementById("app");
-//ReactDOM.render(<App name="Jane"/>, mountNode);
-ReactDOM.render(<App user={new UserInfo()}/>, mountNode);
+
+const userInfo: UserInfo = new UserInfo();
+export const UserContext = React.createContext(userInfo);
+UserContext.displayName = "UserContext";
+
+ReactDOM.render(<React.StrictMode>
+      <UserContext.Provider value={userInfo}>
+        <App/>
+      </UserContext.Provider>
+    </React.StrictMode>,
+    mountNode);

@@ -3,13 +3,11 @@
  */
 
 import {UserInfo} from "app/client/app/UserInfo";
+import {UserContext} from "app/index";
 import * as React from "react";
 
-export interface MainAppProps
-{
-  user: UserInfo;
-}
+export const MainApp = () => {
+  const userInfo: UserInfo = React.useContext(UserContext);
 
-export const MainApp = (props: MainAppProps) => {
-  return <div>Yo! person {props.user.username}</div>
-}
+  return <div>Yo! person {userInfo.username}</div>;
+};

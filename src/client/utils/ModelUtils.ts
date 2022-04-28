@@ -8,8 +8,13 @@ export class ModelUtils
 
   public static generateId(): string
   {
+    return ModelUtils.generateRandomString(22);
+  }
+
+  public static generateRandomString(length: number): string
+  {
     let s: string = "";
-    for (let i = 0; i < 22; i++)
+    for (let i = 0; i < length; i++)
     {
       s = s + ModelUtils.BASE62.charAt(Math.floor(Math.random() * ModelUtils.BASE62.length));
     }

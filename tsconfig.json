@@ -15,14 +15,20 @@
     "noUnusedParameters": true,
     "strict": true,
     "strictPropertyInitialization": false,
+    "esModuleInterop": true,
     "outDir": "./dist/",
     "module": "es6",
     "moduleResolution": "node",
     "sourceMap": true,
     "target": "es6",
     "jsx": "react",
+    "types": [
+      "mocha"
+    ],
     "typeRoots": [
-      "node_modules/@types"
+      "src/customTypings",
+      "node_modules/@types",
+      "mocha/@types"
     ],
     "lib": [
       "es2017",
