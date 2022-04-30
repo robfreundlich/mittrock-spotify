@@ -1,0 +1,24 @@
+/*
+ * Copyright (c) 2022. Rob Freundlich <rob@freundlichs.com> - All rights reserved.
+ */
+
+:root {
+  --spotify-button-height: 50px;
+  --spotify-button-width: 250px;
+}
+
+.login button {
+  width: var(--spotify-button-width);
+  height: var(--spotify-button-height);
+
+  display: flex;
+  flex-direction: row;
+
+  align-items: center;
+}
+
+.login button svg {
+  height: 90%;
+  padding-right: 5px;
+  fill: var(--color-spotify-green);
+}

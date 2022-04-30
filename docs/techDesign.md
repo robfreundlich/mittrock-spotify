@@ -21,3 +21,10 @@ src/
     ├── player/
     └── utils/
 ```
+
+# Useful links
+
+* [Spotify Web API](https://developer.spotify.com/documentation/web-api/)
+* [spotify-web-api-js docs](https://jmperezperez.com/spotify-web-api-js/)
+* [Authorization guide](https://developer.spotify.com/documentation/general/guides/authorization/)
+* [Dexie guide](https://developer.fireflysemantics.com/guides/guides--dexie--browser-big-data-with-dexie-and-typescript)

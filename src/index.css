@@ -1,0 +1,11 @@
+/*
+ * Copyright (c) 2022. Rob Freundlich <rob@freundlichs.com> - All rights reserved.
+ */
+
+@import url("client/app/App.css");
+
+:root {
+  --color-spotify-green: #1DB954;
+  --color-spotiy-white: #FFFFFF;
+  --color-spotify-black: #191414;
+}

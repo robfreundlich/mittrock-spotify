@@ -2,29 +2,30 @@
  * Copyright (c) 2022. Rob Freundlich <rob@freundlichs.com> - All rights reserved.
  */
 
-import {Album} from "app/client/model/Album";
-import {Artist} from "app/client/model/Artist";
-import {areGenresSame, Genre} from "app/client/model/Genre";
-import {areIdentifiedObjectsSame, IdentifiedObject} from "app/client/model/IdentifiedObject";
-import {Title} from "app/client/model/Title";
-import {Track} from "app/client/model/Track";
+import {IAlbum} from "app/client/model/Album";
+import {IArtist} from "app/client/model/Artist";
+import {areGenresSame, IGenre} from "app/client/model/Genre";
+import {ITitle, Title} from "app/client/model/Title";
+import {ITrack} from "app/client/model/Track";
 import {ArrayUtils} from "app/client/utils/ArrayUtils";
 import {ModelUtils} from "app/client/utils/ModelUtils";
 import {Explicitness, TrackStorageOrigin} from "app/client/utils/Types";
+import {areIdentifiedObjectsSame, IdentifiedObject} from "./IdentifiedObject";
+
 
 export class DataStore implements IdentifiedObject
 {
   private _id: string;
 
-  private _tracks: Track[] = [];
+  private _tracks: ITrack[] = [];
 
-  private _albums: Album[] = [];
+  private _albums: IAlbum[] = [];
 
-  private _artists: Artist[] = [];
+  private _artists: IArtist[] = [];
 
-  private _genres: Genre[] = [];
+  private _genres: IGenre[] = [];
 
-  private _titles: Title[] = [];
+  private _titles: ITitle[] = [];
 
   private _explicits: Explicitness[] = [];
 
@@ -43,7 +44,52 @@ export class DataStore implements IdentifiedObject
     return this._id;
   }
 
-  public addTrack(track: Track): void
+  public get tracks(): ITrack[]
+  {
+    return this._tracks;
+  }
+
+  public get albums(): IAlbum[]
+  {
+    return this._albums;
+  }
+
+  public get artists(): IArtist[]
+  {
+    return this._artists;
+  }
+
+  public get genres(): IGenre[]
+  {
+    return this._genres;
+  }
+
+  public get titles(): ITitle[]
+  {
+    return this._titles;
+  }
+
+  public get explicits(): Explicitness[]
+  {
+    return this._explicits;
+  }
+
+  public get lengths(): number[]
+  {
+    return this._lengths;
+  }
+
+  public get popularities(): number[]
+  {
+    return this._popularities;
+  }
+
+  public get locals(): TrackStorageOrigin[]
+  {
+    return this._locals;
+  }
+
+  public addTrack(track: ITrack): void
   {
     this.addToStore(track,
                     track.album,
@@ -56,10 +102,10 @@ export class DataStore implements IdentifiedObject
     );
   }
 
-  private addToStore(track: Track,
-                     album: Album,
-                     artists: Artist[],
-                     genres: Genre[],
+  private addToStore(track: ITrack,
+                     album: IAlbum,
+                     artists: IArtist[],
+                     genres: IGenre[],
                      explicit: Explicitness,
                      length: number,
                      popularity: number,
@@ -72,17 +118,17 @@ export class DataStore implements IdentifiedObject
     ArrayUtils.pushIfMissing(this._popularities, popularity);
     ArrayUtils.pushIfMissing(this._locals, local);
 
-    artists.forEach((artist: Artist) => {
+    artists.forEach((artist: IArtist) => {
       ArrayUtils.pushIfMissing(this._artists, artist, areIdentifiedObjectsSame);
     });
 
-    genres.forEach((genre: Genre) => {
+    genres.forEach((genre: IGenre) => {
       ArrayUtils.pushIfMissing(this._genres, genre, areGenresSame);
     });
 
-    const titleIndex: number = this._titles.findIndex((title: Title) => {
+    const titleIndex: number = this._titles.findIndex((title: ITitle) => {
       title.name === track.name;
-    })
+    });
 
     let title: Title;
     if (titleIndex === -1)
@@ -101,7 +147,7 @@ export class DataStore implements IdentifiedObject
     }
     else
     {
-      title = this._titles[titleIndex];
+      title = this._titles[titleIndex] as Title;
       title.addTrack(track);
     }
   }

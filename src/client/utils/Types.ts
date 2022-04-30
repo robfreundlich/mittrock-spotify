@@ -4,7 +4,7 @@
 
 export type AlbumType = "album" | "single" | "compilation";
 
-export type ReleaseDataPrecision = "year" | "month" | "day";
+export type ReleaseDatePrecision = "year" | "month" | "day";
 
 export type Explicitness = "explicit" | "clean";
 

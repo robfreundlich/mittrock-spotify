@@ -2,6 +2,11 @@
  * Copyright (c) 2022. Rob Freundlich <rob@freundlichs.com> - All rights reserved.
  */
 
+export interface IGenre
+{
+  name: string;
+}
+
 export class Genre
 {
   private _name: string;
@@ -17,7 +22,7 @@ export class Genre
   }
 }
 
-export const areGenresSame = (a: Genre, b: Genre): boolean => {
+export const areGenresSame = (a: IGenre, b: IGenre): boolean => {
   // Handle null/undefined cases
   if (!a || !b)
   {
@@ -27,5 +32,5 @@ export const areGenresSame = (a: Genre, b: Genre): boolean => {
   }
 
   return a.name === b.name;
-}
+};
 

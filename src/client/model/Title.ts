@@ -2,28 +2,51 @@
  * Copyright (c) 2022. Rob Freundlich <rob@freundlichs.com> - All rights reserved.
  */
 
-import {Album} from "app/client/model/Album";
-import {Artist} from "app/client/model/Artist";
-import {areGenresSame, Genre} from "app/client/model/Genre";
+import {IArtist} from "app/client/model/Artist";
+import {areGenresSame, IGenre} from "app/client/model/Genre";
 import {areIdentifiedObjectsSame, IdentifiedObject} from "app/client/model/IdentifiedObject";
-import {Track} from "app/client/model/Track";
+import {ITrack} from "app/client/model/Track";
 import {ArrayUtils} from "app/client/utils/ArrayUtils";
 import {Explicitness, TrackStorageOrigin} from "app/client/utils/Types";
+import {IAlbum} from "./Album";
+
+export interface ITitle extends IdentifiedObject
+{
+  id: string;
+
+  name: string;
+
+  albums: IAlbum[];
+
+  genres: IGenre[];
+
+  artists: IArtist[];
+
+  explicits: Explicitness[];
+
+  lengths: number[];
+
+  popularities: number[];
+
+  locals: TrackStorageOrigin[];
+
+  tracks: ITrack[];
+}
 
 /**
- * A title represents all <code>{@link Track}</code>s that have the same name.
+ * A title represents all <code>{@link ITrack}</code>s that have the same name.
  */
-export class Title implements IdentifiedObject
+export class Title implements ITitle
 {
   private _id: string;
 
   private _name: string;
 
-  private _albums: Album[];
+  private _albums: IAlbum[];
 
-  private _genres: Genre[];
+  private _genres: IGenre[];
 
-  private _artists: Artist[];
+  private _artists: IArtist[];
 
   private _explicits: Explicitness[];
 
@@ -33,18 +56,18 @@ export class Title implements IdentifiedObject
 
   private _locals: TrackStorageOrigin[];
 
-  private _tracks: Track[];
+  private _tracks: ITrack[];
 
   constructor(id: string,
               name: string,
-              albums: Album[],
-              genres: Genre[],
-              artists: Artist[],
+              albums: IAlbum[],
+              genres: IGenre[],
+              artists: IArtist[],
               explicits: Explicitness[],
               lengths: number[],
               popularities: number[],
               locals: TrackStorageOrigin[],
-              tracks: Track[])
+              tracks: ITrack[])
   {
     this._id = id;
     this._name = name;
@@ -68,17 +91,17 @@ export class Title implements IdentifiedObject
     return this._name;
   }
 
-  public get albums(): Album[]
+  public get albums(): IAlbum[]
   {
     return this._albums;
   }
 
-  public get genres(): Genre[]
+  public get genres(): IGenre[]
   {
     return this._genres;
   }
 
-  public get artists(): Artist[]
+  public get artists(): IArtist[]
   {
     return this._artists;
   }
@@ -103,12 +126,12 @@ export class Title implements IdentifiedObject
     return this._locals;
   }
 
-  public get tracks(): Track[]
+  public get tracks(): ITrack[]
   {
     return this._tracks;
   }
 
-  public addTrack(track: Track): void
+  public addTrack(track: ITrack): void
   {
     if (ArrayUtils.pushIfMissing(this._tracks, track, areIdentifiedObjectsSame))
     {

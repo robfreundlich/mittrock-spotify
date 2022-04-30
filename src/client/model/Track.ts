@@ -2,18 +2,43 @@
  * Copyright (c) 2022. Rob Freundlich <rob@freundlichs.com> - All rights reserved.
  */
 
-import {Album} from "app/client/model/Album";
-import {Artist} from "app/client/model/Artist";
-import {Genre} from "app/client/model/Genre";
+import {IAlbum} from "app/client/model/Album";
+import {IArtist} from "app/client/model/Artist";
+import {IGenre} from "app/client/model/Genre";
 import {IdentifiedObject} from "app/client/model/IdentifiedObject";
 import {Explicitness, TrackStorageOrigin} from "app/client/utils/Types";
+
+export interface ITrack extends IdentifiedObject
+{
+  id: string;
+
+  name: string;
+
+  explicit: "explicit" | "clean";
+
+  length: number;
+
+  popularity: number;
+
+  local: "local" | "streaming";
+
+  discNumber: number;
+
+  trackNumber: number;
+
+  album: IAlbum;
+
+  genres: IGenre[];
+
+  artists: IArtist[];
+}
 
 /**
  * A Track represents a single instance of a song (or whatever)
  */
-export class Track implements IdentifiedObject
+export class Track implements ITrack
 {
-  private _id: string;
+  public _id: string;
 
   private _name: string;
 
@@ -29,11 +54,11 @@ export class Track implements IdentifiedObject
 
   private _trackNumber: number;
 
-  private _album: Album;
+  private _album: IAlbum;
 
-  private _genres: Genre[];
+  private _genres: IGenre[];
 
-  private _artists: Artist[];
+  private _artists: IArtist[];
 
   constructor(id: string,
               name: string,
@@ -43,9 +68,9 @@ export class Track implements IdentifiedObject
               local: TrackStorageOrigin,
               discNumber: number,
               trackNumber: number,
-              album: Album,
-              genres: Genre[],
-              artists: Artist[])
+              album: IAlbum,
+              genres: IGenre[],
+              artists: IArtist[])
   {
     this._id = id;
     this._name = name;
@@ -100,17 +125,22 @@ export class Track implements IdentifiedObject
     return this._trackNumber;
   }
 
-  public get album(): Album
+  public get album(): IAlbum
   {
     return this._album;
   }
 
-  public get genres(): Genre[]
+  public get genres(): IGenre[]
   {
     return this._genres;
   }
 
-  public get artists(): Artist[]
+  public set genres(value: IGenre[])
+  {
+    this._genres = value;
+  }
+
+  public get artists(): IArtist[]
   {
     return this._artists;
   }

@@ -2,20 +2,31 @@
  * Copyright (c) 2022. Rob Freundlich <rob@freundlichs.com> - All rights reserved.
  */
 
-import {Genre} from "app/client/model/Genre";
+import {IGenre} from "app/client/model/Genre";
 import {IdentifiedObject} from "app/client/model/IdentifiedObject";
 
-export class Artist implements IdentifiedObject
+export interface IArtist extends IdentifiedObject
+{
+  id: string;
+
+  name: string;
+
+  genres: IGenre[];
+
+  popularity: number;
+}
+
+export class Artist implements IArtist
 {
   private _id: string;
 
   private _name: string;
 
-  private _genres: Genre[];
+  private _genres: IGenre[];
 
   private _popularity: number; // 0 to 100
 
-  constructor(id: string, name: string, popularity: number, genres: Genre[])
+  constructor(id: string, name: string, popularity: number, genres: IGenre[])
   {
     this._id = id;
     this._name = name;
@@ -33,7 +44,7 @@ export class Artist implements IdentifiedObject
     return this._name;
   }
 
-  public get genres(): Genre[]
+  public get genres(): IGenre[]
   {
     return this._genres;
   }
