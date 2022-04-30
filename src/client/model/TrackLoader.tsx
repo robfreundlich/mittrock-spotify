@@ -50,7 +50,7 @@ export const TrackLoader = () => {
                                        apiTrack.disc_number,
                                        apiTrack.track_number,
                                        convertApiAlbumToIAlbum(apiTrack.album),
-                                       [],  // TODO: Need to backfill genres
+                                       [],  // Will backfill genres in a moment
                                        convertApiArtistsToArtists(apiTrack.artists));
 
         track.artists.forEach((artist) => {
