@@ -4,8 +4,11 @@
 
 import {IAlbum} from "app/client/model/Album";
 import {IArtist} from "app/client/model/Artist";
+import {IFavorites} from "app/client/model/Favorites";
 import {IGenre} from "app/client/model/Genre";
 import {IdentifiedObject} from "app/client/model/IdentifiedObject";
+import {IPlaylist} from "app/client/model/Playlist";
+import {isAlbum, isPlaylist, TrackSource} from "app/client/model/TrackSource";
 import {Explicitness, TrackStorageOrigin} from "app/client/utils/Types";
 
 export interface ITrack extends IdentifiedObject
@@ -27,6 +30,10 @@ export interface ITrack extends IdentifiedObject
   trackNumber: number;
 
   album: IAlbum;
+
+  playlist: IPlaylist | undefined;
+
+  source: TrackSource;
 
   genres: IGenre[];
 
@@ -56,9 +63,13 @@ export class Track implements ITrack
 
   private _album: IAlbum;
 
+  private _playlist: IPlaylist | undefined;
+
   private _genres: IGenre[];
 
   private _artists: IArtist[];
+
+  private _source: TrackSource;
 
   constructor(id: string,
               name: string,
@@ -68,9 +79,10 @@ export class Track implements ITrack
               local: TrackStorageOrigin,
               discNumber: number,
               trackNumber: number,
-              album: IAlbum,
+              source: IAlbum | IPlaylist | IFavorites,
               genres: IGenre[],
-              artists: IArtist[])
+              artists: IArtist[],
+              album?: IAlbum)
   {
     this._id = id;
     this._name = name;
@@ -80,9 +92,52 @@ export class Track implements ITrack
     this._local = local;
     this._discNumber = discNumber;
     this._trackNumber = trackNumber;
-    this._album = album;
+
+    if (isAlbum(source))
+    {
+      this._album = source;
+      this._source = "album";
+    }
+    else if (isPlaylist(source))
+    {
+      this._playlist = source;
+      this._source = "playlist";
+      if (album)
+      {
+        this._album = album;
+      }
+    }
+    else
+    {
+      this._source = "favorite";
+      if (album)
+      {
+        this._album = album;
+      }
+    }
+
     this._genres = genres.slice();
     this._artists = artists.slice();
+  }
+
+  public get playlist(): IPlaylist | undefined
+  {
+    return this._playlist;
+  }
+
+  public set playlist(value: IPlaylist | undefined)
+  {
+    this._playlist = value;
+  }
+
+  public get source(): TrackSource
+  {
+    return this._source;
+  }
+
+  public set source(value: TrackSource)
+  {
+    this._source = value;
   }
 
   public get id(): string

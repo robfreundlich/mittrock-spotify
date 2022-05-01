@@ -33,6 +33,8 @@ export const DBTrackLoader = () => {
         const apiTrack: SpotifyObjects.Track = result.track;
 
         const dbTrack: ITrack = {
+          playlist: undefined,
+          source: "favorite",
           id: apiTrack.id,
           name: apiTrack.name,
           local: "streaming",
@@ -43,7 +45,7 @@ export const DBTrackLoader = () => {
           trackNumber: apiTrack.track_number,
           album: convertApiAlbumToIAlbum(apiTrack.album),
           genres: [],
-          artists: convertApiArtistsToArtists(apiTrack.artists),
+          artists: convertApiArtistsToArtists(apiTrack.artists)
         };
 
         setTracks(index);

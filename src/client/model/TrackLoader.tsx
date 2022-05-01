@@ -6,6 +6,7 @@ import {DataStoreContext, SpotifyApiContext} from "app/client/app/App";
 import {IAlbum} from "app/client/model/Album";
 import {IArtist} from "app/client/model/Artist";
 import {DataStore} from "app/client/model/DataStore";
+import {Favorites} from "app/client/model/Favorites";
 import {Genre} from "app/client/model/Genre";
 import {ITrack, Track} from "app/client/model/Track";
 import React from "react";
@@ -14,10 +15,14 @@ import * as SpotifyObjects from "spotify-web-api-ts/types/types/SpotifyObjects";
 import {SavedTrack} from "spotify-web-api-ts/types/types/SpotifyObjects";
 import {GetSavedTracksResponse} from "spotify-web-api-ts/types/types/SpotifyResponses";
 
+type Status = "unloaded" | "loading_favorites" | "loaded" | "error";
+
 export const TrackLoader = () => {
-  const [status, setStatus] = React.useState<"unloaded" | "loading" | "loaded" | "error">("unloaded");
+  const [status, setStatus] = React.useState<Status>("unloaded");
   const [error, setError] = React.useState();
   const [offset, setOffset] = React.useState(0);
+
+  const loaderTrackCount: React.MutableRefObject<number> = React.useRef(0);
 
   var authToken: string = React.useContext(SpotifyApiContext);
   var dataStore: DataStore = React.useContext(DataStoreContext);
@@ -25,12 +30,17 @@ export const TrackLoader = () => {
   var spotify = new SpotifyWebApi({accessToken: authToken});
 
   const startLoading = () => {
-    setStatus("loading");
-
-    loadNextBatch();
+    setStatus("loading_favorites");
   };
 
-  const loadNextBatch = async () => {
+  const loadNext = async () => {
+    if (status === "loading_favorites")
+    {
+      loadFavorites();
+    }
+  };
+
+  const loadFavorites = async () => {
     try
     {
       const results: GetSavedTracksResponse = await spotify.library.getSavedTracks({limit: 50, offset: offset});
@@ -49,9 +59,10 @@ export const TrackLoader = () => {
                                        "streaming",
                                        apiTrack.disc_number,
                                        apiTrack.track_number,
-                                       convertApiAlbumToIAlbum(apiTrack.album),
-                                       [],  // Will backfill genres in a moment
-                                       convertApiArtistsToArtists(apiTrack.artists));
+                                       Favorites.favorites,
+                                       [],
+                                       convertApiArtistsToArtists(apiTrack.artists),
+                                       convertApiAlbumToIAlbum(apiTrack.album));
 
         track.artists.forEach((artist) => {
           artistIds.add(artist.id);
@@ -59,6 +70,8 @@ export const TrackLoader = () => {
 
         tracks.push(track);
       });
+
+      loaderTrackCount.current += results.items.length;
 
       const allArtistIds: string[] = [...artistIds];
       const artistIdChunks: string[][] = [];
@@ -84,7 +97,7 @@ export const TrackLoader = () => {
         dataStore.addTrack(track);
       });
 
-      if (dataStore.tracks.length === results.total)
+      if (loaderTrackCount.current === results.total)
       {
         setStatus("loaded");
       }
@@ -136,9 +149,8 @@ export const TrackLoader = () => {
         return <button disabled={status !== "unloaded"}
                        onClick={startLoading}>Click to begin loading</button>;
 
-      case "loading":
-        loadNextBatch();
-        return `Loading. Loaded ${offset} tracks so far.`;
+      case "loading_favorites":
+        return `Loading. Loaded ${offset} tracks so far from Favorites.`;
 
       case "loaded":
         return `Loaded ${dataStore.tracks.length} tracks.`;
@@ -147,6 +159,10 @@ export const TrackLoader = () => {
         return `Error loading tracks ${error}`;
     }
   };
+
+  React.useEffect(() => {
+    loadNext();
+  });
 
   return <div className="track-loader">
     {getStatusContent()}

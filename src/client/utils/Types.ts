@@ -10,3 +10,4 @@ export type Explicitness = "explicit" | "clean";
 
 export type TrackStorageOrigin = "local" | "streaming";
 
+export type Visibility = "private" | "public"
