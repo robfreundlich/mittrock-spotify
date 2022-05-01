@@ -165,6 +165,11 @@ export class Track implements ITrack
     return this._popularity;
   }
 
+  public set popularity(value: number)
+  {
+    this._popularity = value;
+  }
+
   public get local(): TrackStorageOrigin
   {
     return this._local;

@@ -35,6 +35,8 @@ export class DataStore implements IdentifiedObject
 
   private _locals: TrackStorageOrigin[] = [];
 
+  private _titlesByName: Map<string, Title> = new Map();
+
   constructor()
   {
   }
@@ -102,6 +104,11 @@ export class DataStore implements IdentifiedObject
     );
   }
 
+  private canonicalName(name: string): string
+  {
+    return name.toLowerCase().replace(/\s/g, "");
+  }
+
   private addToStore(track: ITrack,
                      album: IAlbum,
                      artists: IArtist[],
@@ -126,12 +133,9 @@ export class DataStore implements IdentifiedObject
       ArrayUtils.pushIfMissing(this._genres, genre, areGenresSame);
     });
 
-    const titleIndex: number = this._titles.findIndex((title: ITitle) => {
-      title.name === track.name;
-    });
-
-    let title: Title;
-    if (titleIndex === -1)
+    const canonicalName = this.canonicalName(track.name);
+    let title: Title | undefined = this._titlesByName.get(canonicalName);
+    if (!title)
     {
       title = new Title(ModelUtils.generateId(),
                         track.name,
@@ -144,10 +148,10 @@ export class DataStore implements IdentifiedObject
                         [track.local],
                         [track]);
       this._titles.push(title);
+      this._titlesByName.set(canonicalName, title);
     }
     else
     {
-      title = this._titles[titleIndex] as Title;
       title.addTrack(track);
     }
   }

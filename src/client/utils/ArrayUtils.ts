@@ -28,4 +28,16 @@ export class ArrayUtils
 
     source.forEach((value: T) => ArrayUtils.pushIfMissing(target, value, equalityCheck));
   }
+
+  public static splitIntoChunks<T>(array: T[], size: number): T[][]
+  {
+    const copy: T[] = array.slice();
+    const chunks: T[][] = [];
+    while (copy.length !== 0)
+    {
+      chunks.push(copy.splice(0, size));
+    }
+
+    return chunks;
+  }
 }
