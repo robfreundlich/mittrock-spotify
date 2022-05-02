@@ -29,7 +29,7 @@ export interface ITrack extends IdentifiedObject
 
   trackNumber: number;
 
-  album: IAlbum;
+  album: IAlbum | undefined;
 
   playlist: IPlaylist | undefined;
 
@@ -61,7 +61,7 @@ export class Track implements ITrack
 
   private _trackNumber: number;
 
-  private _album: IAlbum;
+  private _album: IAlbum | undefined;
 
   private _playlist: IPlaylist | undefined;
 
@@ -185,7 +185,7 @@ export class Track implements ITrack
     return this._trackNumber;
   }
 
-  public get album(): IAlbum
+  public get album(): IAlbum | undefined
   {
     return this._album;
   }

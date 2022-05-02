@@ -110,7 +110,7 @@ export class DataStore implements IdentifiedObject
   }
 
   private addToStore(track: ITrack,
-                     album: IAlbum,
+                     album: IAlbum | undefined,
                      artists: IArtist[],
                      genres: IGenre[],
                      explicit: Explicitness,
@@ -119,7 +119,10 @@ export class DataStore implements IdentifiedObject
                      local: TrackStorageOrigin): void
   {
     ArrayUtils.pushIfMissing(this._tracks, track, areIdentifiedObjectsSame);
-    ArrayUtils.pushIfMissing(this._albums, album, areIdentifiedObjectsSame);
+    if (album)
+    {
+      ArrayUtils.pushIfMissing(this._albums, album, areIdentifiedObjectsSame);
+    }
     ArrayUtils.pushIfMissing(this._explicits, explicit);
     ArrayUtils.pushIfMissing(this._lengths, length);
     ArrayUtils.pushIfMissing(this._popularities, popularity);
@@ -139,7 +142,7 @@ export class DataStore implements IdentifiedObject
     {
       title = new Title(ModelUtils.generateId(),
                         track.name,
-                        [track.album],
+                        track.album ? [track.album] : [],
                         track.genres,
                         track.artists,
                         [track.explicit],
