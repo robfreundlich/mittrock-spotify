@@ -10,10 +10,10 @@ import {Scopes, SpotifyAuth} from "react-spotify-auth";
 import {getCookie} from "typescript-cookie";
 
 const dataStore: DataStore = new DataStore();
-export const SpotifyApiContext = React.createContext("");
-SpotifyApiContext.displayName = "SpotifyApi";
-export const DataStoreContext = React.createContext<DataStore>(dataStore);
-DataStoreContext.displayName = "DataStore";
+export type AppContextData = {
+  authToken: string;
+  dataStore: DataStore;
+}
 
 export const App = () => {
 
@@ -21,11 +21,7 @@ export const App = () => {
   const [token, setToken] = React.useState(cookie);
 
   const renderWithToken = () => {
-    return <SpotifyApiContext.Provider value={token!}>
-      <DataStoreContext.Provider value={dataStore}>
-        <TrackLoader/>
-      </DataStoreContext.Provider>
-    </SpotifyApiContext.Provider>;
+    return <TrackLoader authToken={token} dataStore={dataStore}/>;
   };
 
   const renderAuthRequest = () => {

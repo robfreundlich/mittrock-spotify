@@ -12,7 +12,7 @@
     "noPropertyAccessFromIndexSignature": false,
     "noUncheckedIndexedAccess": false,
     "noUnusedLocals": true,
-    "noUnusedParameters": true,
+    "noUnusedParameters": false,
     "strict": true,
     "strictPropertyInitialization": false,
     "esModuleInterop": true,

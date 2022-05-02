@@ -2,7 +2,6 @@
  * Copyright (c) 2022. Rob Freundlich <rob@freundlichs.com> - All rights reserved.
  */
 
-import {DataStoreContext, SpotifyApiContext} from "app/client/app/App";
 import {IAlbum} from "app/client/model/Album";
 import {IArtist} from "app/client/model/Artist";
 import {DataStore} from "app/client/model/DataStore";
@@ -23,38 +22,81 @@ type Status = {
   error?: string;
 }
 
-export const TrackLoader = () => {
-  const [status, setStatus] = React.useState<Status>({status: "unloaded"});
+export interface TrackLoaderProps
+{
+  authToken: string | undefined;
 
-  const loaderItemCount: React.MutableRefObject<number> = React.useRef(0);
+  dataStore: DataStore;
+}
 
-  var authToken: string = React.useContext(SpotifyApiContext);
-  var dataStore: DataStore = React.useContext(DataStoreContext);
+export class TrackLoader extends React.Component<TrackLoaderProps, Status>
+{
+  private loaderItemCount: number = 0;
 
-  var spotify = new SpotifyWebApi({accessToken: authToken});
+  private spotify: SpotifyWebApi;
 
-  const startLoading = () => {
-    setStatus({status: "loading_favorites", offset: 0});
-  };
-
-  function loadNext(): void
+  constructor(props: Readonly<never>)
   {
-    // window.requestAnimationFrame(() => {
-    if (status.status === "loading_favorites")
+    super(props);
+
+    this.state = {status: "unloaded"};
+  }
+
+  public override render()
+  {
+    return <div className="track-loader">
+      {this.getStatusContent()}
+    </div>;
+  }
+
+  public override componentDidMount(): void
+  {
+    this.updateFromStateAndProps();
+  }
+
+  public override componentDidUpdate(prevProps: Readonly<TrackLoaderProps>, prevState: Readonly<Status>): void
+  {
+    this.updateFromStateAndProps(prevProps, prevState);
+  }
+
+  private updateFromStateAndProps(prevProps?: Readonly<TrackLoaderProps>, prevState?: Readonly<Status>): void
+  {
+    if (this.props.authToken)
     {
-      loadFavorites();
+      if (prevProps?.authToken !== this.props.authToken)
+      {
+        this.spotify = new SpotifyWebApi({accessToken: this.props.authToken});
+      }
     }
-    else if (status.status === "loading_albums")
+
+    if ((prevState === undefined) || (JSON.stringify(prevState) !== JSON.stringify(this.state)))
     {
-      loadAlbums();
+      this.loadNext();
     }
-    // });
+  }
+
+  private startLoading(): void
+  {
+    this.setState({status: "loading_favorites", offset: 0});
   };
 
-  const loadFavorites = async () => {
+  private loadNext(): void
+  {
+    if (this.state.status === "loading_favorites")
+    {
+      this.loadFavorites();
+    }
+    else if (this.state.status === "loading_albums")
+    {
+      this.loadAlbums();
+    }
+  };
+
+  private async loadFavorites(): Promise<void>
+  {
     try
     {
-      const results: GetSavedTracksResponse = await spotify.library.getSavedTracks({limit: 50, offset: status.offset!});
+      const results: GetSavedTracksResponse = await this.spotify.library.getSavedTracks({limit: 50, offset: this.state.offset!});
 
       const artistIds: Set<string> = new Set();
       const tracks: Track[] = [];
@@ -72,8 +114,8 @@ export const TrackLoader = () => {
                                        apiTrack.track_number,
                                        Favorites.favorites,
                                        [],  // We'll fill this in later, when we need it.
-                                       convertApiArtistsToArtists(apiTrack.artists),
-                                       convertApiAlbumToIAlbum(apiTrack.album));
+                                       this.convertApiArtistsToArtists(apiTrack.artists),
+                                       this.convertApiAlbumToIAlbum(apiTrack.album));
 
         track.artists.forEach((artist) => {
           artistIds.add(artist.id);
@@ -82,12 +124,12 @@ export const TrackLoader = () => {
         tracks.push(track);
       });
 
-      loaderItemCount.current += results.items.length;
+      this.loaderItemCount += results.items.length;
 
       const artistIdChunks: string[][] = ArrayUtils.splitIntoChunks([...artistIds], 20);
 
       await Promise.all(artistIdChunks.map(async (ids: string[]) => {
-        const artists: Array<SpotifyObjects.Artist | null> = await spotify.artists.getArtists(ids);
+        const artists: Array<SpotifyObjects.Artist | null> = await this.spotify.artists.getArtists(ids);
         artists.forEach((artist: SpotifyObjects.Artist | null) => {
           if (artist !== null)
           {
@@ -100,35 +142,36 @@ export const TrackLoader = () => {
       }));
 
       tracks.forEach((track: Track) => {
-        dataStore.addTrack(track);
+        this.props.dataStore.addTrack(track);
       });
 
-      if (loaderItemCount.current === results.total)
+      if (this.loaderItemCount === results.total)
       {
-        loaderItemCount.current = 0;
-        setStatus({status: "loading_albums", offset: 0, subprogress: 0});
+        this.loaderItemCount = 0;
+        this.setState({status: "loading_albums", offset: 0, subprogress: 0});
       }
       else
       {
-        setStatus({status: status.status, offset: status.offset! + results.items.length});
+        this.setState({status: this.state.status, offset: this.state.offset! + results.items.length});
       }
     }
     catch (err)
     {
-      setStatus({status: "error", error: (err as any).toString()});
+      this.setState({status: "error", error: (err as any).toString()});
     }
   };
 
-  const loadAlbums = async () => {
+  private async loadAlbums(): Promise<void>
+  {
     try
     {
-      const results: GetSavedAlbumsResponse = await spotify.library.getSavedAlbums({limit: 50, offset: status.offset!});
+      const results: GetSavedAlbumsResponse = await this.spotify.library.getSavedAlbums({limit: 50, offset: this.state.offset!});
 
       const tracks: Track[] = [];
 
       results.items.forEach((result: SavedAlbum) => {
         const apiAlbum: SpotifyObjects.Album = result.album;
-        const album: IAlbum = convertApiAlbumToIAlbum(apiAlbum);
+        const album: IAlbum = this.convertApiAlbumToIAlbum(apiAlbum);
         apiAlbum.tracks.items.forEach((apiTrack: SimplifiedTrack) => {
 
           const track: Track = new Track(apiTrack.id,
@@ -141,7 +184,7 @@ export const TrackLoader = () => {
                                          apiTrack.track_number,
                                          album,
                                          apiAlbum.genres.map((genre) => new Genre(genre)),
-                                         convertApiArtistsToArtists(apiTrack.artists));
+                                         this.convertApiArtistsToArtists(apiTrack.artists));
 
           tracks.push(track);
         });
@@ -152,7 +195,7 @@ export const TrackLoader = () => {
       const trackIdChunks: string[][] = ArrayUtils.splitIntoChunks(allTrackIds, 20);
 
       await Promise.all(trackIdChunks.map(async (ids: string[]) => {
-        const artists: Array<SpotifyObjects.Track | null> = await spotify.tracks.getTracks(ids);
+        const artists: Array<SpotifyObjects.Track | null> = await this.spotify.tracks.getTracks(ids);
         artists.forEach((apiTrack: SpotifyObjects.Track | null) => {
           if (apiTrack !== null)
           {
@@ -162,32 +205,32 @@ export const TrackLoader = () => {
       }));
 
       tracks.forEach((track: Track) => {
-        dataStore.addTrack(track);
+        this.props.dataStore.addTrack(track);
       });
 
-      loaderItemCount.current += results.items.length;
+      this.loaderItemCount += results.items.length;
 
-      if (loaderItemCount.current === results.total)
+      if (this.loaderItemCount === results.total)
       {
-        setStatus({status: "loaded"});
+        this.setState({status: "loaded"});
       }
       else
       {
-        setStatus({
-                    status: status.status,
-                    offset: status.offset! + results.items.length,
-                    subprogress: status.subprogress! + tracks.length
-                  });
+        this.setState({
+                        status: this.state.status,
+                        offset: this.state.offset! + results.items.length,
+                        subprogress: this.state.subprogress! + tracks.length
+                      });
       }
     }
     catch (err)
     {
-      setStatus({status: "error", error: (err as any).toString()});
+      this.setState({status: "error", error: (err as any).toString()});
     }
-  };
+  }
 
-
-  const convertApiAlbumToIAlbum = (apiAlbum: SpotifyObjects.SimplifiedAlbum) => {
+  private convertApiAlbumToIAlbum(apiAlbum: SpotifyObjects.SimplifiedAlbum): IAlbum
+  {
     const album: IAlbum = {
       id: apiAlbum.id,
       name: apiAlbum.name,
@@ -195,13 +238,14 @@ export const TrackLoader = () => {
       tracks: [],
       releaseDate: apiAlbum.release_date,
       releaseDatePrecision: apiAlbum.release_date_precision,
-      artists: convertApiArtistsToArtists(apiAlbum.artists)
+      artists: this.convertApiArtistsToArtists(apiAlbum.artists)
     };
 
     return album;
   };
 
-  const convertApiArtistsToArtists = (apiArtists: SpotifyObjects.SimplifiedArtist[]) => {
+  private convertApiArtistsToArtists(apiArtists: SpotifyObjects.SimplifiedArtist[]): IArtist[]
+  {
     const artists: IArtist[] = apiArtists.map((apiArtist: SpotifyObjects.SimplifiedArtist) => {
       const artist: IArtist = {
         id: apiArtist.id,
@@ -216,32 +260,26 @@ export const TrackLoader = () => {
     return artists;
   };
 
-  const getStatusContent = () => {
-    switch (status.status)
+  private getStatusContent(): React.ReactNode
+  {
+    switch (this.state.status)
     {
       case "unloaded":
-        return <button disabled={status.status !== "unloaded"}
-                       onClick={startLoading}>Click to begin loading</button>;
+        return <button disabled={this.state.status !== "unloaded"}
+                       onClick={() => this.startLoading()}>Click to begin loading</button>;
 
       case "loading_favorites":
-        return `Loading Favorites. Loaded ${status.offset} tracks so far.`;
+        return `Loading Favorites. Loaded ${this.state.offset} tracks so far.`;
 
       case "loading_albums":
-        return `Loading Albums. Loaded ${status.offset} albums with ${status.subprogress} tracks so far.`;
+        return `Loading Albums. Loaded ${this.state.offset} albums with ${this.state.subprogress} tracks so far.`;
 
       case "loaded":
-        return `Loaded ${dataStore.titles.length} titles for ${dataStore.tracks.length} tracks.`;
+        return `Loaded ${this.props.dataStore.titles.length} titles for ${this.props.dataStore.tracks.length} tracks.`;
 
       case "error":
-        return `Error loading tracks ${status.error}`;
+        return `Error loading tracks ${this.state.error}`;
     }
   };
+}
 
-  React.useEffect(() => {
-    loadNext();
-  }, [status]);
-
-  return <div className="track-loader">
-    {getStatusContent()}
-  </div>;
-};

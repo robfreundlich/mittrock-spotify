@@ -2,7 +2,6 @@
  * Copyright (c) 2022. Rob Freundlich <rob@freundlichs.com> - All rights reserved.
  */
 
-import {SpotifyApiContext} from "app/client/app/App";
 import {DexieDB} from "app/client/db/DexieDB";
 import {IAlbum} from "app/client/model/Album";
 import {IArtist} from "app/client/model/Artist";
@@ -13,18 +12,26 @@ import * as SpotifyObjects from "spotify-web-api-ts/types/types/SpotifyObjects";
 import {SavedTrack} from "spotify-web-api-ts/types/types/SpotifyObjects";
 import {GetSavedTracksResponse} from "spotify-web-api-ts/types/types/SpotifyResponses";
 
-export const DBTrackLoader = () => {
+export interface DBTrackLoaderProps
+{
+  authToken: string | undefined;
+}
+
+export const DBTrackLoader = (props: DBTrackLoaderProps) => {
 
   const [status, setStatus] = React.useState<"unloaded" | "loading" | "loaded" | "error">("unloaded");
   const [tracks, setTracks] = React.useState(0);
   const [error, setError] = React.useState();
 
-  var authToken: string = React.useContext(SpotifyApiContext);
-
   const startLoading = async () => {
     setStatus("loading");
 
-    var spotify = new SpotifyWebApi({accessToken: authToken});
+    if (!props.authToken)
+    {
+      return;
+    }
+
+    var spotify: SpotifyWebApi = new SpotifyWebApi({accessToken: props.authToken});
 
     try
     {

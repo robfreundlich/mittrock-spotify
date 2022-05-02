@@ -135,6 +135,7 @@ export class Title implements ITitle
   {
     if (ArrayUtils.pushIfMissing(this._tracks, track, areIdentifiedObjectsSame))
     {
+      // TODO: Don't push undefined albums
       ArrayUtils.pushIfMissing(this._albums, track.album, areIdentifiedObjectsSame);
       ArrayUtils.pushAllMissing(this._genres, track.genres, areGenresSame);
       ArrayUtils.pushAllMissing(this._artists, track.artists, areIdentifiedObjectsSame);
