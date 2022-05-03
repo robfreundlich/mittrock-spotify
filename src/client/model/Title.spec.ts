@@ -43,16 +43,7 @@ describe("Tests the internal consistency of the Title object", () => {
   beforeEach("Set up objects", () => {
     resetMockedObjects();
 
-    title = new Title(ModelUtils.generateId(),
-                      "Cool Song",
-                      [album],
-                      [genre],
-                      [artist],
-                      ["clean"],
-                      [100],
-                      [50],
-                      ["streaming"],
-                      [track]);
+    title = new Title(ModelUtils.generateId(), "Cool Song", [album], [], [genre], [artist], ["clean"], [100], [50], ["streaming"], [track]);
   });
 
   afterEach(() => {

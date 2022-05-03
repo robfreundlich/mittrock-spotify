@@ -91,6 +91,11 @@ export class DataStore implements IdentifiedObject
     return this._locals;
   }
 
+  private static canonicalName(name: string): string
+  {
+    return name.toLowerCase().replace(/\s/g, "");
+  }
+
   public addTrack(track: ITrack): void
   {
     this.addToStore(track,
@@ -102,11 +107,6 @@ export class DataStore implements IdentifiedObject
                     track.popularity,
                     track.local
     );
-  }
-
-  private canonicalName(name: string): string
-  {
-    return name.toLowerCase().replace(/\s/g, "");
   }
 
   private addToStore(track: ITrack,
@@ -136,13 +136,14 @@ export class DataStore implements IdentifiedObject
       ArrayUtils.pushIfMissing(this._genres, genre, areGenresSame);
     });
 
-    const canonicalName = this.canonicalName(track.name);
+    const canonicalName = DataStore.canonicalName(track.name);
     let title: Title | undefined = this._titlesByName.get(canonicalName);
     if (!title)
     {
       title = new Title(ModelUtils.generateId(),
                         track.name,
                         track.album ? [track.album] : [],
+                        [],
                         track.genres,
                         track.artists,
                         [track.explicit],

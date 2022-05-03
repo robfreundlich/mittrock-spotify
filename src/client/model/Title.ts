@@ -5,6 +5,7 @@
 import {IArtist} from "app/client/model/Artist";
 import {areGenresSame, IGenre} from "app/client/model/Genre";
 import {areIdentifiedObjectsSame, IdentifiedObject} from "app/client/model/IdentifiedObject";
+import {IPlaylist} from "app/client/model/Playlist";
 import {ITrack} from "app/client/model/Track";
 import {ArrayUtils} from "app/client/utils/ArrayUtils";
 import {Explicitness, TrackStorageOrigin} from "app/client/utils/Types";
@@ -17,6 +18,8 @@ export interface ITitle extends IdentifiedObject
   name: string;
 
   albums: IAlbum[];
+
+  playlists: IPlaylist[];
 
   genres: IGenre[];
 
@@ -44,6 +47,8 @@ export class Title implements ITitle
 
   private _albums: IAlbum[];
 
+  private _playlists: IPlaylist[];
+
   private _genres: IGenre[];
 
   private _artists: IArtist[];
@@ -61,6 +66,7 @@ export class Title implements ITitle
   constructor(id: string,
               name: string,
               albums: IAlbum[],
+              playlists: IPlaylist[],
               genres: IGenre[],
               artists: IArtist[],
               explicits: Explicitness[],
@@ -72,6 +78,7 @@ export class Title implements ITitle
     this._id = id;
     this._name = name;
     this._albums = albums;
+    this._playlists = playlists;
     this._genres = genres;
     this._artists = artists;
     this._explicits = explicits;
@@ -79,6 +86,11 @@ export class Title implements ITitle
     this._popularities = popularities;
     this._locals = locals;
     this._tracks = tracks;
+  }
+
+  public get playlists(): IPlaylist[]
+  {
+    return this._playlists;
   }
 
   public get id(): string
