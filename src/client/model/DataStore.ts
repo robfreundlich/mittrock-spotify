@@ -5,6 +5,7 @@
 import {IAlbum} from "app/client/model/Album";
 import {IArtist} from "app/client/model/Artist";
 import {areGenresSame, IGenre} from "app/client/model/Genre";
+import {IPlaylist} from "app/client/model/Playlist";
 import {ITitle, Title} from "app/client/model/Title";
 import {ITrack} from "app/client/model/Track";
 import {ArrayUtils} from "app/client/utils/ArrayUtils";
@@ -15,6 +16,11 @@ import {areIdentifiedObjectsSame, IdentifiedObject} from "./IdentifiedObject";
 
 export class DataStore implements IdentifiedObject
 {
+  private static canonicalName(name: string): string
+  {
+    return name.toLowerCase().replace(/\s/g, "");
+  }
+
   private _id: string;
 
   private _tracks: ITrack[] = [];
@@ -22,6 +28,8 @@ export class DataStore implements IdentifiedObject
   private _albums: IAlbum[] = [];
 
   private _artists: IArtist[] = [];
+
+  private _playlists: IPlaylist[] = [];
 
   private _genres: IGenre[] = [];
 
@@ -39,6 +47,11 @@ export class DataStore implements IdentifiedObject
 
   constructor()
   {
+  }
+
+  public get playlists(): IPlaylist[]
+  {
+    return this._playlists;
   }
 
   public get id(): string
@@ -91,26 +104,14 @@ export class DataStore implements IdentifiedObject
     return this._locals;
   }
 
-  private static canonicalName(name: string): string
-  {
-    return name.toLowerCase().replace(/\s/g, "");
-  }
-
   public addTrack(track: ITrack): void
   {
-    this.addToStore(track,
-                    track.album,
-                    track.artists,
-                    track.genres,
-                    track.explicit,
-                    track.length,
-                    track.popularity,
-                    track.local
-    );
+    this.addToStore(track, track.album, track.playlist, track.artists, track.genres, track.explicit, track.length, track.popularity, track.local);
   }
 
   private addToStore(track: ITrack,
                      album: IAlbum | undefined,
+                     playlist: IPlaylist | undefined,
                      artists: IArtist[],
                      genres: IGenre[],
                      explicit: Explicitness,
@@ -123,6 +124,12 @@ export class DataStore implements IdentifiedObject
     {
       ArrayUtils.pushIfMissing(this._albums, album, areIdentifiedObjectsSame);
     }
+
+    if (playlist)
+    {
+      ArrayUtils.pushIfMissing(this._playlists, playlist, areIdentifiedObjectsSame);
+    }
+
     ArrayUtils.pushIfMissing(this._explicits, explicit);
     ArrayUtils.pushIfMissing(this._lengths, length);
     ArrayUtils.pushIfMissing(this._popularities, popularity);
@@ -143,7 +150,7 @@ export class DataStore implements IdentifiedObject
       title = new Title(ModelUtils.generateId(),
                         track.name,
                         track.album ? [track.album] : [],
-                        [],
+                        track.playlist ? [track.playlist] : [],
                         track.genres,
                         track.artists,
                         [track.explicit],
