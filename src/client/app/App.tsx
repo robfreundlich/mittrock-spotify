@@ -10,11 +10,6 @@ import {Scopes, SpotifyAuth} from "react-spotify-auth";
 import {getCookie} from "typescript-cookie";
 
 const dataStore: DataStore = new DataStore();
-export type AppContextData = {
-  authToken: string;
-  dataStore: DataStore;
-}
-
 export const App = () => {
 
   const cookie: string | undefined = getCookie("spotifyAuthToken");
@@ -25,17 +20,17 @@ export const App = () => {
   };
 
   const renderAuthRequest = () => {
+    const scopes = [
+      Scopes.playlistReadPrivate,
+      Scopes.userLibraryRead,
+      Scopes.userFollowRead,
+      Scopes.userReadPrivate,
+      Scopes.playlistReadCollaborative,
+    ];
     return <div className="login">
       <SpotifyAuth redirectUri="http://localhost:8080"
                    clientID={ClientInfo.CLIENT_ID}
-                   scopes={[
-                     Scopes.userLibraryRead,
-                     Scopes.userLibraryModify,
-                     Scopes.userFollowRead,
-                     Scopes.userTopRead,
-                     Scopes.userReadPrivate,
-                     Scopes.userReadEmail
-                   ]}
+                   scopes={scopes}
                    onAccessToken={(token) => setToken(token)}
       />
     </div>;

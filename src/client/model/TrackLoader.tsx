@@ -10,6 +10,7 @@ import {Genre} from "app/client/model/Genre";
 import {IPlaylist} from "app/client/model/Playlist";
 import {ITrack, Track} from "app/client/model/Track";
 import {ArrayUtils} from "app/client/utils/ArrayUtils";
+import {TimeUtils} from "app/client/utils/TimeUtils";
 import React from "react";
 import {SpotifyWebApi} from "spotify-web-api-ts";
 import * as SpotifyObjects from "spotify-web-api-ts/types/types/SpotifyObjects";
@@ -27,6 +28,7 @@ type Status = {
   subprogress?: number;
   error?: string;
   currentPlaylist?: number;
+  currentTime: Date;
 }
 
 export interface TrackLoaderProps
@@ -46,12 +48,12 @@ export class TrackLoader extends React.Component<TrackLoaderProps, Status>
 
   private _currentPlaylistTotalTracks: number;
 
-  constructor(props: Readonly<never>)
+  private static apiDelay(condition: boolean): Promise<void>
   {
-    super(props);
-
-    this.state = {status: "unloaded"};
+    return TimeUtils.delay(100, condition);
   }
+
+  private _startTime: number;
 
   public override render()
   {
@@ -70,11 +72,6 @@ export class TrackLoader extends React.Component<TrackLoaderProps, Status>
     this.updateFromStateAndProps(prevProps, prevState);
   }
 
-  private async delay(msec: number): Promise<void>
-  {
-    return new Promise((res => setTimeout(res, msec)));
-  }
-
   private updateFromStateAndProps(prevProps?: Readonly<TrackLoaderProps>, prevState?: Readonly<Status>): void
   {
     if (this.props.authToken)
@@ -91,10 +88,12 @@ export class TrackLoader extends React.Component<TrackLoaderProps, Status>
     }
   }
 
-  private startLoading(): void
+  constructor(props: Readonly<never>)
   {
-    this.setState({status: "loading_favorites", offset: 0});
-  };
+    super(props);
+
+    this.state = {status: "unloaded", currentTime: new Date()};
+  }
 
   private loadNext(): void
   {
@@ -116,10 +115,17 @@ export class TrackLoader extends React.Component<TrackLoaderProps, Status>
     }
   };
 
+  private startLoading(): void
+  {
+    this._startTime = new Date().getTime();
+    this.setState({status: "loading_favorites", offset: 0, subprogress: 0});
+  };
+
   private async loadFavorites(): Promise<void>
   {
     try
     {
+      await TrackLoader.apiDelay(this.state.offset! > 0);
       const results: GetSavedTracksResponse = await this.spotify.library.getSavedTracks({limit: 50, offset: this.state.offset!});
 
       const artistIds: Set<string> = new Set();
@@ -153,6 +159,7 @@ export class TrackLoader extends React.Component<TrackLoaderProps, Status>
       const artistIdChunks: string[][] = ArrayUtils.splitIntoChunks([...artistIds], 20);
 
       await Promise.all(artistIdChunks.map(async (ids: string[]) => {
+        await TrackLoader.apiDelay(true);
         const artists: Array<SpotifyObjects.Artist | null> = await this.spotify.artists.getArtists(ids);
         artists.forEach((artist: SpotifyObjects.Artist | null) => {
           if (artist !== null)
@@ -172,16 +179,16 @@ export class TrackLoader extends React.Component<TrackLoaderProps, Status>
       if (this.loaderItemCount === results.total)
       {
         this.loaderItemCount = 0;
-        this.setState({status: "loading_albums", offset: 0, subprogress: 0});
+        this.setState({status: "loading_albums", offset: 0, subprogress: 0, currentTime: new Date()});
       }
       else
       {
-        this.setState({status: this.state.status, offset: this.state.offset! + results.items.length});
+        this.setState({status: this.state.status, offset: this.state.offset! + results.items.length, currentTime: new Date()});
       }
     }
     catch (err)
     {
-      this.setState({status: "error", error: (err as Error).stack!});
+      this.setState({status: "error", error: (err as Error).stack!, currentTime: new Date()});
     }
   };
 
@@ -189,6 +196,7 @@ export class TrackLoader extends React.Component<TrackLoaderProps, Status>
   {
     try
     {
+      await TrackLoader.apiDelay(this.state.offset! > 0);
       const results: GetSavedAlbumsResponse = await this.spotify.library.getSavedAlbums({limit: 50, offset: this.state.offset!});
 
       const tracks: Track[] = [];
@@ -219,7 +227,7 @@ export class TrackLoader extends React.Component<TrackLoaderProps, Status>
       const trackIdChunks: string[][] = ArrayUtils.splitIntoChunks(allTrackIds, 20);
 
       await Promise.all(trackIdChunks.map(async (ids: string[]) => {
-        await this.delay(50);
+        await TrackLoader.apiDelay(true);
         const artists: Array<SpotifyObjects.Track | null> = await this.spotify.tracks.getTracks(ids);
         artists.forEach((apiTrack: SpotifyObjects.Track | null) => {
           if (apiTrack !== null)
@@ -238,20 +246,21 @@ export class TrackLoader extends React.Component<TrackLoaderProps, Status>
       if (this.loaderItemCount === results.total)
       {
         this.loaderItemCount = 0;
-        this.setState({status: "loading_playlists", offset: 0, subprogress: 0});
+        this.setState({status: "loading_playlists", offset: 0, subprogress: 0, currentTime: new Date()});
       }
       else
       {
         this.setState({
                         status: this.state.status,
                         offset: this.state.offset! + results.items.length,
-                        subprogress: this.state.subprogress! + tracks.length
+                        subprogress: this.state.subprogress! + tracks.length,
+                        currentTime: new Date()
                       });
       }
     }
     catch (err)
     {
-      this.setState({status: "error", error: (err as Error).stack!});
+      this.setState({status: "error", error: (err as Error).stack!, currentTime: new Date()});
     }
   }
 
@@ -259,10 +268,12 @@ export class TrackLoader extends React.Component<TrackLoaderProps, Status>
   {
     try
     {
+      await TrackLoader.apiDelay(this.state.offset! > 0);
       const results: GetMyPlaylistsResponse = await this.spotify.playlists.getMyPlaylists({limit: 50, offset: this.state.offset!});
 
       await Promise.all(results.items.map((async (result: SimplifiedPlaylist) => {
         const apiPlaylist: Playlist = await this.spotify.playlists.getPlaylist(result.id);
+        await TrackLoader.apiDelay(true);
         const playlist: IPlaylist = this.convertApiPlaylistToIPlaylist(apiPlaylist);
 
         this._playlists.push(playlist);
@@ -273,19 +284,20 @@ export class TrackLoader extends React.Component<TrackLoaderProps, Status>
       if (this.loaderItemCount === results.total)
       {
         this.loaderItemCount = 0;
-        this.setState({status: "loading_playlist_tracks"});
+        this.setState({status: "loading_playlist_tracks", offset: 0, subprogress: 0, currentTime: new Date()});
       }
       else
       {
         this.setState({
                         status: this.state.status,
                         offset: this.state.offset! + results.items.length,
+                        currentTime: new Date()
                       });
       }
     }
     catch (err)
     {
-      this.setState({status: "error", error: (err as Error).stack!});
+      this.setState({status: "error", error: (err as Error).stack!, currentTime: new Date()});
     }
   }
 
@@ -304,6 +316,7 @@ export class TrackLoader extends React.Component<TrackLoaderProps, Status>
 
       const tracks: Track[] = [];
 
+      await TrackLoader.apiDelay(this.state.offset! > 0);
       const results: GetPlaylistItemsResponse = await this.spotify.playlists.getPlaylistItems(playListId, {limit: 100, offset: this.state.offset!});
       results.items.forEach((item: PlaylistItem) => {
         const apiTrack: SpotifyObjects.Track | Episode = item.track;
@@ -339,15 +352,18 @@ export class TrackLoader extends React.Component<TrackLoaderProps, Status>
         this._currentPlaylistTotalTracks = 0;
         if (playlistIndex == this._playlists.length - 1)
         {
-          this.setState({status: "loaded"});
+          this.setState({status: "loaded", currentTime: new Date()});
         }
-
-        this.setState({
-                        status: this.state.status,
-                        offset: 0,
-                        subprogress: this.state.subprogress!,
-                        currentPlaylist: playlistIndex + 1
-                      });
+        else
+        {
+          this.setState({
+                          status: this.state.status,
+                          offset: 0,
+                          subprogress: this.state.subprogress!,
+                          currentPlaylist: playlistIndex + 1,
+                          currentTime: new Date()
+                        });
+        }
       }
       else
       {
@@ -355,12 +371,13 @@ export class TrackLoader extends React.Component<TrackLoaderProps, Status>
                         status: this.state.status,
                         offset: this.state.offset! + results.items.length,
                         subprogress: this.state.subprogress! + tracks.length,
+                        currentTime: new Date()
                       });
       }
     }
     catch (err)
     {
-      this.setState({status: "error", error: (err as Error).stack!});
+      this.setState({status: "error", error: (err as Error).stack!, currentTime: new Date()});
     }
   }
 
@@ -420,21 +437,26 @@ export class TrackLoader extends React.Component<TrackLoaderProps, Status>
                        onClick={() => this.startLoading()}>Click to begin loading</button>;
 
       case "loading_favorites":
-        return `Loading Favorites. Loaded ${this.state.offset} tracks so far.`;
+        return `Loading Favorites. Loaded ${this.state.offset} tracks so far. Time: ${TimeUtils.getElapsedTime(this._startTime, this.state.currentTime)}}`;
 
       case "loading_albums":
-        return `Loading Albums. Loaded ${this.state.offset} albums with ${this.state.subprogress} tracks so far.`;
+        return `Loading Albums. Loaded ${this.state.offset} albums with ${this.state.subprogress} tracks so far.`
+               + ` Time: ${TimeUtils.getElapsedTime(this._startTime, this.state.currentTime)}`;
 
       case "loading_playlists":
-        return `Loading Playlists. Loaded ${this.state.offset} playlists so far.`;
+        return `Loading Playlists. Loaded ${this.state.offset} playlists so far.`
+               + ` Time: ${TimeUtils.getElapsedTime(this._startTime, this.state.currentTime)}`;
 
       case "loading_playlist_tracks":
         return `Loading tracks for ${(this.state.currentPlaylist === undefined)
                                      ? "Playlists"
-                                     : `Playlist "${this._playlists[this.state.currentPlaylist].name}`}. Loaded ${this.state.offset} tracks so far.`;
+                                     : `Playlist "${this._playlists[this.state.currentPlaylist].name}`}".`
+               + ` Loaded ${this.state.offset} tracks so far. Time: ${TimeUtils.getElapsedTime(this._startTime,
+                                                                                               this.state.currentTime)}`;
 
       case "loaded":
-        return `Loaded ${this.props.dataStore.titles.length} titles for ${this.props.dataStore.tracks.length} tracks.`;
+        return `Loaded ${this.props.dataStore.titles.length} titles for ${this.props.dataStore.tracks.length} tracks.`
+               + ` Time: ${TimeUtils.getElapsedTime(this._startTime, this.state.currentTime)}`;
 
       case "error":
         return `Error loading tracks ${this.state.error}`;
