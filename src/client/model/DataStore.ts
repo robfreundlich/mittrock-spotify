@@ -49,6 +49,16 @@ export class DataStore implements IdentifiedObject
   {
   }
 
+  public get numFavoriteTracks(): number
+  {
+    return this._tracks.filter((track) => track.source === "favorite").length;
+  }
+
+  public get numAlbumTracks(): number
+  {
+    return this._tracks.filter((track) => track.source === "album").length;
+  }
+
   public get playlists(): IPlaylist[]
   {
     return this._playlists;
@@ -102,6 +112,11 @@ export class DataStore implements IdentifiedObject
   public get locals(): TrackStorageOrigin[]
   {
     return this._locals;
+  }
+
+  public get numPlaylistTracks(): number
+  {
+    return this._tracks.filter((track) => track.source === "playlist").length;
   }
 
   public addTrack(track: ITrack): void

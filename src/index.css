@@ -3,9 +3,19 @@
  */
 
 @import url("client/app/App.css");
+@import url("client/model/TrackLoader.css");
 
 :root {
+  --color-medium-grey: #888888;
+
   --color-spotify-green: #1DB954;
+  --color-spotify-green-darker: #116C31;
   --color-spotiy-white: #FFFFFF;
   --color-spotify-black: #191414;
+
+  --default-border-radius: 4px;
+  --default-border-color: var(--color-spotify-black);
+  --default-border-width: 1.5px;
+  --default-border-style: solid;
+  --default-box-shadow: 3px 3px 5px var(--color-spotify-green-darker);
 }

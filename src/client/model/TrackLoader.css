@@ -1,0 +1,71 @@
+/*
+ * Copyright (c) 2022. Rob Freundlich <rob@freundlichs.com> - All rights reserved.
+ */
+
+:root {
+  --spotify-button-height: 50px;
+  --spotify-button-width: 250px;
+}
+
+.track-loader .progress .container {
+  border-radius: var(--default-border-radius);
+  border-color: var(--default-border-color);
+  border-width: var(--default-border-width);
+  border-style: var(--default-border-style);
+  box-shadow: var(--default-box-shadow);
+  margin: 1em;
+  padding: 0.5em;
+  width: 15em;
+}
+
+.track-loader .progress .container:not(:first-child) {
+  margin-top: 0;
+}
+
+.track-loader .progress .container:last-child {
+  margin-bottom: 0;
+}
+
+.track-loader .progress .item {
+  display: flex;
+  flex-direction: row;
+}
+
+.track-loader .progress .item .label {
+  flex-grow: 1;
+  flex-shrink: 1;
+}
+
+.track-loader .progress .item .label:after {
+  content: ":";
+}
+
+.track-loader .progress .item .data {
+  flex-grow: 0;
+  flex-shrink: 0;
+}
+
+.track-loader .progress .container.error-container {
+  width: 30em;
+  height: 15em;
+  border-color: red;
+  box-shadow: 3px 3px 5px darkred;
+}
+
+.track-loader .progress .container.error-container.item {
+  flex-direction: column;
+}
+
+.track-loader .progress .container.error-container.item label {
+  flex-grow: 0;
+  flex-shrink: 0;
+}
+
+.track-loader .progress .container.error-container.item data {
+  flex-grow: 1;
+  flex-shrink: 1;
+}
+
+.track-loader .progress .container.error-container.item textarea {
+  width: 100%
+}

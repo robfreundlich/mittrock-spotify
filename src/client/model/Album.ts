@@ -5,10 +5,11 @@
 import {IArtist} from "app/client/model/Artist";
 import {areIdentifiedObjectsSame, IdentifiedObject} from "app/client/model/IdentifiedObject";
 import {ITrack} from "app/client/model/Track";
+import {ITrackSource, TrackSource} from "app/client/model/TrackSource";
 import {ArrayUtils} from "app/client/utils/ArrayUtils";
 import {AlbumType, ReleaseDatePrecision} from "app/client/utils/Types";
 
-export interface IAlbum extends IdentifiedObject
+export interface IAlbum extends IdentifiedObject, ITrackSource
 {
   id: string;
 
@@ -27,6 +28,8 @@ export interface IAlbum extends IdentifiedObject
 
 export class Album implements IAlbum
 {
+  public readonly sourceType: TrackSource = "album";
+
   private _id: string;
 
   private _name: string;
@@ -99,4 +102,5 @@ export class Album implements IAlbum
   {
     ArrayUtils.pushIfMissing(this._tracks, track, areIdentifiedObjectsSame);
   }
+
 }

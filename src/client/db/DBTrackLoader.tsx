@@ -76,7 +76,8 @@ export const DBTrackLoader = (props: DBTrackLoaderProps) => {
       tracks: [],
       releaseDate: apiAlbum.release_date,
       releaseDatePrecision: apiAlbum.release_date_precision,
-      artists: convertApiArtistsToArtists(apiAlbum.artists)
+      artists: convertApiArtistsToArtists(apiAlbum.artists),
+      sourceType: "album",
     };
 
     return dbAlbum;

@@ -23,7 +23,7 @@ import {
 } from "spotify-web-api-ts/types/types/SpotifyResponses";
 
 type Status = {
-  status: "unloaded" | "loading_favorites" | "loading_albums" | "loading_playlists" | "loading_playlist_tracks" | "loaded" | "error";
+  status: "unloaded" | "loading_favorites" | "loading_albums" | "loading_playlists" | "loading_playlist_tracks" | "loaded" | "error" | "stopped";
   offset?: number;
   subprogress?: number;
   error?: string;
@@ -40,6 +40,11 @@ export interface TrackLoaderProps
 
 export class TrackLoader extends React.Component<TrackLoaderProps, Status>
 {
+  private static apiDelay(condition: boolean): Promise<void>
+  {
+    return TimeUtils.delay(100, condition);
+  }
+
   private loaderItemCount: number = 0;
 
   private spotify: SpotifyWebApi;
@@ -48,17 +53,72 @@ export class TrackLoader extends React.Component<TrackLoaderProps, Status>
 
   private _currentPlaylistTotalTracks: number;
 
-  private static apiDelay(condition: boolean): Promise<void>
-  {
-    return TimeUtils.delay(100, condition);
-  }
-
   private _startTime: number;
+
+  constructor(props: Readonly<never>)
+  {
+    super(props);
+
+    this.state = {status: "unloaded", currentTime: new Date()};
+  }
 
   public override render()
   {
+    if (this.state.status === "unloaded")
+    {
+      return <button disabled={this.state.status !== "unloaded"}
+                     onClick={() => this.startLoading()}>Click to begin loading</button>;
+    }
+
     return <div className="track-loader">
-      {this.getStatusContent()}
+
+      <button onClick={() => this.state = {status: "stopped", currentTime: new Date()}}>Stop</button>
+
+      <div className="progress">
+
+        {(this.state.status === "error") && <div className="error-container container">
+          <div className="error-label label">Error</div>
+          <textarea className="error-content data">${this.state.error}</textarea>
+        </div>}
+
+        <div className="favorites-container container item">
+          <div className="label">Favorites</div>
+          <div className="data">{this.props.dataStore.numFavoriteTracks}</div>
+        </div>
+
+        <div className="albums-container container">
+          <div className="albums item">
+            <div className="label">Albums</div>
+            <div className="data">{this.props.dataStore.albums.length}</div>
+          </div>
+          <div className="tracks item">
+            <div className="label">Tracks</div>
+            <div className="data">{this.props.dataStore.numAlbumTracks}</div>
+          </div>
+        </div>
+
+        <div className="playlists-container container">
+          <div className="playlists item">
+            <div className="label">Playlists</div>
+            <div className="data">{this.props.dataStore.playlists.length}</div>
+          </div>
+          <div className="tracks item">
+            <div className="label">Tracks</div>
+            <div className="data">{this.props.dataStore.numPlaylistTracks}</div>
+          </div>
+        </div>
+
+        <div className="totals-container container">
+          <div className="total-tracks item">
+            <div className="label">Total tracks</div>
+            <div className="data">{this.props.dataStore.tracks.length}</div>
+          </div>
+          <div className="elapsed-time item">
+            <div className="label">Elapsed time</div>
+            <div className="data">{TimeUtils.getElapsedTime(this._startTime, this.state.currentTime)}</div>
+          </div>
+        </div>
+      </div>
     </div>;
   }
 
@@ -86,13 +146,6 @@ export class TrackLoader extends React.Component<TrackLoaderProps, Status>
     {
       this.loadNext();
     }
-  }
-
-  constructor(props: Readonly<never>)
-  {
-    super(props);
-
-    this.state = {status: "unloaded", currentTime: new Date()};
   }
 
   private loadNext(): void
@@ -390,7 +443,8 @@ export class TrackLoader extends React.Component<TrackLoaderProps, Status>
       tracks: [],
       releaseDate: apiAlbum.release_date,
       releaseDatePrecision: apiAlbum.release_date_precision,
-      artists: this.convertApiArtistsToArtists(apiAlbum.artists)
+      artists: this.convertApiArtistsToArtists(apiAlbum.artists),
+      sourceType: "album"
     };
 
     return album;
@@ -407,6 +461,7 @@ export class TrackLoader extends React.Component<TrackLoaderProps, Status>
       owner: apiPlaylist.owner.display_name ?? "",
       snapshot_id: apiPlaylist.snapshot_id,
       visibility: apiPlaylist.public ? "public" : "private",
+      sourceType: "playlist"
     };
 
     return playlist;
@@ -426,41 +481,6 @@ export class TrackLoader extends React.Component<TrackLoaderProps, Status>
     });
 
     return artists;
-  };
-
-  private getStatusContent(): React.ReactNode
-  {
-    switch (this.state.status)
-    {
-      case "unloaded":
-        return <button disabled={this.state.status !== "unloaded"}
-                       onClick={() => this.startLoading()}>Click to begin loading</button>;
-
-      case "loading_favorites":
-        return `Loading Favorites. Loaded ${this.state.offset} tracks so far. Time: ${TimeUtils.getElapsedTime(this._startTime, this.state.currentTime)}}`;
-
-      case "loading_albums":
-        return `Loading Albums. Loaded ${this.state.offset} albums with ${this.state.subprogress} tracks so far.`
-               + ` Time: ${TimeUtils.getElapsedTime(this._startTime, this.state.currentTime)}`;
-
-      case "loading_playlists":
-        return `Loading Playlists. Loaded ${this.state.offset} playlists so far.`
-               + ` Time: ${TimeUtils.getElapsedTime(this._startTime, this.state.currentTime)}`;
-
-      case "loading_playlist_tracks":
-        return `Loading tracks for ${(this.state.currentPlaylist === undefined)
-                                     ? "Playlists"
-                                     : `Playlist "${this._playlists[this.state.currentPlaylist].name}`}".`
-               + ` Loaded ${this.state.offset} tracks so far. Time: ${TimeUtils.getElapsedTime(this._startTime,
-                                                                                               this.state.currentTime)}`;
-
-      case "loaded":
-        return `Loaded ${this.props.dataStore.titles.length} titles for ${this.props.dataStore.tracks.length} tracks.`
-               + ` Time: ${TimeUtils.getElapsedTime(this._startTime, this.state.currentTime)}`;
-
-      case "error":
-        return `Error loading tracks ${this.state.error}`;
-    }
   };
 }
 

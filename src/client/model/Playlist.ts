@@ -4,9 +4,10 @@
 
 import {IdentifiedObject} from "app/client/model/IdentifiedObject";
 import {ITrack} from "app/client/model/Track";
+import {ITrackSource, TrackSource} from "app/client/model/TrackSource";
 import {Visibility} from "app/client/utils/Types";
 
-export interface IPlaylist extends IdentifiedObject
+export interface IPlaylist extends IdentifiedObject, ITrackSource
 {
   id: string;
 
@@ -27,6 +28,8 @@ export interface IPlaylist extends IdentifiedObject
 
 export class Playlist implements IPlaylist
 {
+  public readonly sourceType: TrackSource = "playlist";
+
   private _collaborative: boolean;
 
   private _description: string;
