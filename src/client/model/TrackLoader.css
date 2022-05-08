@@ -18,6 +18,17 @@
   width: 15em;
 }
 
+
+.track-loader .status-bar {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+}
+
+.track-loader .status-bar > *:not(:first-child) {
+  padding-left: 0.5em;
+}
+
 .track-loader .progress .container:not(:first-child) {
   margin-top: 0;
 }

@@ -36,7 +36,10 @@ export class TrackLoader extends React.Component<TrackLoaderProps, TrackLoaderSt
 
     return <div className="track-loader">
 
-      <button onClick={() => this.state = {status: "stopped", currentTime: new Date()}}>Stop</button>
+      <div className="status-bar">
+        <button onClick={() => this.state = {status: "stopped", currentTime: new Date()}}>Stop</button>
+        <div>{this.props.controller.status.status}</div>
+      </div>
 
       <div className="progress">
 

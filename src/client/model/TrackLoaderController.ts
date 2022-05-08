@@ -2,6 +2,7 @@
  * Copyright (c) 2022. Rob Freundlich <rob@freundlichs.com> - All rights reserved.
  */
 
+import {DataStoreDexieLoader, DexieStoreLoadFailure} from "app/client/db/DataStoreDexieLoader";
 import {IAlbum} from "app/client/model/Album";
 import {IArtist} from "app/client/model/Artist";
 import {DataStore} from "app/client/model/DataStore";
@@ -22,7 +23,15 @@ import {
 } from "spotify-web-api-ts/types/types/SpotifyResponses";
 
 export type TrackLoaderStatus = {
-  status: "unloaded" | "loading_favorites" | "loading_albums" | "loading_playlists" | "loading_playlist_tracks" | "loaded" | "error" | "stopped";
+  status: "unloaded"
+      | "loading_favorites"
+      | "loading_albums"
+      | "loading_playlists"
+      | "loading_playlist_tracks"
+      | "loaded"
+      | "saving_to_database"
+      | "error"
+      | "stopped";
   offset?: number;
   subprogress?: number;
   error?: string;
@@ -71,6 +80,8 @@ export class TrackLoaderController
   private _currentPlaylistTotalTracks: number;
 
   private _status: TrackLoaderStatus;
+
+  private _dbLoader: DataStoreDexieLoader | undefined;
 
   constructor(dataStore: DataStore)
   {
@@ -140,7 +151,45 @@ export class TrackLoaderController
       this.loadPlaylistTracks(this.status.currentPlaylist).then(() => {/**/
       });
     }
+    else if (this.status.status === "saving_to_database")
+    {
+      this.saveToDatabase();
+    }
   };
+
+  private saveToDatabase(): void
+  {
+    if (this._dbLoader)
+    {
+      return;
+    }
+
+    this._dbLoader = new DataStoreDexieLoader(this._dataStore);
+    this._dbLoader.onError = (err: Error) => {
+      this.setStatus({
+                       status: "error",
+                       error: err.stack ?? err.message
+                     });
+    };
+
+    this._dbLoader.load().then(() => {
+
+      if (this._dbLoader!.loadFailures.length > 0)
+      {
+        this.setStatus({
+                         status: "error",
+                         error: this._dbLoader!.loadFailures.map((failure: DexieStoreLoadFailure) => {
+                           return `${failure.valueType}: ${failure.value.name} - ${failure.failure}`;
+                         }).join("\n")
+                       });
+      }
+      else
+      {
+        this.setStatus({status: "loaded"});
+      }
+      this._dbLoader = undefined;
+    });
+  }
 
   private async loadFavorites(): Promise<void>
   {
@@ -371,7 +420,7 @@ export class TrackLoaderController
         this._currentPlaylistTotalTracks = 0;
         if (playlistIndex == this._playlists.length - 1)
         {
-          this.setStatus({status: "loaded"});
+          this.setStatus({status: "saving_to_database"});
         }
         else
         {

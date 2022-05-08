@@ -5,6 +5,8 @@
 import {IAlbum} from "app/client/model/Album";
 import {IArtist} from "app/client/model/Artist";
 import {IGenre} from "app/client/model/Genre";
+import {IdentifiedObject} from "app/client/model/IdentifiedObject";
+import {IPlaylist} from "app/client/model/Playlist";
 import {ITitle} from "app/client/model/Title";
 import {ITrack} from "app/client/model/Track";
 import Dexie, {Table} from "dexie";
@@ -15,29 +17,6 @@ export class DexieDB extends Dexie
 
   private static instance: DexieDB;
 
-  public readonly albums!: Table<IAlbum>;
-
-  public readonly artists!: Table<IArtist>;
-
-  public readonly genres!: Table<IGenre>;
-
-  public readonly titles!: Table<ITitle>;
-
-  public readonly tracks!: Table<ITrack>;
-
-  constructor()
-  {
-    super("mittrock-spotify");
-
-    this.version(DexieDB.CURRENT_VERSION).stores({
-                                                   albums: "id, name, type",
-                                                   artists: "id, name",
-                                                   genres: "name",
-                                                   titles: "id, name, *genres.name, *artists.name",
-                                                   tracks: "id, name, album.name, *genres.name, artists.*name"
-                                                 });
-  }
-
   public static get db(): DexieDB
   {
     if (!DexieDB.instance)
@@ -46,5 +25,31 @@ export class DexieDB extends Dexie
     }
 
     return DexieDB.instance;
+  }
+
+  public readonly albums!: Table<IAlbum>;
+
+  public readonly artists!: Table<IArtist>;
+
+  public readonly genres!: Table<IGenre | IdentifiedObject>;
+
+  public readonly titles!: Table<ITitle>;
+
+  public readonly tracks!: Table<ITrack>;
+
+  public readonly playlists!: Table<IPlaylist>;
+
+  constructor()
+  {
+    super("mittrock-spotify");
+
+    this.version(DexieDB.CURRENT_VERSION).stores({
+                                                   albums: "id",
+                                                   artists: "id",
+                                                   genres: "id++",
+                                                   titles: "id",
+                                                   tracks: "id",
+                                                   playlists: "id",
+                                                 });
   }
 }
