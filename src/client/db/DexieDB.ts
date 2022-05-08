@@ -44,12 +44,12 @@ export class DexieDB extends Dexie
     super("mittrock-spotify");
 
     this.version(DexieDB.CURRENT_VERSION).stores({
-                                                   albums: "id",
+                                                   albums: "id, name, type",
                                                    artists: "id",
                                                    genres: "id++",
-                                                   titles: "id",
-                                                   tracks: "id",
-                                                   playlists: "id",
+                                                   titles: "id, name",
+                                                   tracks: "id, name",
+                                                   playlists: "id, name",
                                                  });
   }
 }

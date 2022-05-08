@@ -129,62 +129,101 @@ export class DataStoreDexieLoader
         })));
   }
 
-  private async loadTitles(): Promise<void[]>
+  private async loadTitles(): Promise<void>
   {
-    return Promise.all(this._dataStore.titles.map((title: ITitle) => DexieDB.db
-                                                                            .transaction("rw",
-                                                                                         DexieDB.db.titles,
-                                                                                         async () => {
-                                                                                           DexieDB.db.titles.add({
-                                                                                                                   id: title.id,
-                                                                                                                   artists: title.artists,
-                                                                                                                   genres: title.genres,
-                                                                                                                   tracks: title.tracks,
-                                                                                                                   lengths: title.lengths,
-                                                                                                                   locals: title.locals,
-                                                                                                                   explicits: title.explicits,
-                                                                                                                   playlists: title.playlists,
-                                                                                                                   popularities: title.popularities,
-                                                                                                                   albums: title.albums,
-                                                                                                                   name: title.name,
-                                                                                                                 });
-                                                                                         }).catch(Dexie.DataError, (error) => {
-          this._loadFailures.push({
-                                    valueType: "title",
-                                    value: title,
-                                    failure: error.message
+    return DexieDB.db.transaction("rw",
+                                  DexieDB.db.titles,
+                                  async () => {
+                                    DexieDB.db.titles.bulkAdd(this._dataStore.titles.map((title: ITitle) => ({
+                                      id: title.id,
+                                      artists: title.artists,
+                                      genres: title.genres,
+                                      tracks: title.tracks,
+                                      lengths: title.lengths,
+                                      locals: title.locals,
+                                      explicits: title.explicits,
+                                      playlists: title.playlists,
+                                      popularities: title.popularities,
+                                      albums: title.albums,
+                                      name: title.name,
+                                    })));
                                   });
-        })));
+
+    // return Promise.all(this._dataStore.titles.map((title: ITitle) => DexieDB.db
+    //                                                                         .transaction("rw",
+    //                                                                                      DexieDB.db.titles,
+    //                                                                                      async () => {
+    //                                                                                        DexieDB.db.titles.add({
+    //                                                                                                                id: title.id,
+    //                                                                                                                artists: title.artists,
+    //                                                                                                                genres: title.genres,
+    //                                                                                                                tracks: title.tracks,
+    //                                                                                                                lengths: title.lengths,
+    //                                                                                                                locals: title.locals,
+    //                                                                                                                explicits: title.explicits,
+    //                                                                                                                playlists: title.playlists,
+    //                                                                                                                popularities: title.popularities,
+    //                                                                                                                albums: title.albums,
+    //                                                                                                                name: title.name,
+    //                                                                                                              });
+    //                                                                                      }).catch(Dexie.DataError, (error) => {
+    //       this._loadFailures.push({
+    //                                 valueType: "title",
+    //                                 value: title,
+    //                                 failure: error.message
+    //                               });
+    //     })));
   }
 
-  private async loadTracks(): Promise<void[]>
+  private async loadTracks(): Promise<void>
   {
-    return Promise.all(this._dataStore.tracks.map((track: ITrack) => DexieDB.db
-                                                                            .transaction("rw",
-                                                                                         DexieDB.db.tracks,
-                                                                                         async () => {
-                                                                                           DexieDB.db.tracks.add({
-                                                                                                                   id: track.id,
-                                                                                                                   artists: track.artists,
-                                                                                                                   genres: track.genres,
-                                                                                                                   name: track.name,
-                                                                                                                   album: track.album,
-                                                                                                                   discNumber: track.discNumber,
-                                                                                                                   explicit: track.explicit,
-                                                                                                                   length: track.length,
-                                                                                                                   local: track.local,
-                                                                                                                   playlist: track.playlist,
-                                                                                                                   popularity: 0,
-                                                                                                                   source: track.source,
-                                                                                                                   trackNumber: 0
-                                                                                                                 });
-                                                                                         }).catch(Dexie.DataError, (error) => {
-          this._loadFailures.push({
-                                    valueType: "track",
-                                    value: track,
-                                    failure: error.message
+    return DexieDB.db.transaction("rw",
+                                  DexieDB.db.tracks,
+                                  async () => {
+                                    DexieDB.db.tracks.bulkAdd(this._dataStore.tracks.map((track: ITrack) => ({
+                                      id: track.id,
+                                      artists: track.artists,
+                                      genres: track.genres,
+                                      name: track.name,
+                                      album: track.album,
+                                      discNumber: track.discNumber,
+                                      explicit: track.explicit,
+                                      length: track.length,
+                                      local: track.local,
+                                      playlist: track.playlist,
+                                      popularity: 0,
+                                      source: track.source,
+                                      trackNumber: 0
+                                    })));
                                   });
-        })));
+
+
+    // return Promise.all(this._dataStore.tracks.map((track: ITrack) => DexieDB.db
+    //                                                                         .transaction("rw",
+    //                                                                                      DexieDB.db.tracks,
+    //                                                                                      async () => {
+    //                                                                                        DexieDB.db.tracks.add({
+    //                                                                                                                id: track.id,
+    //                                                                                                                artists: track.artists,
+    //                                                                                                                genres: track.genres,
+    //                                                                                                                name: track.name,
+    //                                                                                                                album: track.album,
+    //                                                                                                                discNumber: track.discNumber,
+    //                                                                                                                explicit: track.explicit,
+    //                                                                                                                length: track.length,
+    //                                                                                                                local: track.local,
+    //                                                                                                                playlist: track.playlist,
+    //                                                                                                                popularity: 0,
+    //                                                                                                                source: track.source,
+    //                                                                                                                trackNumber: 0
+    //                                                                                                              });
+    //                                                                                      }).catch(Dexie.DataError, (error) => {
+    //       this._loadFailures.push({
+    //                                 valueType: "track",
+    //                                 value: track,
+    //                                 failure: error.message
+    //                               });
+    //     })));
   }
 
   private async loadPlaylists(): Promise<void[]>
