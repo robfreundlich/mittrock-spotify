@@ -7,18 +7,13 @@ export interface IGenre
   name: string;
 }
 
-export class Genre
+export class Genre implements IGenre
 {
-  private _name: string;
+  public name: string;
 
   constructor(name: string)
   {
-    this._name = name;
-  }
-
-  public get name(): string
-  {
-    return this._name;
+    this.name = name;
   }
 }
 

@@ -35,9 +35,9 @@ describe("Tests the internal consistency of the Title object", () => {
     when(mockedTrack.id).thenReturn(trackId);
 
     album = instance(mockedAlbum);
-    genre = instance(mockedGenre)
-    artist = instance(mockedArtist)
-    track = instance(mockedTrack)
+    genre = instance(mockedGenre);
+    artist = instance(mockedArtist);
+    track = instance(mockedTrack);
   }
 
   beforeEach("Set up objects", () => {
@@ -144,7 +144,7 @@ describe("Tests the internal consistency of the Title object", () => {
       // The title should have the standard genre (from its initial mock) and the new one
       // (from the new track)
       expect(title.genres).to.have.ordered.members([genre, blues]);
-    })
+    });
   });
 
   describe("Tests artist consistency", () => {

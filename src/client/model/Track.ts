@@ -45,31 +45,31 @@ export interface ITrack extends IdentifiedObject
  */
 export class Track implements ITrack
 {
-  public _id: string;
+  public id: string;
 
-  private _name: string;
+  public readonly name: string;
 
-  private _explicit: Explicitness;
+  public readonly explicit: Explicitness;
 
-  private _length: number; // seconds
+  public readonly length: number; // seconds
 
-  private _popularity: number; // integer 0 - 100
+  public popularity: number; // integer 0 - 100
 
-  private _local: TrackStorageOrigin;
+  public readonly local: TrackStorageOrigin;
 
-  private _discNumber: number;
+  public readonly discNumber: number;
 
-  private _trackNumber: number;
+  public readonly trackNumber: number;
 
-  private _album: IAlbum | undefined;
+  public readonly album: IAlbum | undefined;
 
-  private _playlist: IPlaylist | undefined;
+  public playlist: IPlaylist | undefined;
 
-  private _genres: IGenre[];
+  public readonly genres: IGenre[];
 
-  private _artists: IArtist[];
+  public readonly artists: IArtist[];
 
-  private _source: TrackSource;
+  public source: TrackSource;
 
   constructor(id: string,
               name: string,
@@ -84,124 +84,39 @@ export class Track implements ITrack
               artists: IArtist[],
               album?: IAlbum)
   {
-    this._id = id;
-    this._name = name;
-    this._explicit = explicit;
-    this._length = length;
-    this._popularity = popularity;
-    this._local = local;
-    this._discNumber = discNumber;
-    this._trackNumber = trackNumber;
+    this.id = id;
+    this.name = name;
+    this.explicit = explicit;
+    this.length = length;
+    this.popularity = popularity;
+    this.local = local;
+    this.discNumber = discNumber;
+    this.trackNumber = trackNumber;
 
     if (isAlbum(source))
     {
-      this._album = source;
-      this._source = "album";
+      this.album = source;
+      this.source = "album";
     }
     else if (isPlaylist(source))
     {
-      this._playlist = source;
-      this._source = "playlist";
+      this.playlist = source;
+      this.source = "playlist";
       if (album)
       {
-        this._album = album;
+        this.album = album;
       }
     }
     else
     {
-      this._source = "favorite";
+      this.source = "favorite";
       if (album)
       {
-        this._album = album;
+        this.album = album;
       }
     }
 
-    this._genres = genres.slice();
-    this._artists = artists.slice();
-  }
-
-  public get playlist(): IPlaylist | undefined
-  {
-    return this._playlist;
-  }
-
-  public set playlist(value: IPlaylist | undefined)
-  {
-    this._playlist = value;
-  }
-
-  public get source(): TrackSource
-  {
-    return this._source;
-  }
-
-  public set source(value: TrackSource)
-  {
-    this._source = value;
-  }
-
-  public get id(): string
-  {
-    return this._id;
-  }
-
-  public get name(): string
-  {
-    return this._name;
-  }
-
-  public get explicit(): Explicitness
-  {
-    return this._explicit;
-  }
-
-  public get length(): number
-  {
-    return this._length;
-  }
-
-  public get popularity(): number
-  {
-    return this._popularity;
-  }
-
-  public set popularity(value: number)
-  {
-    this._popularity = value;
-  }
-
-  public get local(): TrackStorageOrigin
-  {
-    return this._local;
-  }
-
-  public get discNumber(): number
-  {
-    return this._discNumber;
-  }
-
-  public get trackNumber(): number
-  {
-    return this._trackNumber;
-  }
-
-  public get album(): IAlbum | undefined
-  {
-    return this._album;
-  }
-
-  public get genres(): IGenre[]
-  {
-    return this._genres;
-  }
-
-  public set genres(value: IGenre[])
-  {
-    this._genres = value;
-  }
-
-  public get artists(): IArtist[]
-  {
-    return this._artists;
+    this.genres = genres.slice();
+    this.artists = artists.slice();
   }
 }

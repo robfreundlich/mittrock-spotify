@@ -54,31 +54,6 @@ export class DataStore implements IdentifiedObject
     return this.getFavorites().length;
   }
 
-  public clear(): void
-  {
-    this._tracks = [];
-
-    this._albums = [];
-
-    this._artists = [];
-
-    this._playlists = [];
-
-    this._genres = [];
-
-    this._titles = [];
-
-    this._explicits = [];
-
-    this._lengths = [];
-
-    this._popularities = [];
-
-    this._locals = [];
-
-    this._titlesByName = new Map();
-  }
-
   public get numAlbumTracks(): number
   {
     return this._tracks.filter((track) => track.source === "album").length;
@@ -149,6 +124,36 @@ export class DataStore implements IdentifiedObject
     this.addToStore(track, track.album, track.playlist, track.artists, track.genres, track.explicit, track.length, track.popularity, track.local);
   }
 
+  public clear(): void
+  {
+    this._tracks = [];
+
+    this._albums = [];
+
+    this._artists = [];
+
+    this._playlists = [];
+
+    this._genres = [];
+
+    this._titles = [];
+
+    this._explicits = [];
+
+    this._lengths = [];
+
+    this._popularities = [];
+
+    this._locals = [];
+
+    this._titlesByName = new Map();
+  }
+
+  public getFavorites(): ITrack[]
+  {
+    return this._tracks.filter((track) => track.source === "favorite");
+  }
+
   private addToStore(track: ITrack,
                      album: IAlbum | undefined,
                      playlist: IPlaylist | undefined,
@@ -205,10 +210,5 @@ export class DataStore implements IdentifiedObject
     {
       title.addTrack(track);
     }
-  }
-
-  public getFavorites(): ITrack[]
-  {
-    return this._tracks.filter((track) => track.source === "favorite");
   }
 }

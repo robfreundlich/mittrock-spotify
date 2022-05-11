@@ -30,21 +30,21 @@ export class Playlist implements IPlaylist
 {
   public readonly sourceType: TrackSource = "playlist";
 
-  private _collaborative: boolean;
+  public collaborative: boolean;
 
-  private _description: string;
+  public description: string;
 
-  private _id: string;
+  public id: string;
 
-  private _name: string;
+  public name: string;
 
-  private _owner: string;
+  public owner: string;
 
-  private _visibility: Visibility;
+  public visibility: Visibility;
 
-  private _snapshot_id: string;
+  public snapshot_id: string;
 
-  private _tracks: ITrack[];
+  public tracks: ITrack[];
 
   constructor(id: string,
               name: string,
@@ -55,93 +55,13 @@ export class Playlist implements IPlaylist
               snapshot_id: string,
               tracks: ITrack[])
   {
-    this._collaborative = collaborative;
-    this._description = description;
-    this._id = id;
-    this._name = name;
-    this._owner = owner;
-    this._visibility = visibility;
-    this._snapshot_id = snapshot_id;
-    this._tracks = tracks;
-  }
-
-  public get visibility(): Visibility
-  {
-    return this._visibility;
-  }
-
-  public set visibility(value: Visibility)
-  {
-    this._visibility = value;
-  }
-
-  public get collaborative(): boolean
-  {
-    return this._collaborative;
-  }
-
-  public set collaborative(value: boolean)
-  {
-    this._collaborative = value;
-  }
-
-  public get description(): string
-  {
-    return this._description;
-  }
-
-  public set description(value: string)
-  {
-    this._description = value;
-  }
-
-  public get id(): string
-  {
-    return this._id;
-  }
-
-  public set id(value: string)
-  {
-    this._id = value;
-  }
-
-  public get name(): string
-  {
-    return this._name;
-  }
-
-  public set name(value: string)
-  {
-    this._name = value;
-  }
-
-  public get owner(): string
-  {
-    return this._owner;
-  }
-
-  public set owner(value: string)
-  {
-    this._owner = value;
-  }
-
-  public get snapshot_id(): string
-  {
-    return this._snapshot_id;
-  }
-
-  public set snapshot_id(value: string)
-  {
-    this._snapshot_id = value;
-  }
-
-  public get tracks(): ITrack[]
-  {
-    return this._tracks;
-  }
-
-  public set tracks(value: ITrack[])
-  {
-    this._tracks = value;
+    this.collaborative = collaborative;
+    this.description = description;
+    this.id = id;
+    this.name = name;
+    this.owner = owner;
+    this.visibility = visibility;
+    this.snapshot_id = snapshot_id;
+    this.tracks = tracks;
   }
 }

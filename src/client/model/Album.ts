@@ -30,77 +30,42 @@ export class Album implements IAlbum
 {
   public readonly sourceType: TrackSource = "album";
 
-  private _id: string;
+  public readonly id: string;
 
-  private _name: string;
+  public readonly name: string;
 
-  private _type: AlbumType;
+  public readonly type: AlbumType;
 
-  private _tracks: ITrack[];
+  public readonly tracks: ITrack[];
 
-  private _releaseDate: string;  // Format: "YYYY", "YYYY-MM", "YYYY-MM-DD"
+  public readonly releaseDate: string;  // Format: "YYYY", "YYYY-MM", "YYYY-MM-DD"
 
-  private _releaseDatePrecision: ReleaseDatePrecision;
+  public readonly releaseDatePrecision: ReleaseDatePrecision;
 
-  private _artists: IArtist[];
+  public readonly artists: IArtist[];
 
   constructor(id: string, name: string, type: AlbumType, releaseDate: string, releaseDatePrecision: ReleaseDatePrecision, artists: IArtist[], tracks?: ITrack[])
   {
-    this._id = id;
-    this._name = name;
-    this._type = type;
-    this._releaseDate = releaseDate;
-    this._releaseDatePrecision = releaseDatePrecision;
-    this._artists = artists;
+    this.id = id;
+    this.name = name;
+    this.type = type;
+    this.releaseDate = releaseDate;
+    this.releaseDatePrecision = releaseDatePrecision;
+    this.artists = artists;
 
     if (tracks)
     {
-      this._tracks = tracks;
+      this.tracks = tracks;
     }
     else
     {
-      this._tracks = [];
+      this.tracks = [];
     }
-  }
-
-  public get id(): string
-  {
-    return this._id;
-  }
-
-  public get name(): string
-  {
-    return this._name;
-  }
-
-  public get type(): AlbumType
-  {
-    return this._type;
-  }
-
-  public get tracks(): ITrack[]
-  {
-    return this._tracks;
-  }
-
-  public get releaseDate(): string
-  {
-    return this._releaseDate;
-  }
-
-  public get releaseDatePrecision(): ReleaseDatePrecision
-  {
-    return this._releaseDatePrecision;
-  }
-
-  public get artists(): IArtist[]
-  {
-    return this._artists;
   }
 
   public addTrack(track: ITrack): void
   {
-    ArrayUtils.pushIfMissing(this._tracks, track, areIdentifiedObjectsSame);
+    ArrayUtils.pushIfMissing(this.tracks, track, areIdentifiedObjectsSame);
   }
 
 }

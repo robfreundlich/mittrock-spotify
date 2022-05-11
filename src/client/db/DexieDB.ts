@@ -13,7 +13,7 @@ import Dexie, {Table} from "dexie";
 
 export class DexieDB extends Dexie
 {
-  public static readonly CURRENT_VERSION = 1;
+  public static readonly CURRENT_VERSION = 11;
 
   private static instance: DexieDB;
 
@@ -39,17 +39,19 @@ export class DexieDB extends Dexie
 
   public readonly playlists!: Table<IPlaylist>;
 
+  public readonly testing!: Table<{ id: string, name: string }>;
+
   constructor()
   {
     super("mittrock-spotify");
 
-    this.version(DexieDB.CURRENT_VERSION).stores({
-                                                   albums: "id, name, type",
-                                                   artists: "id",
-                                                   genres: "id++",
-                                                   titles: "id, name",
-                                                   tracks: "id, name",
-                                                   playlists: "id, name",
-                                                 });
+    this.version(1).stores({
+                             albums: "id, name, type",
+                             artists: "id",
+                             genres: "id++",
+                             titles: "id, name",
+                             tracks: "id, name",
+                             playlists: "id, name",
+                           });
   }
 }

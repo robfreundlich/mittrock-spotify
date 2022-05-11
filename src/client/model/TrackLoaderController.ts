@@ -45,8 +45,6 @@ type TrackLoaderStatusNoTime = Omit<TrackLoaderStatus, "currentTime">;
 
 export class TrackLoaderController
 {
-  private _onComplete: (status: TrackLoaderStatus) => void;
-
   private static apiDelay(condition: boolean): Promise<void>
   {
     return TimeUtils.delay(100, condition);
@@ -73,6 +71,8 @@ export class TrackLoaderController
 
   public onStatusChanged: (status: TrackLoaderStatus) => void;
 
+  private _onComplete: (status: TrackLoaderStatus) => void;
+
   private readonly _dataStore: DataStore;
 
   private loaderItemCount: number = 0;
@@ -86,6 +86,8 @@ export class TrackLoaderController
   private _status: TrackLoaderStatus;
 
   private _dbLoader: DataStoreDexieLoader | undefined;
+
+  private _attemptedDBLoad: boolean = false;
 
   constructor(dataStore: DataStore, onComplete: (status: TrackLoaderStatus) => void)
   {
@@ -124,6 +126,17 @@ export class TrackLoaderController
 
   public setStatus(value: TrackLoaderStatusNoTime): void
   {
+    if (!this._attemptedDBLoad && (value.status === "error"))
+    {
+      this.setStatus({status: "saving_to_database"});
+
+      this.saveToDatabase().then(() => {
+        this.setStatus(value);
+      });
+
+      return;
+    }
+
     const fullStatus = {...value, currentTime: new Date()};
     this._status = fullStatus;
     this.onStatusChanged(this._status);
@@ -173,13 +186,14 @@ export class TrackLoaderController
     }
   };
 
-  private saveToDatabase(): void
+  private async saveToDatabase(): Promise<void>
   {
     if (this._dbLoader)
     {
       return;
     }
 
+    this._attemptedDBLoad = true;
     this._dbLoader = new DataStoreDexieLoader(this._dataStore);
     this._dbLoader.onError = (err: Error) => {
       this.setStatus({
@@ -188,23 +202,23 @@ export class TrackLoaderController
                      });
     };
 
-    this._dbLoader.load().then(() => {
+    await this._dbLoader.load();
 
-      if (this._dbLoader!.loadFailures.length > 0)
-      {
-        this.setStatus({
-                         status: "error",
-                         error: this._dbLoader!.loadFailures.map((failure: DexieStoreLoadFailure) => {
-                           return `${failure.valueType}: ${failure.value.name} - ${failure.failure}`;
-                         }).join("\n")
-                       });
-      }
-      else
-      {
-        this.setStatus({status: "loaded"});
-      }
-      this._dbLoader = undefined;
-    });
+    if (this._dbLoader!.loadFailures.length > 0)
+    {
+      this.setStatus({
+                       status: "error",
+                       error: this._dbLoader!.loadFailures.map((failure: DexieStoreLoadFailure) => {
+                         return `${failure.valueType}: ${failure.value.name} - ${failure.failure}`;
+                       }).join("\n")
+                     });
+    }
+    else
+    {
+      this.setStatus({status: "loaded"});
+    }
+
+    this._dbLoader = undefined;
   }
 
   private clearData(): void

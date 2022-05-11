@@ -8,7 +8,7 @@ import {ITrack} from "app/client/model/Track";
 import {TrackLoaderController, TrackLoaderStatus} from "app/client/model/TrackLoaderController";
 import {getCookie} from "typescript-cookie";
 
-export type AppState = "authorizing" | "authorized" | "no_data" | "loaded";
+export type AppState = "authorizing" | "authorized" | "no_data" | "loading" | "loaded";
 
 export class AppController
 {
@@ -82,6 +82,8 @@ export class AppController
     }
     else
     {
+      this.setState("loading");
+
       await DexieDB.db.tracks.each((track: ITrack) => {
         this.dataStore.addTrack(track);
       });

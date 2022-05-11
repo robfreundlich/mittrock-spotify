@@ -18,39 +18,19 @@ export interface IArtist extends IdentifiedObject
 
 export class Artist implements IArtist
 {
-  private _id: string;
+  public readonly id: string;
 
-  private _name: string;
+  public readonly name: string;
 
-  private _genres: IGenre[];
+  public readonly genres: IGenre[];
 
-  private _popularity: number; // 0 to 100
+  public readonly popularity: number; // 0 to 100
 
   constructor(id: string, name: string, popularity: number, genres: IGenre[])
   {
-    this._id = id;
-    this._name = name;
-    this._genres = genres;
-    this._popularity = popularity;
-  }
-
-  public get id(): string
-  {
-    return this._id;
-  }
-
-  public get name(): string
-  {
-    return this._name;
-  }
-
-  public get genres(): IGenre[]
-  {
-    return this._genres;
-  }
-
-  public get popularity(): number
-  {
-    return this._popularity;
+    this.id = id;
+    this.name = name;
+    this.genres = genres;
+    this.popularity = popularity;
   }
 }
