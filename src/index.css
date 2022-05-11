@@ -3,6 +3,8 @@
  */
 
 @import url("client/app/App.css");
+@import url("client/browser/Browser.css");
+@import url("client/libs/Popup.css");
 @import url("client/model/TrackLoader.css");
 
 :root {
@@ -18,4 +20,21 @@
   --default-border-width: 1.5px;
   --default-border-style: solid;
   --default-box-shadow: 3px 3px 5px var(--color-spotify-green-darker);
+  --default-border: var(--default-border-width) var(--default-border-style) var(--default-border-color);
+
+  --default-gap: 0.25em;
+}
+
+html {
+  height: 100%;
+}
+
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+#app-root {
+  height: 100%;
 }

@@ -3,6 +3,7 @@
  */
 
 import {DataStoreDexieLoader, DexieStoreLoadFailure} from "app/client/db/DataStoreDexieLoader";
+import {DexieDB} from "app/client/db/DexieDB";
 import {IAlbum} from "app/client/model/Album";
 import {IArtist} from "app/client/model/Artist";
 import {DataStore} from "app/client/model/DataStore";
@@ -24,6 +25,7 @@ import {
 
 export type TrackLoaderStatus = {
   status: "unloaded"
+      | "clearing_data"
       | "loading_favorites"
       | "loading_albums"
       | "loading_playlists"
@@ -43,6 +45,8 @@ type TrackLoaderStatusNoTime = Omit<TrackLoaderStatus, "currentTime">;
 
 export class TrackLoaderController
 {
+  private _onComplete: (status: TrackLoaderStatus) => void;
+
   private static apiDelay(condition: boolean): Promise<void>
   {
     return TimeUtils.delay(100, condition);
@@ -83,9 +87,10 @@ export class TrackLoaderController
 
   private _dbLoader: DataStoreDexieLoader | undefined;
 
-  constructor(dataStore: DataStore)
+  constructor(dataStore: DataStore, onComplete: (status: TrackLoaderStatus) => void)
   {
     this._dataStore = dataStore;
+    this._onComplete = onComplete;
   }
 
   public get dataStore(): DataStore
@@ -119,18 +124,29 @@ export class TrackLoaderController
 
   public setStatus(value: TrackLoaderStatusNoTime): void
   {
-    this._status = {...value, currentTime: new Date()};
+    const fullStatus = {...value, currentTime: new Date()};
+    this._status = fullStatus;
     this.onStatusChanged(this._status);
+
+    if ((value.status === "loaded") || (value.status === "stopped") || (value.status === "error"))
+    {
+      this._onComplete(fullStatus);
+    }
+
   }
 
   public startLoading(): void
   {
     this.startTime = new Date().getTime();
-    this.setStatus({status: "loading_favorites", offset: 0, subprogress: 0});
+    this.setStatus({status: "clearing_data"});
   };
 
   private loadNext(): void
   {
+    if (this.status.status === "clearing_data")
+    {
+      this.clearData();
+    }
     if (this.status.status === "loading_favorites")
     {
       this.loadFavorites().then(() => {/**/
@@ -188,6 +204,24 @@ export class TrackLoaderController
         this.setStatus({status: "loaded"});
       }
       this._dbLoader = undefined;
+    });
+  }
+
+  private clearData(): void
+  {
+    DexieDB.db.albums.clear().then(() => {
+      DexieDB.db.artists.clear().then(() => {
+        DexieDB.db.genres.clear().then(() => {
+          DexieDB.db.titles.clear().then(() => {
+            DexieDB.db.tracks.clear().then(() => {
+              DexieDB.db.playlists.clear().then(() => {
+                this._dataStore.clear();
+                this.setStatus({status: "loading_favorites", offset: 0, subprogress: 0});
+              });
+            });
+          });
+        });
+      });
     });
   }
 

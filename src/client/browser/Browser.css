@@ -1,0 +1,30 @@
+/*
+ * Copyright (c) 2022. Rob Freundlich <rob@freundlichs.com> - All rights reserved.
+ */
+
+:root {
+
+}
+
+.browser h1 {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.browser .tracks {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.browser .tracks .track {
+  flex-grow: 0;
+  flex-shrink: 0;
+  width: 8em;
+  height: 8em;
+  border: var(--default-border);
+  border-radius: 1em;
+  box-shadow: var(--default-box-shadow);
+  padding: 1em;
+  margin: var(--default-gap);
+}

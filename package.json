@@ -44,6 +44,7 @@
     "dexie": "^3.2.1",
     "npmvet": "^0.1.5",
     "react-spotify-auth": "^1.4.3",
+    "reactjs-popup": "^2.0.5",
     "spotify-web-api-ts": "^1.4.5",
     "typescript-cookie": "^1.0.3"
   }

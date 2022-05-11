@@ -119,7 +119,9 @@ export class DataStoreDexieLoader
                                                                             .transaction("rw",
                                                                                          DexieDB.db.genres,
                                                                                          async () => {
-                                                                                           DexieDB.db.genres.add(genre);
+                                                                                           DexieDB.db.genres.add({
+                                                                                                                   name: genre.name
+                                                                                                                 });
                                                                                          }).catch(Dexie.DataError, (error) => {
           this._loadFailures.push({
                                     valueType: "genre",
@@ -153,19 +155,7 @@ export class DataStoreDexieLoader
     //                                                                         .transaction("rw",
     //                                                                                      DexieDB.db.titles,
     //                                                                                      async () => {
-    //                                                                                        DexieDB.db.titles.add({
-    //                                                                                                                id: title.id,
-    //                                                                                                                artists: title.artists,
-    //                                                                                                                genres: title.genres,
-    //                                                                                                                tracks: title.tracks,
-    //                                                                                                                lengths: title.lengths,
-    //                                                                                                                locals: title.locals,
-    //                                                                                                                explicits: title.explicits,
-    //                                                                                                                playlists: title.playlists,
-    //                                                                                                                popularities: title.popularities,
-    //                                                                                                                albums: title.albums,
-    //                                                                                                                name: title.name,
-    //                                                                                                              });
+    //                                                                                        DexieDB.db.titles.add(title);
     //                                                                                      }).catch(Dexie.DataError, (error) => {
     //       this._loadFailures.push({
     //                                 valueType: "title",
@@ -202,21 +192,7 @@ export class DataStoreDexieLoader
     //                                                                         .transaction("rw",
     //                                                                                      DexieDB.db.tracks,
     //                                                                                      async () => {
-    //                                                                                        DexieDB.db.tracks.add({
-    //                                                                                                                id: track.id,
-    //                                                                                                                artists: track.artists,
-    //                                                                                                                genres: track.genres,
-    //                                                                                                                name: track.name,
-    //                                                                                                                album: track.album,
-    //                                                                                                                discNumber: track.discNumber,
-    //                                                                                                                explicit: track.explicit,
-    //                                                                                                                length: track.length,
-    //                                                                                                                local: track.local,
-    //                                                                                                                playlist: track.playlist,
-    //                                                                                                                popularity: 0,
-    //                                                                                                                source: track.source,
-    //                                                                                                                trackNumber: 0
-    //                                                                                                              });
+    //                                                                                        DexieDB.db.tracks.add(track);
     //                                                                                      }).catch(Dexie.DataError, (error) => {
     //       this._loadFailures.push({
     //                                 valueType: "track",

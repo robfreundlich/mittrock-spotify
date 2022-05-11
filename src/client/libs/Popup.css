@@ -1,0 +1,10 @@
+/*
+ * Copyright (c) 2022. Rob Freundlich <rob@freundlichs.com> - All rights reserved.
+ */
+
+.popup-content {
+  background-color: white;
+  border: var(--default-border);
+  border-radius: var(--default-border-radius);
+  box-shadow: var(--default-box-shadow);
+}
