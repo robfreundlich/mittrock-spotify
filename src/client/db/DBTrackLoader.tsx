@@ -2,7 +2,7 @@
  * Copyright (c) 2022. Rob Freundlich <rob@freundlichs.com> - All rights reserved.
  */
 
-import {DexieDB} from "app/client/db/DexieDB";
+import {AppServices} from "app/client/app/AppServices";
 import {IAlbum} from "app/client/model/Album";
 import {IArtist} from "app/client/model/Artist";
 import {ITrack} from "app/client/model/Track";
@@ -56,7 +56,7 @@ export const DBTrackLoader = (props: DBTrackLoaderProps) => {
         };
 
         setTracks(index);
-        DexieDB.db.tracks.add(dbTrack);
+        AppServices.db.tracks.add(dbTrack);
       });
 
       setStatus("loaded");

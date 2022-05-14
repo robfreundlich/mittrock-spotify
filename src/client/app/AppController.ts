@@ -2,7 +2,7 @@
  * Copyright (c) 2022. Rob Freundlich <rob@freundlichs.com> - All rights reserved.
  */
 
-import {DexieDB} from "app/client/db/DexieDB";
+import {AppServices} from "app/client/app/AppServices";
 import {DataStore} from "app/client/model/DataStore";
 import {ITrack} from "app/client/model/Track";
 import {TrackLoaderController, TrackLoaderStatus} from "app/client/model/TrackLoaderController";
@@ -26,6 +26,7 @@ export class AppController
 
   constructor(onStateChanged: (state: AppState) => void)
   {
+    AppServices.initialize();
     this._onStateChanged = onStateChanged;
 
     this.setState("authorizing");
@@ -74,7 +75,7 @@ export class AppController
                                                               this.setState("loaded");
                                                             });
 
-    const numTracks = await DexieDB.db.tracks?.count();
+    const numTracks = await AppServices.db.tracks?.count();
 
     if (numTracks === 0)
     {
@@ -84,7 +85,7 @@ export class AppController
     {
       this.setState("loading");
 
-      await DexieDB.db.tracks.each((track: ITrack) => {
+      await AppServices.db.tracks.each((track: ITrack) => {
         this.dataStore.addTrack(track);
       });
       this.setState("loaded");

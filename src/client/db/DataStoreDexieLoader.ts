@@ -2,7 +2,7 @@
  * Copyright (c) 2022. Rob Freundlich <rob@freundlichs.com> - All rights reserved.
  */
 
-import {DexieDB} from "app/client/db/DexieDB";
+import {AppServices} from "app/client/app/AppServices";
 import {IAlbum} from "app/client/model/Album";
 import {IArtist} from "app/client/model/Artist";
 import {DataStore} from "app/client/model/DataStore";
@@ -60,35 +60,35 @@ export class DataStoreDexieLoader
 
   private async clear(): Promise<void>
   {
-    await DexieDB.db.transaction("rw",
-                                 DexieDB.db.albums,
-                                 DexieDB.db.artists,
-                                 DexieDB.db.genres,
-                                 DexieDB.db.titles,
-                                 DexieDB.db.tracks,
-                                 async () => {
-                                   DexieDB.db.albums.clear();
-                                   DexieDB.db.artists.clear();
-                                   DexieDB.db.genres.clear();
-                                   DexieDB.db.titles.clear();
-                                   DexieDB.db.tracks.clear();
-                                 });
-    await DexieDB.db.transaction("rw",
-                                 DexieDB.db.playlists,
-                                 async () => {
-                                   DexieDB.db.playlists.clear();
-                                 });
+    await AppServices.db.transaction("rw",
+                                     AppServices.db.albums,
+                                     AppServices.db.artists,
+                                     AppServices.db.genres,
+                                     AppServices.db.titles,
+                                     AppServices.db.tracks,
+                                     async () => {
+                                       AppServices.db.albums.clear();
+                                       AppServices.db.artists.clear();
+                                       AppServices.db.genres.clear();
+                                       AppServices.db.titles.clear();
+                                       AppServices.db.tracks.clear();
+                                     });
+    await AppServices.db.transaction("rw",
+                                     AppServices.db.playlists,
+                                     async () => {
+                                       AppServices.db.playlists.clear();
+                                     });
 
   }
 
   private loadAlbums(): Promise<void[]>
   {
-    return Promise.all(this._dataStore.albums.map((album: IAlbum) => DexieDB.db
-                                                                            .transaction("rw",
-                                                                                         DexieDB.db.albums,
-                                                                                         async () => {
-                                                                                           DexieDB.db.albums.add(album);
-                                                                                         }).catch(Dexie.DataError, (error) => {
+    return Promise.all(this._dataStore.albums.map((album: IAlbum) => AppServices.db
+                                                                                .transaction("rw",
+                                                                                             AppServices.db.albums,
+                                                                                             async () => {
+                                                                                               AppServices.db.albums.add(album);
+                                                                                             }).catch(Dexie.DataError, (error) => {
           this._loadFailures.push({
                                     valueType: "album",
                                     value: album,
@@ -99,12 +99,12 @@ export class DataStoreDexieLoader
 
   private loadArtists(): Promise<void[]>
   {
-    return Promise.all(this._dataStore.artists.map((artist: IArtist) => DexieDB.db
-                                                                               .transaction("rw",
-                                                                                            DexieDB.db.artists,
-                                                                                            async () => {
-                                                                                              DexieDB.db.artists.add(artist);
-                                                                                            }).catch(Dexie.DataError, (error) => {
+    return Promise.all(this._dataStore.artists.map((artist: IArtist) => AppServices.db
+                                                                                   .transaction("rw",
+                                                                                                AppServices.db.artists,
+                                                                                                async () => {
+                                                                                                  AppServices.db.artists.add(artist);
+                                                                                                }).catch(Dexie.DataError, (error) => {
           this._loadFailures.push({
                                     valueType: "artist",
                                     value: artist,
@@ -115,12 +115,12 @@ export class DataStoreDexieLoader
 
   private loadGenres(): Promise<void[]>
   {
-    return Promise.all(this._dataStore.genres.map((genre: IGenre) => DexieDB.db
-                                                                            .transaction("rw",
-                                                                                         DexieDB.db.genres,
-                                                                                         async () => {
-                                                                                           DexieDB.db.genres.add(genre);
-                                                                                         }).catch(Dexie.DataError, (error) => {
+    return Promise.all(this._dataStore.genres.map((genre: IGenre) => AppServices.db
+                                                                                .transaction("rw",
+                                                                                             AppServices.db.genres,
+                                                                                             async () => {
+                                                                                               AppServices.db.genres.add(genre);
+                                                                                             }).catch(Dexie.DataError, (error) => {
           this._loadFailures.push({
                                     valueType: "genre",
                                     value: genre,
@@ -131,29 +131,29 @@ export class DataStoreDexieLoader
 
   private async loadTitles(): Promise<void>
   {
-    return DexieDB.db.transaction("rw",
-                                  DexieDB.db.titles,
-                                  async () => {
-                                    DexieDB.db.titles.bulkAdd(this._dataStore.titles.map((title: ITitle) => ({
-                                      id: title.id,
-                                      artists: title.artists,
-                                      genres: title.genres,
-                                      tracks: title.tracks,
-                                      lengths: title.lengths,
-                                      locals: title.locals,
-                                      explicits: title.explicits,
-                                      playlists: title.playlists,
-                                      popularities: title.popularities,
-                                      albums: title.albums,
-                                      name: title.name,
-                                    })));
-                                  });
+    return AppServices.db.transaction("rw",
+                                      AppServices.db.titles,
+                                      async () => {
+                                        AppServices.db.titles.bulkAdd(this._dataStore.titles.map((title: ITitle) => ({
+                                          id: title.id,
+                                          artists: title.artists,
+                                          genres: title.genres,
+                                          tracks: title.tracks,
+                                          lengths: title.lengths,
+                                          locals: title.locals,
+                                          explicits: title.explicits,
+                                          playlists: title.playlists,
+                                          popularities: title.popularities,
+                                          albums: title.albums,
+                                          name: title.name,
+                                        })));
+                                      });
 
-    // return Promise.all(this._dataStore.titles.map((title: ITitle) => DexieDB.db
+    // return Promise.all(this._dataStore.titles.map((title: ITitle) => AppServices.db
     //                                                                         .transaction("rw",
-    //                                                                                      DexieDB.db.titles,
+    //                                                                                      AppServices.db.titles,
     //                                                                                      async () => {
-    //                                                                                        DexieDB.db.titles.add(title);
+    //                                                                                        AppServices.db.titles.add(title);
     //                                                                                      }).catch(Dexie.DataError, (error) => {
     //       this._loadFailures.push({
     //                                 valueType: "title",
@@ -165,32 +165,32 @@ export class DataStoreDexieLoader
 
   private async loadTracks(): Promise<void>
   {
-    return DexieDB.db.transaction("rw",
-                                  DexieDB.db.tracks,
-                                  async () => {
-                                    DexieDB.db.tracks.bulkAdd(this._dataStore.tracks.map((track: ITrack) => ({
-                                      id: track.id,
-                                      artists: track.artists,
-                                      genres: track.genres,
-                                      name: track.name,
-                                      album: track.album,
-                                      discNumber: track.discNumber,
-                                      explicit: track.explicit,
-                                      length: track.length,
-                                      local: track.local,
-                                      playlist: track.playlist,
-                                      popularity: 0,
-                                      source: track.source,
-                                      trackNumber: 0
-                                    })));
-                                  });
+    return AppServices.db.transaction("rw",
+                                      AppServices.db.tracks,
+                                      async () => {
+                                        AppServices.db.tracks.bulkAdd(this._dataStore.tracks.map((track: ITrack) => ({
+                                          id: track.id,
+                                          artists: track.artists,
+                                          genres: track.genres,
+                                          name: track.name,
+                                          album: track.album,
+                                          discNumber: track.discNumber,
+                                          explicit: track.explicit,
+                                          length: track.length,
+                                          local: track.local,
+                                          playlist: track.playlist,
+                                          popularity: 0,
+                                          source: track.source,
+                                          trackNumber: 0
+                                        })));
+                                      });
 
 
-    // return Promise.all(this._dataStore.tracks.map((track: ITrack) => DexieDB.db
+    // return Promise.all(this._dataStore.tracks.map((track: ITrack) => AppServices.db
     //                                                                         .transaction("rw",
-    //                                                                                      DexieDB.db.tracks,
+    //                                                                                      AppServices.db.tracks,
     //                                                                                      async () => {
-    //                                                                                        DexieDB.db.tracks.add(track);
+    //                                                                                        AppServices.db.tracks.add(track);
     //                                                                                      }).catch(Dexie.DataError, (error) => {
     //       this._loadFailures.push({
     //                                 valueType: "track",
@@ -202,12 +202,12 @@ export class DataStoreDexieLoader
 
   private async loadPlaylists(): Promise<void[]>
   {
-    return Promise.all(this._dataStore.playlists.map((playlist: IPlaylist) => DexieDB.db
-                                                                                     .transaction("rw",
-                                                                                                  DexieDB.db.playlists,
-                                                                                                  async () => {
-                                                                                                    DexieDB.db.playlists.add(playlist);
-                                                                                                  }).catch(Dexie.DataError, (error) => {
+    return Promise.all(this._dataStore.playlists.map((playlist: IPlaylist) => AppServices.db
+                                                                                         .transaction("rw",
+                                                                                                      AppServices.db.playlists,
+                                                                                                      async () => {
+                                                                                                        AppServices.db.playlists.add(playlist);
+                                                                                                      }).catch(Dexie.DataError, (error) => {
           this._loadFailures.push({
                                     valueType: "playlist",
                                     value: playlist,

@@ -2,8 +2,8 @@
  * Copyright (c) 2022. Rob Freundlich <rob@freundlichs.com> - All rights reserved.
  */
 
+import {AppServices} from "app/client/app/AppServices";
 import {DataStoreDexieLoader, DexieStoreLoadFailure} from "app/client/db/DataStoreDexieLoader";
-import {DexieDB} from "app/client/db/DexieDB";
 import {IAlbum} from "app/client/model/Album";
 import {IArtist} from "app/client/model/Artist";
 import {DataStore} from "app/client/model/DataStore";
@@ -223,12 +223,12 @@ export class TrackLoaderController
 
   private clearData(): void
   {
-    DexieDB.db.albums.clear().then(() => {
-      DexieDB.db.artists.clear().then(() => {
-        DexieDB.db.genres.clear().then(() => {
-          DexieDB.db.titles.clear().then(() => {
-            DexieDB.db.tracks.clear().then(() => {
-              DexieDB.db.playlists.clear().then(() => {
+    AppServices.db.albums.clear().then(() => {
+      AppServices.db.artists.clear().then(() => {
+        AppServices.db.genres.clear().then(() => {
+          AppServices.db.titles.clear().then(() => {
+            AppServices.db.tracks.clear().then(() => {
+              AppServices.db.playlists.clear().then(() => {
                 this._dataStore.clear();
                 this.setStatus({status: "loading_favorites", offset: 0, subprogress: 0});
               });
