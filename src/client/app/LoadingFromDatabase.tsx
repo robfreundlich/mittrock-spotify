@@ -24,7 +24,7 @@ export interface LoadingState
   status: "uninitialized" | "no_data" | "loading" | "loaded";
 }
 
-export class Loading extends React.Component<LoadingProps, LoadingState>
+export class LoadingFromDatabase extends React.Component<LoadingProps, LoadingState>
 {
   private _trackLoaderController: TrackLoaderController;
 

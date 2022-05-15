@@ -5,7 +5,7 @@
 import {hashLocationPlugin, servicesPlugin, UIRouterReact} from '@uirouter/react';
 import {AppServices} from "app/client/app/AppServices";
 
-import appStates from './client/app/states';
+import appStates, {loadingFromDatabaseState} from './client/app/states';
 
 // Create a new instance of the Router
 export const router = new UIRouterReact();
@@ -33,4 +33,4 @@ appStates.forEach(state => {
 });
 
 // Global config for router
-router.urlService.rules.initial({state: 'loading'});
+router.urlService.rules.initial({state: loadingFromDatabaseState.name});
