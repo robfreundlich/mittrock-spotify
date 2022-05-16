@@ -4,13 +4,12 @@
 
 import {UIRouterReact} from "@uirouter/react";
 import {AppServices} from "app/client/app/AppServices";
+import {browserState, loadingDatabaseState} from "app/client/app/states";
 import {DataStore} from "app/client/model/DataStore";
 import {ITrack} from "app/client/model/Track";
-import {TrackLoader} from "app/client/model/TrackLoader";
-import {TrackLoaderController, TrackLoaderStatus} from "app/client/model/TrackLoaderController";
 import React from "react";
 
-export interface LoadingProps
+export interface LoadingFromDatabaseProps
 {
   authToken: string | undefined;
 
@@ -24,18 +23,11 @@ export interface LoadingState
   status: "uninitialized" | "no_data" | "loading" | "loaded";
 }
 
-export class LoadingFromDatabase extends React.Component<LoadingProps, LoadingState>
+export class LoadingFromDatabase extends React.Component<LoadingFromDatabaseProps, LoadingState>
 {
-  private _trackLoaderController: TrackLoaderController;
-
-  constructor(props: Readonly<LoadingProps> | LoadingProps)
+  constructor(props: Readonly<LoadingFromDatabaseProps> | LoadingFromDatabaseProps)
   {
     super(props);
-
-    this._trackLoaderController = new TrackLoaderController(this.props.dataStore,
-                                                            (status: TrackLoaderStatus) => {
-                                                              this.setState({status: "loaded"});
-                                                            });
 
     this.state = {status: "uninitialized"};
   }
@@ -48,7 +40,7 @@ export class LoadingFromDatabase extends React.Component<LoadingProps, LoadingSt
         return <div>"Figuring out what to do ..."</div>;
 
       case "no_data":
-        return <TrackLoader authToken={this.props.authToken} controller={this._trackLoaderController}/>;
+        return <div>Going to data loader page ...</div>;
 
       case "loading":
         return <div>Loading track information ...</div>;
@@ -77,11 +69,25 @@ export class LoadingFromDatabase extends React.Component<LoadingProps, LoadingSt
     }
   }
 
-  public override componentDidUpdate(prevProps: Readonly<LoadingProps>, prevState: Readonly<LoadingState>, snapshot?: any)
+  public override componentDidUpdate(prevProps: Readonly<LoadingFromDatabaseProps>, prevState: Readonly<LoadingState>, snapshot?: any)
   {
-    if (this.state.status === "loaded")
+    if (this.state.status === "no_data")
     {
-      this.props.router.stateService.go("browser");
+      this.props.router.stateService.go(loadingDatabaseState.name,
+                                        {},
+                                        {
+                                          location: true,
+                                          inherit: true
+                                        });
+    }
+    else if (this.state.status === "loaded")
+    {
+      this.props.router.stateService.go(browserState.name,
+                                        {},
+                                        {
+                                          location: true,
+                                          inherit: true
+                                        });
     }
   }
 }

@@ -3,6 +3,7 @@
  */
 
 import {AppServices} from "app/client/app/AppServices";
+import {LoadingDatabaseStatus} from "app/client/app/LoadingDatabase";
 import {DataStoreDexieLoader, DexieStoreLoadFailure} from "app/client/db/DataStoreDexieLoader";
 import {IAlbum} from "app/client/model/Album";
 import {IArtist} from "app/client/model/Artist";
@@ -23,17 +24,9 @@ import {
   GetSavedTracksResponse
 } from "spotify-web-api-ts/types/types/SpotifyResponses";
 
+
 export type TrackLoaderStatus = {
-  status: "unloaded"
-      | "clearing_data"
-      | "loading_favorites"
-      | "loading_albums"
-      | "loading_playlists"
-      | "loading_playlist_tracks"
-      | "loaded"
-      | "saving_to_database"
-      | "error"
-      | "stopped";
+  status: LoadingDatabaseStatus;
   offset?: number;
   subprogress?: number;
   error?: string;

@@ -4,7 +4,8 @@
 
 import {hashLocationPlugin, servicesPlugin, UIRouterReact} from '@uirouter/react';
 import {AppServices} from "app/client/app/AppServices";
-
+import {UseDatabaseTracksHook} from "app/client/app/UseDatabaseHook";
+import {UseDatastoreTracksHook} from "app/client/app/UseDatastoreTracksHook";
 import appStates, {loadingFromDatabaseState} from './client/app/states';
 
 // Create a new instance of the Router
@@ -34,3 +35,13 @@ appStates.forEach(state => {
 
 // Global config for router
 router.urlService.rules.initial({state: loadingFromDatabaseState.name});
+
+// Register the "requires Database" hook
+router.transitionService.onBefore(UseDatabaseTracksHook.criteria,
+                                  UseDatabaseTracksHook.useDatabaseTracks,
+                                  {priority: 20});
+
+// Register the "requires Datastore" hook
+router.transitionService.onBefore(UseDatastoreTracksHook.criteria,
+                                  UseDatastoreTracksHook.useDatastoreTracks,
+                                  {priority: 10});

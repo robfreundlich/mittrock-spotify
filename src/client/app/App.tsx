@@ -2,18 +2,63 @@
  * Copyright (c) 2022. Rob Freundlich <rob@freundlichs.com> - All rights reserved.
  */
 
-import {UIView} from "@uirouter/react";
+import {UIRouter, UIView} from "@uirouter/react";
+import {ClientInfo} from "app/client/app/ClientInfo";
+import {router} from "app/router.config";
 import * as React from "react";
+import {Scopes, SpotifyAuth} from "react-spotify-auth";
+import {getCookie} from "typescript-cookie";
 
-export class App extends React.Component
-{
-  public override render(): React.ReactNode
-  {
-    return <div className="app">
+export var spotifyAuthToken: string | undefined = getCookie("spotifyAuthToken");
+
+export const App = () => {
+  const [token, setToken] = React.useState(getCookie("spotifyAuthToken"));
+
+  const renderApp = () => {
+    spotifyAuthToken = token;
+
+    return <UIRouter router={router}>
       <UIView/>
+    </UIRouter>;
+  };
+
+  const renderAuthRequest = () => {
+    const scopes = [
+      Scopes.playlistReadPrivate,
+      Scopes.userLibraryRead,
+      Scopes.userFollowRead,
+      Scopes.userReadPrivate,
+      Scopes.playlistReadCollaborative,
+    ];
+
+    return <div className="login">
+      <SpotifyAuth redirectUri="http://localhost:8080"
+                   clientID={ClientInfo.CLIENT_ID}
+                   scopes={scopes}
+                   onAccessToken={(token) => setToken(token)}
+      />
     </div>;
-  }
-}
+  };
+
+  return <React.StrictMode>
+    <div className="app">
+      {token && renderApp()}
+      {!token && renderAuthRequest()}
+    </div>
+  </React.StrictMode>;
+
+};
+
+
+// export class App extends React.Component
+// {
+//   public override render(): React.ReactNode
+//   {
+//     return <div className="app">
+//       <UIView/>
+//     </div>;
+//   }
+// }
 
 // export class OldApp extends React.Component
 // {
