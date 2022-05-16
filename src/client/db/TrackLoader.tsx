@@ -2,7 +2,7 @@
  * Copyright (c) 2022. Rob Freundlich <rob@freundlichs.com> - All rights reserved.
  */
 
-import {TrackLoaderController, TrackLoaderStatus} from "app/client/model/TrackLoaderController";
+import {TrackLoaderController, TrackLoaderStatus} from "app/client/db/TrackLoaderController";
 import {TimeUtils} from "app/client/utils/TimeUtils";
 import React from "react";
 
@@ -11,41 +11,24 @@ export interface TrackLoaderProps
   authToken: string | undefined;
 
   controller: TrackLoaderController;
+
+  status: TrackLoaderStatus;
 }
 
-export class TrackLoader extends React.Component<TrackLoaderProps, TrackLoaderStatus>
+export class TrackLoader extends React.Component<TrackLoaderProps>
 {
   constructor(props: Readonly<TrackLoaderProps>)
   {
     super(props);
-
-    this.state = {status: "unloaded", currentTime: new Date()};
-    this.props.controller.onStatusChanged = (status) => {
-      this.setState(status);
-    };
-    this.props.controller.setStatus({status: "unloaded"});
   }
 
   public override render()
   {
-    if (this.state.status === "unloaded")
-    {
-      return <button disabled={this.state.status !== "unloaded"}
-                     onClick={() => this.props.controller.startLoading()}>Click to begin loading</button>;
-    }
-
     return <div className="track-loader">
-
-      <div className="status-bar">
-        <button onClick={() => this.state = {status: "stopped", currentTime: new Date()}}>Stop</button>
-        <div>{this.props.controller.status.status}</div>
-      </div>
-
       <div className="progress">
-
-        {(this.state.status === "error") && <div className="error-container container">
+        {(this.props.status?.status === "error") && <div className="error-container container">
           <div className="error-label label">Error</div>
-          <textarea className="error-content data" value={this.state.error}/>
+          <textarea className="error-content data" value={this.props.status?.error}/>
         </div>}
 
         <div className="favorites-container container item">
@@ -82,7 +65,7 @@ export class TrackLoader extends React.Component<TrackLoaderProps, TrackLoaderSt
           </div>
           <div className="elapsed-time item">
             <div className="label">Elapsed time</div>
-            <div className="data">{TimeUtils.getElapsedTime(this.props.controller.startTime, this.state.currentTime)}</div>
+            <div className="data">{TimeUtils.getElapsedTime(this.props.controller.startTime, this.props.status?.currentTime)}</div>
           </div>
         </div>
       </div>
@@ -109,4 +92,3 @@ export class TrackLoader extends React.Component<TrackLoaderProps, TrackLoaderSt
   }
 
 }
-

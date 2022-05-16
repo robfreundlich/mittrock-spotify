@@ -27,4 +27,5 @@
   box-shadow: var(--default-box-shadow);
   padding: 1em;
   margin: var(--default-gap);
+  overflow: auto;
 }

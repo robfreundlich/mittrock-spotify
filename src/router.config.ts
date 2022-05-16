@@ -6,7 +6,7 @@ import {hashLocationPlugin, servicesPlugin, UIRouterReact} from '@uirouter/react
 import {AppServices} from "app/client/app/AppServices";
 import {UseDatabaseTracksHook} from "app/client/app/UseDatabaseHook";
 import {UseDatastoreTracksHook} from "app/client/app/UseDatastoreTracksHook";
-import appStates, {loadingFromDatabaseState} from './client/app/states';
+import appStates, {browserState, loadingFromDatabaseState} from './client/app/states';
 
 // Create a new instance of the Router
 export const router = new UIRouterReact();
@@ -14,7 +14,7 @@ router.plugin(servicesPlugin);
 router.plugin(hashLocationPlugin);
 
 // Lazy load visualizer...
-import('@uirouter/visualizer').then(module => router.plugin(module.Visualizer));
+// import('@uirouter/visualizer').then(module => router.plugin(module.Visualizer));
 
 AppServices.initialize();
 
@@ -35,6 +35,7 @@ appStates.forEach(state => {
 
 // Global config for router
 router.urlService.rules.initial({state: loadingFromDatabaseState.name});
+router.urlService.rules.otherwise({state: browserState.name});
 
 // Register the "requires Database" hook
 router.transitionService.onBefore(UseDatabaseTracksHook.criteria,

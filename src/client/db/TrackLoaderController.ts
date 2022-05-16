@@ -2,8 +2,9 @@
  * Copyright (c) 2022. Rob Freundlich <rob@freundlichs.com> - All rights reserved.
  */
 
+import {UIRouterReact} from "@uirouter/react";
 import {AppServices} from "app/client/app/AppServices";
-import {LoadingDatabaseStatus} from "app/client/app/LoadingDatabase";
+import {browserState} from "app/client/app/states";
 import {DataStoreDexieLoader, DexieStoreLoadFailure} from "app/client/db/DataStoreDexieLoader";
 import {IAlbum} from "app/client/model/Album";
 import {IArtist} from "app/client/model/Artist";
@@ -25,6 +26,18 @@ import {
 } from "spotify-web-api-ts/types/types/SpotifyResponses";
 
 
+export type LoadingDatabaseStatus =
+    "unloaded"
+    | "clearing_data"
+    | "loading_favorites"
+    | "loading_albums"
+    | "loading_playlists"
+    | "loading_playlist_tracks"
+    | "saving_to_database"
+    | "loaded"
+    | "error"
+    | "stopped";
+
 export type TrackLoaderStatus = {
   status: LoadingDatabaseStatus;
   offset?: number;
@@ -38,6 +51,17 @@ type TrackLoaderStatusNoTime = Omit<TrackLoaderStatus, "currentTime">;
 
 export class TrackLoaderController
 {
+  public static isBrowsable(status: LoadingDatabaseStatus): boolean
+  {
+    return ((status === "loaded") || (status === "stopped") || (status === "error"))
+           && (AppServices.dataStore.tracks.length > 0);
+  }
+
+  public static isRunning(status: LoadingDatabaseStatus): boolean
+  {
+    return ((status !== undefined) && (status !== "unloaded") && (status !== "loaded") && (status !== "error") && (status !== "stopped"));
+  }
+
   private static apiDelay(condition: boolean): Promise<void>
   {
     return TimeUtils.delay(100, condition);
@@ -62,11 +86,11 @@ export class TrackLoaderController
 
   public startTime: number;
 
-  public onStatusChanged: (status: TrackLoaderStatus) => void;
-
-  private _onComplete: (status: TrackLoaderStatus) => void;
+  public _onStatusChanged: (status: TrackLoaderStatus) => void;
 
   private readonly _dataStore: DataStore;
+
+  private readonly _router: UIRouterReact;
 
   private loaderItemCount: number = 0;
 
@@ -82,10 +106,11 @@ export class TrackLoaderController
 
   private _attemptedDBLoad: boolean = false;
 
-  constructor(dataStore: DataStore, onComplete: (status: TrackLoaderStatus) => void)
+  constructor(dataStore: DataStore, router: UIRouterReact, onStatusChanged: (status: TrackLoaderStatus) => void)
   {
     this._dataStore = dataStore;
-    this._onComplete = onComplete;
+    this._router = router;
+    this._onStatusChanged = onStatusChanged;
   }
 
   public get dataStore(): DataStore
@@ -107,6 +132,11 @@ export class TrackLoaderController
         this.spotify = new SpotifyWebApi({accessToken: currentAuthToken});
       }
     }
+  }
+
+  public gotoBrowser(): void
+  {
+    this._router.stateService.go(browserState.name, undefined, {location: true, reload: true});
   }
 
   public handlePossibleStateChange(prevState: Readonly<TrackLoaderStatus> | undefined): void
@@ -132,48 +162,48 @@ export class TrackLoaderController
 
     const fullStatus = {...value, currentTime: new Date()};
     this._status = fullStatus;
-    this.onStatusChanged(this._status);
-
-    if ((value.status === "loaded") || (value.status === "stopped") || (value.status === "error"))
-    {
-      this._onComplete(fullStatus);
-    }
-
+    this._onStatusChanged(this._status);
   }
 
   public startLoading(): void
   {
     this.startTime = new Date().getTime();
     this.setStatus({status: "clearing_data"});
+    // window.open("http://localhost:8080/new_window", "_blank", "popup");
   };
+
+  public stop()
+  {
+    this.setStatus({status: "stopped"});
+  }
 
   private loadNext(): void
   {
-    if (this.status.status === "clearing_data")
+    if (this.status?.status === "clearing_data")
     {
       this.clearData();
     }
-    if (this.status.status === "loading_favorites")
+    if (this.status?.status === "loading_favorites")
     {
       this.loadFavorites().then(() => {/**/
       });
     }
-    else if (this.status.status === "loading_albums")
+    else if (this.status?.status === "loading_albums")
     {
       this.loadAlbums().then(() => {/**/
       });
     }
-    else if (this.status.status === "loading_playlists")
+    else if (this.status?.status === "loading_playlists")
     {
       this.loadPlaylists().then(() => {/**/
       });
     }
-    else if (this.status.status === "loading_playlist_tracks")
+    else if (this.status?.status === "loading_playlist_tracks")
     {
-      this.loadPlaylistTracks(this.status.currentPlaylist).then(() => {/**/
+      this.loadPlaylistTracks(this.status?.currentPlaylist).then(() => {/**/
       });
     }
-    else if (this.status.status === "saving_to_database")
+    else if (this.status?.status === "saving_to_database")
     {
       this.saveToDatabase();
     }
@@ -197,7 +227,7 @@ export class TrackLoaderController
 
     await this._dbLoader.load();
 
-    if (this._dbLoader!.loadFailures.length > 0)
+    if ((this.status.status !== "error") && (this._dbLoader!.loadFailures.length > 0))
     {
       this.setStatus({
                        status: "error",
@@ -236,8 +266,8 @@ export class TrackLoaderController
   {
     try
     {
-      await TrackLoaderController.apiDelay(this.status.offset! > 0);
-      const results: GetSavedTracksResponse = await this.spotify.library.getSavedTracks({limit: 50, offset: this.status.offset!});
+      await TrackLoaderController.apiDelay(this.status?.offset! > 0);
+      const results: GetSavedTracksResponse = await this.spotify.library.getSavedTracks({limit: 50, offset: this.status?.offset!});
 
       const artistIds: Set<string> = new Set();
       const tracks: Track[] = [];
@@ -294,7 +324,7 @@ export class TrackLoaderController
       }
       else
       {
-        this.setStatus({status: this.status.status, offset: this.status.offset! + results.items.length});
+        this.setStatus({status: this.status?.status, offset: this.status?.offset! + results.items.length});
       }
     }
     catch (err)
@@ -307,8 +337,8 @@ export class TrackLoaderController
   {
     try
     {
-      await TrackLoaderController.apiDelay(this.status.offset! > 0);
-      const results: GetSavedAlbumsResponse = await this.spotify.library.getSavedAlbums({limit: 50, offset: this.status.offset!});
+      await TrackLoaderController.apiDelay(this.status?.offset! > 0);
+      const results: GetSavedAlbumsResponse = await this.spotify.library.getSavedAlbums({limit: 50, offset: this.status?.offset!});
 
       const tracks: Track[] = [];
 
@@ -362,9 +392,9 @@ export class TrackLoaderController
       else
       {
         this.setStatus({
-                         status: this.status.status,
-                         offset: this.status.offset! + results.items.length,
-                         subprogress: this.status.subprogress! + tracks.length
+                         status: this.status?.status,
+                         offset: this.status?.offset! + results.items.length,
+                         subprogress: this.status?.subprogress! + tracks.length
                        });
       }
     }
@@ -378,8 +408,8 @@ export class TrackLoaderController
   {
     try
     {
-      await TrackLoaderController.apiDelay(this.status.offset! > 0);
-      const results: GetMyPlaylistsResponse = await this.spotify.playlists.getMyPlaylists({limit: 50, offset: this.status.offset!});
+      await TrackLoaderController.apiDelay(this.status?.offset! > 0);
+      const results: GetMyPlaylistsResponse = await this.spotify.playlists.getMyPlaylists({limit: 50, offset: this.status?.offset!});
 
       await Promise.all(results.items.map((async (result: SimplifiedPlaylist) => {
         const apiPlaylist: Playlist = await this.spotify.playlists.getPlaylist(result.id);
@@ -399,8 +429,8 @@ export class TrackLoaderController
       else
       {
         this.setStatus({
-                         status: this.status.status,
-                         offset: this.status.offset! + results.items.length
+                         status: this.status?.status,
+                         offset: this.status?.offset! + results.items.length
                        });
       }
     }
@@ -425,8 +455,8 @@ export class TrackLoaderController
 
       const tracks: Track[] = [];
 
-      await TrackLoaderController.apiDelay(this.status.offset! > 0);
-      const results: GetPlaylistItemsResponse = await this.spotify.playlists.getPlaylistItems(playListId, {limit: 100, offset: this.status.offset!});
+      await TrackLoaderController.apiDelay(this.status?.offset! > 0);
+      const results: GetPlaylistItemsResponse = await this.spotify.playlists.getPlaylistItems(playListId, {limit: 100, offset: this.status?.offset!});
       results.items.forEach((item: PlaylistItem) => {
         const apiTrack: SpotifyObjects.Track | Episode = item.track;
         if (apiTrack.type === "episode")
@@ -466,9 +496,9 @@ export class TrackLoaderController
         else
         {
           this.setStatus({
-                           status: this.status.status,
+                           status: this.status?.status,
                            offset: 0,
-                           subprogress: this.status.subprogress!,
+                           subprogress: this.status?.subprogress!,
                            currentPlaylist: playlistIndex + 1
                          });
         }
@@ -476,9 +506,9 @@ export class TrackLoaderController
       else
       {
         this.setStatus({
-                         status: this.status.status,
-                         offset: this.status.offset! + results.items.length,
-                         subprogress: this.status.subprogress! + tracks.length,
+                         status: this.status?.status,
+                         offset: this.status?.offset! + results.items.length,
+                         subprogress: this.status?.subprogress! + tracks.length,
                          currentPlaylist: playlistIndex
                        });
       }

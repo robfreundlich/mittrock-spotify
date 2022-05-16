@@ -3,11 +3,11 @@
  */
 
 import {Transition} from "@uirouter/react";
-import {spotifyAuthToken} from "app/client/app/App";
 import {AppServices} from "app/client/app/AppServices";
-import {LoadingDatabase} from "app/client/app/LoadingDatabase";
-import {LoadingFromDatabase} from "app/client/app/LoadingFromDatabase";
+import {spotifyAuthToken} from "app/client/app/Authorization";
 import {Browser} from "app/client/browser/Browser";
+import {LoadingDatabase} from "app/client/db/LoadingDatabase";
+import {LoadingFromDatabase} from "app/client/db/LoadingFromDatabase";
 
 export const getDataStore = () => AppServices.dataStore;
 export const getAuthToken = () => spotifyAuthToken;
@@ -39,7 +39,6 @@ export const loadingDatabaseState = {
   name: "loadingDatabase",
   url: "/loadingDatabase",
   component: LoadingDatabase,
-  requiresAuthorization: true,
   resolve: [
     {
       token: "dataStore",
