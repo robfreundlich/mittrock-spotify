@@ -18,14 +18,37 @@
 }
 
 .browser .tracks .track {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: stretch;
+
   flex-grow: 0;
   flex-shrink: 0;
-  width: 8em;
-  height: 8em;
+  /* width: 8rem; */
+  /* height: 8rem; */
   border: var(--default-border);
-  border-radius: 1em;
+  border-radius: 1rem;
   box-shadow: var(--default-box-shadow);
-  padding: 1em;
+  padding: 1rem;
   margin: var(--default-gap);
   overflow: auto;
+  max-width: 16rem;
+  max-height: 12rem;
+  text-align: center;
+}
+
+.browser .tracks .track .track-name {
+  font-family: sans-serif;
+  font-size: 1.5rem;
+  font-variant: small-caps;
+}
+
+.browser .tracks .track .track-album {
+  font-family: Arial Black, sans-serif;
+  flex-grow: 1;
+}
+
+.browser .tracks .track .track-genres {
+  font-family: sans-serif;
 }

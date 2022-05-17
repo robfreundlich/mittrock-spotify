@@ -45,7 +45,7 @@
 .app .header {
   flex-grow: 0;
   flex-shrink: 0;
-  flex-basis: 1em;
+  flex-basis: 1rem;
 
   display: flex;
   flex-direction: row;
@@ -54,14 +54,14 @@
 .app .body {
   flex-grow: 1;
   flex-shrink: 1;
-  /* flex-basis: 1em; */
+  /* flex-basis: 1rem; */
   overflow: auto;
 }
 
 .app .footer {
   flex-grow: 0;
   flex-shrink: 0;
-  flex-basis: 1em;
+  flex-basis: 1rem;
 }
 
 .app .header > * {
