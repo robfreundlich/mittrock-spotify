@@ -7,7 +7,7 @@
   --spotify-button-width: 250px;
 }
 
-.track-loader .progress .container {
+.track-loader .progress .item-container {
   border-radius: var(--default-border-radius);
   border-color: var(--default-border-color);
   border-width: var(--default-border-width);
@@ -29,11 +29,11 @@
   padding-left: 0.5rem;
 }
 
-.track-loader .progress .container:not(:first-child) {
+.track-loader .progress .item-container:not(:first-child) {
   margin-top: 0;
 }
 
-.track-loader .progress .container:last-child {
+.track-loader .progress .item-container:last-child {
   margin-bottom: 0;
 }
 
@@ -56,28 +56,28 @@
   flex-shrink: 0;
 }
 
-.track-loader .progress .container.error-container {
+.track-loader .progress .item-container.error-container {
   width: 30rem;
   height: 15rem;
   border-color: red;
   box-shadow: 3px 3px 5px darkred;
 }
 
-.track-loader .progress .container.error-container.item {
+.track-loader .progress .item-container.error-container.item {
   flex-direction: column;
 }
 
-.track-loader .progress .container.error-container.item label {
+.track-loader .progress .item-container.error-container.item label {
   flex-grow: 0;
   flex-shrink: 0;
 }
 
-.track-loader .progress .container.error-container.item data {
+.track-loader .progress .item-container.error-container.item data {
   flex-grow: 1;
   flex-shrink: 1;
 }
 
-.track-loader .progress .container.error-container.item textarea {
+.track-loader .progress .item-container.error-container.item textarea {
   width: 100%;
   height: 100%;
 }

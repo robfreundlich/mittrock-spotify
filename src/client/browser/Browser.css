@@ -4,99 +4,41 @@
 
 :root {
   --album-name-font: Arial Black, sans-serif;
-
+  --artist-name-font: Georgia, sans-serif;
 }
 
 .browser h1 {
-  margin-top: 0;
-  margin-bottom: 0;
+  margin-top: 1.5rem;
+  margin-bottom: 0.25rem;
+  margin-left: 0.25rem;
+  margin-right: 0.25rem;
+  width: calc(100% - 0.5rem);
+  background-color: var(--color-spotify-green-darker);
+  color: var(--color-spotify-white);
+  text-align: center;
+
+  border: var(--default-border);
+  border-radius: 0.5rem;
 }
 
-.browser .tracks {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
+.browser > *:first-child h1 {
+  margin-top: 0.25rem;
 }
 
-.browser .tracks .track {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: stretch;
-
+.browser .more {
   flex-grow: 0;
   flex-shrink: 0;
-  /* width: 8rem; */
-  /* height: 8rem; */
   border: var(--default-border);
   border-radius: 1rem;
   box-shadow: var(--default-box-shadow);
   padding: 1rem;
   margin: var(--default-gap);
-  overflow: auto;
-  max-width: 16rem;
-  max-height: 12rem;
   text-align: center;
-  background-color: var(--color-spotiy-white);
-}
-
-.browser .tracks .track .track-name {
-  font-family: sans-serif;
+  background-color: var(--color-spotify-white);
   font-size: 1.5rem;
-  font-variant: small-caps;
-}
-
-.browser .tracks .track .track-album {
-  font-family: var(--album-name-font);
-  flex-grow: 1;
-}
-
-.browser .tracks .track .track-genres {
   font-family: sans-serif;
-
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-}
-
-.browser .albums {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-}
-
-.browser .albums .album {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: stretch;
-
-  flex-grow: 0;
-  flex-shrink: 0;
-  /* width: 8rem; */
-  /* height: 8rem; */
-  border: var(--default-border);
-  border-radius: 1rem;
-  box-shadow: var(--default-box-shadow);
-  padding: 1rem;
-  margin: var(--default-gap);
-  overflow: auto;
-  max-width: 16rem;
-  max-height: 12rem;
-  text-align: center;
-  background-color: var(--color-spotiy-white);
-}
-
-.browser .albums .album .album-name {
-  font-family: var(--album-name-font);
-}
-
-.browser .albums .album .album-genres {
-  font-family: sans-serif;
-
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
+  font-variant: unicase;
+  align-self: flex-end;
 }
 
 .browser .genre {
@@ -104,8 +46,73 @@
   border-radius: 0.3rem;
   box-shadow: var(--default-box-shadow);
   text-align: center;
-  background-color: var(--color-spotiy-white);
+  background-color: var(--color-spotify-white);
   white-space: nowrap;
   padding: 0.1rem;
   margin: 0.3rem;
+}
+
+.browser .item-container {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.browser .item-container .item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: stretch;
+
+  flex-grow: 0;
+  flex-shrink: 0;
+  max-width: 16rem;
+  max-height: 12rem;
+
+  border: var(--default-border);
+  border-radius: 1rem;
+  box-shadow: var(--default-box-shadow);
+  padding: 1rem;
+  margin: var(--default-gap);
+  overflow: auto;
+  text-align: center;
+  background-color: var(--color-spotify-white);
+}
+
+
+.browser .item-container .item .track-name {
+  font-family: sans-serif;
+  font-size: 1.5rem;
+  font-variant: small-caps;
+}
+
+.browser .item-container .item .album-name {
+  font-family: var(--album-name-font);
+  flex-grow: 1;
+}
+
+.browser .item-container .item .artist-name {
+  font-family: var(--artist-name-font);
+  font-size: 1.25rem;
+}
+
+.browser .item-container .item .playlist-name {
+  font-family: var(--album-name-font);
+  flex-grow: 1;
+}
+
+.browser .item-container .item .genres {
+  font-family: sans-serif;
+
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.browser .item-container .item .genres .more {
+  font-size: 1rem;
+}
+
+.browser .genres .item-container .genre .name {
+  font-size: 1.5rem;
 }

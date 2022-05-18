@@ -8,6 +8,8 @@ import {DataStore} from "app/client/model/DataStore";
 
 export class BrowserController
 {
+  private static readonly PREVIEW_COUNT = 8;
+
   private _dataStore: DataStore;
 
   private _router: UIRouterReact;
@@ -31,10 +33,16 @@ export class BrowserController
     }
   }
 
-  public getFirstN<T extends { name: string }>(array: T[], n: number = 8): T[]
+  public getFirstN<T extends { name: string }>(array: T[], n?: number): T[]
   {
+    n = n ?? BrowserController.PREVIEW_COUNT;
     return array.slice()
                 .sort(compareByName)
                 .slice(0, Math.min(array.length, n));
+  }
+
+  public hasMore<T>(array: T[]): boolean
+  {
+    return array.length > BrowserController.PREVIEW_COUNT;
   }
 }
