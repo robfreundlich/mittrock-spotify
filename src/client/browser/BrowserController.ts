@@ -3,7 +3,6 @@
  */
 
 import {UIRouterReact} from "@uirouter/react";
-import {compareByName} from "app/client/model/ComparisonFunctions";
 import {DataStore} from "app/client/model/DataStore";
 
 export class BrowserController
@@ -33,11 +32,13 @@ export class BrowserController
     }
   }
 
-  public getFirstN<T extends { name: string }>(array: T[], n?: number): T[]
+  public getFirstN<T>(array: T[],
+                      compare: (a: T, B: T) => number,
+                      n?: number): T[]
   {
     n = n ?? BrowserController.PREVIEW_COUNT;
     return array.slice()
-                .sort(compareByName)
+                .sort(compare)
                 .slice(0, Math.min(array.length, n));
   }
 

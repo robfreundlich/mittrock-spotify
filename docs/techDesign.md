@@ -23,6 +23,7 @@ src/
 
 # Useful links
 
+* [Github Page](https://github.com/robfreundlich/mittrock-spotify)
 * [Spotify Web API](https://developer.spotify.com/documentation/web-api/)
 * [spotify-web-api-js docs](https://jmperezperez.com/spotify-web-api-js/)
 * [Authorization guide](https://developer.spotify.com/documentation/general/guides/authorization/)

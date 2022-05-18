@@ -181,7 +181,8 @@ export class DataStoreDexieLoader
                                           playlist: track.playlist,
                                           popularity: 0,
                                           source: track.source,
-                                          trackNumber: 0
+                                          trackNumber: 0,
+                                          addedAt: track.addedAt
                                         })));
                                       });
 

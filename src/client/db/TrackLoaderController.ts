@@ -286,7 +286,8 @@ export class TrackLoaderController
                                        Favorites.favorites,
                                        [],  // We'll fill this in later, when we need it.
                                        this.convertApiArtistsToArtists(apiTrack.artists),
-                                       this.convertApiAlbumToIAlbum(apiTrack.album));
+                                       this.convertApiAlbumToIAlbum(apiTrack.album),
+                                       new Date(result.added_at));
 
         track.artists.forEach((artist) => {
           artistIds.add(artist.id);
@@ -344,7 +345,7 @@ export class TrackLoaderController
 
       results.items.forEach((result: SavedAlbum) => {
         const apiAlbum: SpotifyObjects.Album = result.album;
-        const album: IAlbum = this.convertApiAlbumToIAlbum(apiAlbum);
+        const album: IAlbum = this.convertApiAlbumToIAlbum(apiAlbum, result.added_at);
         apiAlbum.tracks.items.forEach((apiTrack: SimplifiedTrack) => {
 
           const track: Track = new Track(apiTrack.id,
@@ -519,7 +520,7 @@ export class TrackLoaderController
     }
   }
 
-  private convertApiAlbumToIAlbum(apiAlbum: SpotifyObjects.SimplifiedAlbum): IAlbum
+  private convertApiAlbumToIAlbum(apiAlbum: SpotifyObjects.SimplifiedAlbum, addedAt?: string): IAlbum
   {
     const album: IAlbum = {
       id: apiAlbum.id,
@@ -529,7 +530,8 @@ export class TrackLoaderController
       releaseDate: apiAlbum.release_date,
       releaseDatePrecision: apiAlbum.release_date_precision,
       artists: this.convertApiArtistsToArtists(apiAlbum.artists),
-      sourceType: "album"
+      sourceType: "album",
+      addedAt: addedAt ? new Date(addedAt) : undefined
     };
 
     return album;

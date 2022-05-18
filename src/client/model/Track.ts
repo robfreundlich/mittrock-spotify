@@ -38,6 +38,8 @@ export interface ITrack extends IdentifiedObject
   genres: IGenre[];
 
   artists: IArtist[];
+
+  addedAt: Date;
 }
 
 /**
@@ -71,6 +73,8 @@ export class Track implements ITrack
 
   public source: TrackSource;
 
+  public addedAt: Date;
+
   constructor(id: string,
               name: string,
               explicit: Explicitness,
@@ -82,7 +86,8 @@ export class Track implements ITrack
               source: IAlbum | IPlaylist | IFavorites,
               genres: IGenre[],
               artists: IArtist[],
-              album?: IAlbum)
+              album?: IAlbum,
+              addedAt?: Date)
   {
     this.id = id;
     this.name = name;
@@ -113,6 +118,10 @@ export class Track implements ITrack
       if (album)
       {
         this.album = album;
+      }
+      if (addedAt)
+      {
+        this.addedAt = addedAt;
       }
     }
 

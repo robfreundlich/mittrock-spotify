@@ -24,6 +24,8 @@ export interface IAlbum extends IdentifiedObject, ITrackSource
   releaseDatePrecision: ReleaseDatePrecision;
 
   artists: IArtist[];
+
+  addedAt: Date | undefined;
 }
 
 export class Album implements IAlbum
@@ -44,7 +46,10 @@ export class Album implements IAlbum
 
   public readonly artists: IArtist[];
 
-  constructor(id: string, name: string, type: AlbumType, releaseDate: string, releaseDatePrecision: ReleaseDatePrecision, artists: IArtist[], tracks?: ITrack[])
+  public readonly addedAt: Date | undefined;
+
+  constructor(id: string, name: string, type: AlbumType, releaseDate: string, releaseDatePrecision: ReleaseDatePrecision, artists: IArtist[], addedAt?: Date,
+              tracks?: ITrack[])
   {
     this.id = id;
     this.name = name;
@@ -52,6 +57,7 @@ export class Album implements IAlbum
     this.releaseDate = releaseDate;
     this.releaseDatePrecision = releaseDatePrecision;
     this.artists = artists;
+    this.addedAt = addedAt;
 
     if (tracks)
     {

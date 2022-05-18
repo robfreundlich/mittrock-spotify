@@ -6,6 +6,7 @@ import {UIRouterReact} from "@uirouter/react";
 import {BrowserController} from "app/client/browser/BrowserController";
 import {IAlbum} from "app/client/model/Album";
 import {IArtist} from "app/client/model/Artist";
+import {compareByAddedAtDesc, compareByName} from "app/client/model/ComparisonFunctions";
 import {DataStore} from "app/client/model/DataStore";
 import {IGenre} from "app/client/model/Genre";
 import {IPlaylist} from "app/client/model/Playlist";
@@ -79,12 +80,12 @@ export class Browser extends React.Component<BrowserProps>
       <h1>Favorites ({favorites.length})</h1>
 
       <div className="tracks item-container">
-        {this.controller.getFirstN(favorites)
+        {this.controller.getFirstN(favorites, compareByAddedAtDesc)
              .map((track: ITrack) => <div className="track item" key={track.id}>
                <div className="track-name">{track.name}</div>
                <div className="album-name">{track.album?.name}</div>
                <div className="genres">
-                 {this.controller.getFirstN(track.genres, 3)
+                 {this.controller.getFirstN(track.genres, compareByName, 3)
                       .map((genre: IGenre, index: number) => <div className="genre" key={`${index}`}>{genre.name}</div>)}
                  {(track.genres.length > 3) && <div className="genre more">...</div>}
                </div>
@@ -103,14 +104,14 @@ export class Browser extends React.Component<BrowserProps>
       <h1>Albums ({albums.length})</h1>
 
       <div className="item-container">
-        {this.controller.getFirstN(albums).map((album: IAlbum) => {
+        {this.controller.getFirstN(albums, compareByAddedAtDesc).map((album: IAlbum) => {
           const genres: Set<IGenre> = new Set();
           album.tracks.forEach((track: ITrack) => track.genres.forEach((genre: IGenre) => genres.add(genre)));
 
           return <div className="album item" key={album.id}>
             <div className="album-name">{album.name}</div>
             <div className="genres">
-              {this.controller.getFirstN([...genres], 3)
+              {this.controller.getFirstN([...genres], compareByName, 3)
                    .map((genre: IGenre, index: number) => <div className="genre" key={`${index}`}>{genre.name}</div>)}
               {(genres.size > 3) && <div className="genre more">...</div>}
             </div>
@@ -124,21 +125,22 @@ export class Browser extends React.Component<BrowserProps>
 
   private renderArtists(): React.ReactNode
   {
-    const artists: IArtist[] = this.props.dataStore.artists;
+    const artists: IArtist[] = this.props.dataStore.artists.filter((artist: IArtist) => artist.name !== "");
 
     return <div className="artists">
       <h1>Artists ({artists.length})</h1>
 
       <div className="item-container">
-        {this.controller.getFirstN(artists).map((artist: IArtist) =>
-                                                    <div className="artist item" key={artist.id}>
-                                                      <div className="artist-name">{artist.name}</div>
-                                                      <div className="genres">
-                                                        {this.controller.getFirstN(artist.genres, 3)
-                                                             .map((genre: IGenre, index: number) => <div className="genre" key={index}>{genre.name}</div>)}
-                                                        {(artist.genres.length > 3) && <div className="genre more">...</div>}
-                                                      </div>
-                                                    </div>)}
+        {this.controller.getFirstN(artists, compareByName).map((artist: IArtist) =>
+                                                                   <div className="artist item" key={artist.id}>
+                                                                     <div className="artist-name">{artist.name}</div>
+                                                                     <div className="genres">
+                                                                       {this.controller.getFirstN(artist.genres, compareByName, 3)
+                                                                            .map((genre: IGenre, index: number) => <div className="genre"
+                                                                                                                        key={index}>{genre.name}</div>)}
+                                                                       {(artist.genres.length > 3) && <div className="genre more">...</div>}
+                                                                     </div>
+                                                                   </div>)}
 
         {this.controller.hasMore(artists) && <div className="more" key="more">More...</div>}
       </div>
@@ -152,10 +154,10 @@ export class Browser extends React.Component<BrowserProps>
 
       <h1>Genres ({genres.length})</h1>
       <div className="item-container">
-        {this.controller.getFirstN(genres).map((genre: IGenre, index: number) =>
-                                                   <div className="genre item" key={index}>
-                                                     <div className="name">{genre.name}</div>
-                                                   </div>)}
+        {this.controller.getFirstN(genres, compareByName).map((genre: IGenre, index: number) =>
+                                                                  <div className="genre item" key={index}>
+                                                                    <div className="name">{genre.name}</div>
+                                                                  </div>)}
 
         {this.controller.hasMore(genres) && <div className="more" key="more">More...</div>}
       </div>
@@ -170,14 +172,14 @@ export class Browser extends React.Component<BrowserProps>
       <h1>Playlists ({playlists.length})</h1>
 
       <div className="item-container">
-        {this.controller.getFirstN(playlists).map((playlist: IPlaylist) => {
+        {this.controller.getFirstN(playlists, compareByName).map((playlist: IPlaylist) => {
           const genres: Set<IGenre> = new Set();
           playlist.tracks.forEach((track: ITrack) => track.genres.forEach((genre: IGenre) => genres.add(genre)));
 
           return <div className="playlist item" key={playlist.id}>
             <div className="playlist-name">{playlist.name}</div>
             <div className="genres">
-              {this.controller.getFirstN([...genres], 3)
+              {this.controller.getFirstN([...genres], compareByName, 3)
                    .map((genre: IGenre, index: number) => <div className="genre" key={`${index}`}>{genre.name}</div>)}
               {(genres.size > 3) && <div className="genre more">...</div>}
             </div>
