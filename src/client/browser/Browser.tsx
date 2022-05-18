@@ -4,7 +4,9 @@
 
 import {UIRouterReact} from "@uirouter/react";
 import {BrowserController} from "app/client/browser/BrowserController";
+import {IAlbum} from "app/client/model/Album";
 import {DataStore} from "app/client/model/DataStore";
+import {IGenre} from "app/client/model/Genre";
 import {ITrack} from "app/client/model/Track";
 import * as React from "react";
 
@@ -22,8 +24,7 @@ export class Browser extends React.Component<BrowserProps>
   constructor(props: Readonly<BrowserProps> | BrowserProps)
   {
     super(props);
-    this.controller = new BrowserController(props.dataStore);
-    console.log(this.controller);
+    this.controller = new BrowserController(props.dataStore, this.props.router);
   }
 
   /*
@@ -111,20 +112,43 @@ export class Browser extends React.Component<BrowserProps>
       <h1>Favorites ({favorites.length})</h1>
 
       <div className="favorites tracks">
-        {favorites.slice(0, Math.min(favorites.length, 8)).map((track: ITrack) => <div className="track" key={track.id}>
-          <div className="track-name">{track.name}</div>
-          <div className="track-album">{track.album?.name}</div>
-          <div className="track-genre">{track.genres.map(genre => genre.name).join(",")}</div>
-        </div>)}
+        {this.controller.getFirstN(favorites)
+             .map((track: ITrack) => <div className="track" key={track.id}>
+               <div className="track-name">{track.name}</div>
+               <div className="track-album">{track.album?.name}</div>
+               <div className="track-genres">
+                 {this.controller.getFirstN(track.genres, 3)
+                      .map(genre => <div className="genre">{genre.name}</div>)}
+                 {(track.genres.length > 3) && <div className="genre more">...</div>}
+               </div>
+             </div>)}
       </div>
     </>;
   }
 
   private renderAlbums(): React.ReactNode
   {
-    return <div className="Albums">
+    const albums: IAlbum[] = this.props.dataStore.albums;
+
+    return <>
       <h1>Albums ({this.props.dataStore.albums.length})</h1>
-    </div>;
+
+      <div className="albums">
+        {this.controller.getFirstN(albums).map((album: IAlbum) => {
+          const genres: Set<IGenre> = new Set();
+          album.tracks.forEach((track: ITrack) => track.genres.forEach((genre: IGenre) => genres.add(genre)));
+
+          return <div className="album" key={album.id}>
+            <div className="album-name">{album.name}</div>
+            <div className="album-genres">
+              {this.controller.getFirstN([...genres], 3)
+                   .map(genre => <div className="genre">{genre.name}</div>)}
+              {(genres.size > 3) && <div className="genre more">...</div>}
+            </div>
+          </div>;
+        })}
+      </div>
+    </>;
   }
 
   private renderArtists(): React.ReactNode
@@ -150,10 +174,7 @@ export class Browser extends React.Component<BrowserProps>
 
   public override componentDidMount(): void
   {
-    if (!this.props.dataStore.tracks?.length)
-    {
-      this.props.router.stateService.go("loading");
-    }
+    this.controller.checkForData();
   }
 
 }

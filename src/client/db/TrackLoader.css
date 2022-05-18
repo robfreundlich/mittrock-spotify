@@ -13,9 +13,9 @@
   border-width: var(--default-border-width);
   border-style: var(--default-border-style);
   box-shadow: var(--default-box-shadow);
-  margin: 1em;
-  padding: 0.5em;
-  width: 15em;
+  margin: 1rem;
+  padding: 0.5rem;
+  width: 15rem;
 }
 
 
@@ -26,7 +26,7 @@
 }
 
 .track-loader .status-bar > *:not(:first-child) {
-  padding-left: 0.5em;
+  padding-left: 0.5rem;
 }
 
 .track-loader .progress .container:not(:first-child) {
@@ -57,8 +57,8 @@
 }
 
 .track-loader .progress .container.error-container {
-  width: 30em;
-  height: 15em;
+  width: 30rem;
+  height: 15rem;
   border-color: red;
   box-shadow: 3px 3px 5px darkred;
 }

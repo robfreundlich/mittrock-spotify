@@ -3,6 +3,7 @@
  */
 
 :root {
+  --album-name-font: Arial Black, sans-serif;
 
 }
 
@@ -36,6 +37,7 @@
   max-width: 16rem;
   max-height: 12rem;
   text-align: center;
+  background-color: var(--color-spotiy-white);
 }
 
 .browser .tracks .track .track-name {
@@ -45,10 +47,65 @@
 }
 
 .browser .tracks .track .track-album {
-  font-family: Arial Black, sans-serif;
+  font-family: var(--album-name-font);
   flex-grow: 1;
 }
 
 .browser .tracks .track .track-genres {
   font-family: sans-serif;
+
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.browser .albums {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.browser .albums .album {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: stretch;
+
+  flex-grow: 0;
+  flex-shrink: 0;
+  /* width: 8rem; */
+  /* height: 8rem; */
+  border: var(--default-border);
+  border-radius: 1rem;
+  box-shadow: var(--default-box-shadow);
+  padding: 1rem;
+  margin: var(--default-gap);
+  overflow: auto;
+  max-width: 16rem;
+  max-height: 12rem;
+  text-align: center;
+  background-color: var(--color-spotiy-white);
+}
+
+.browser .albums .album .album-name {
+  font-family: var(--album-name-font);
+}
+
+.browser .albums .album .album-genres {
+  font-family: sans-serif;
+
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.browser .genre {
+  border: var(--default-border);
+  border-radius: 0.3rem;
+  box-shadow: var(--default-box-shadow);
+  text-align: center;
+  background-color: var(--color-spotiy-white);
+  white-space: nowrap;
+  padding: 0.1rem;
+  margin: 0.3rem;
 }
