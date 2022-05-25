@@ -51,6 +51,17 @@ type TrackLoaderStatusNoTime = Omit<TrackLoaderStatus, "currentTime">;
 
 export class TrackLoaderController
 {
+  private static apiDelayTimeMsec: number = 1;
+
+  public static increaseDelayTime(): void
+  {
+    if (TrackLoaderController.apiDelayTimeMsec < 256)
+    {
+      TrackLoaderController.apiDelayTimeMsec *= 2;
+      console.log(`Increased delay time to ${TrackLoaderController.apiDelayTimeMsec}`);
+    }
+  }
+
   public static isBrowsable(status: LoadingDatabaseStatus): boolean
   {
     return ((status === "loaded") || (status === "stopped") || (status === "error"))
@@ -62,9 +73,14 @@ export class TrackLoaderController
     return ((status !== undefined) && (status !== "unloaded") && (status !== "loaded") && (status !== "error") && (status !== "stopped"));
   }
 
+  public static resetDelayTime(): void
+  {
+    TrackLoaderController.apiDelayTimeMsec = 1;
+  }
+
   private static apiDelay(condition: boolean): Promise<void>
   {
-    return TimeUtils.delay(100, condition);
+    return TimeUtils.delay(TrackLoaderController.apiDelayTimeMsec, condition);
   }
 
   private static convertApiPlaylistToIPlaylist(apiPlaylist: SpotifyObjects.Playlist): IPlaylist
@@ -87,6 +103,8 @@ export class TrackLoaderController
   public startTime: number;
 
   public _onStatusChanged: (status: TrackLoaderStatus) => void;
+
+  private lastRateLimitHit: number;
 
   private readonly _dataStore: DataStore;
 
@@ -167,6 +185,8 @@ export class TrackLoaderController
 
   public startLoading(): void
   {
+    TrackLoaderController.resetDelayTime();
+
     this.startTime = new Date().getTime();
     this.setStatus({status: "clearing_data"});
     // window.open("http://localhost:8080/new_window", "_blank", "popup");
@@ -175,6 +195,16 @@ export class TrackLoaderController
   public stop()
   {
     this.setStatus({status: "stopped"});
+  }
+
+  private isRateLimitError(error: any): boolean
+  {
+    return (error.response?.data?.error?.status === 429);
+  }
+
+  private getRateLimitRetrySeconds(error: any): number
+  {
+    return parseInt(error.response?.headers["retry-after"], 10);
   }
 
   private loadNext(): void
@@ -262,12 +292,51 @@ export class TrackLoaderController
     });
   }
 
+  private async callSpotify<T>(getData: () => Promise<T>, apiDelayCondition: boolean = true): Promise<T>
+  {
+    for (let i = 0; i < 5; i++)
+    {
+      try
+      {
+        await TrackLoaderController.apiDelay(apiDelayCondition);
+        const result: T = await getData();
+
+        return result;
+      }
+      catch (err)
+      {
+        if (this.isRateLimitError(err))
+        {
+          const delay: number = this.getRateLimitRetrySeconds(err) * 1000;
+
+          console.log((err as Error).message);
+          console.log("Pausing for " + delay + " seconds");
+
+          const now: number = new Date().getTime();
+          if ((this.lastRateLimitHit === undefined) || ((now - this.lastRateLimitHit) > delay))
+          {
+            TrackLoaderController.increaseDelayTime();
+          }
+
+          this.lastRateLimitHit = now;
+          await TimeUtils.delay(delay);
+        }
+        else
+        {
+          throw err;
+        }
+      }
+    }
+
+    throw new Error("Too many retries on one call");
+  }
+
   private async loadFavorites(): Promise<void>
   {
     try
     {
-      await TrackLoaderController.apiDelay(this.status?.offset! > 0);
-      const results: GetSavedTracksResponse = await this.spotify.library.getSavedTracks({limit: 50, offset: this.status?.offset!});
+      const results: GetSavedTracksResponse = await this.callSpotify(() => this.spotify.library.getSavedTracks({limit: 50, offset: this.status?.offset!}),
+                                                                     this.status?.offset! > 0);
 
       const artistIds: Set<string> = new Set();
       const tracks: Track[] = [];
@@ -301,8 +370,7 @@ export class TrackLoaderController
       const artistIdChunks: string[][] = ArrayUtils.splitIntoChunks([...artistIds], 20);
 
       await Promise.all(artistIdChunks.map(async (ids: string[]) => {
-        await TrackLoaderController.apiDelay(true);
-        const artists: Array<SpotifyObjects.Artist | null> = await this.spotify.artists.getArtists(ids);
+        const artists: Array<SpotifyObjects.Artist | null> = await this.callSpotify(() => this.spotify.artists.getArtists(ids));
         artists.forEach((artist: SpotifyObjects.Artist | null) => {
           if (artist !== null)
           {
@@ -338,8 +406,8 @@ export class TrackLoaderController
   {
     try
     {
-      await TrackLoaderController.apiDelay(this.status?.offset! > 0);
-      const results: GetSavedAlbumsResponse = await this.spotify.library.getSavedAlbums({limit: 50, offset: this.status?.offset!});
+      const results: GetSavedAlbumsResponse = await this.callSpotify(() => this.spotify.library.getSavedAlbums({limit: 50, offset: this.status?.offset!}),
+                                                                     this.status?.offset! > 0);
 
       const tracks: Track[] = [];
 
@@ -369,8 +437,7 @@ export class TrackLoaderController
       const trackIdChunks: string[][] = ArrayUtils.splitIntoChunks(allTrackIds, 20);
 
       await Promise.all(trackIdChunks.map(async (ids: string[]) => {
-        await TrackLoaderController.apiDelay(true);
-        const artists: Array<SpotifyObjects.Track | null> = await this.spotify.tracks.getTracks(ids);
+        const artists: Array<SpotifyObjects.Track | null> = await this.callSpotify(() => this.spotify.tracks.getTracks(ids));
         artists.forEach((apiTrack: SpotifyObjects.Track | null) => {
           if (apiTrack !== null)
           {
@@ -409,11 +476,11 @@ export class TrackLoaderController
   {
     try
     {
-      await TrackLoaderController.apiDelay(this.status?.offset! > 0);
-      const results: GetMyPlaylistsResponse = await this.spotify.playlists.getMyPlaylists({limit: 50, offset: this.status?.offset!});
+      const results: GetMyPlaylistsResponse = await this.callSpotify(() => this.spotify.playlists.getMyPlaylists({limit: 50, offset: this.status?.offset!}),
+                                                                     this.status?.offset! > 0);
 
       await Promise.all(results.items.map((async (result: SimplifiedPlaylist) => {
-        const apiPlaylist: Playlist = await this.spotify.playlists.getPlaylist(result.id);
+        const apiPlaylist: Playlist = await this.callSpotify(() => this.spotify.playlists.getPlaylist(result.id));
         await TrackLoaderController.apiDelay(true);
         const playlist: IPlaylist = TrackLoaderController.convertApiPlaylistToIPlaylist(apiPlaylist);
 
@@ -456,8 +523,12 @@ export class TrackLoaderController
 
       const tracks: Track[] = [];
 
-      await TrackLoaderController.apiDelay(this.status?.offset! > 0);
-      const results: GetPlaylistItemsResponse = await this.spotify.playlists.getPlaylistItems(playListId, {limit: 100, offset: this.status?.offset!});
+      const results: GetPlaylistItemsResponse = await this.callSpotify(() => this.spotify.playlists.getPlaylistItems(playListId,
+                                                                                                                     {
+                                                                                                                       limit: 100,
+                                                                                                                       offset: this.status?.offset!
+                                                                                                                     }),
+                                                                       this.status?.offset! > 0);
       results.items.forEach((item: PlaylistItem) => {
         const apiTrack: SpotifyObjects.Track | Episode = item.track;
         if (apiTrack.type === "episode")

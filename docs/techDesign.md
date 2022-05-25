@@ -30,3 +30,9 @@ src/
 * [Dexie guide](https://developer.fireflysemantics.com/guides/guides--dexie--browser-big-data-with-dexie-and-typescript)
 * [UI Router](https://ui-router.github.io/react/)
 
+# Handling rate limits
+
+A rate limit error has the following characteristics:
+
+* Status code 429
+* `retry-after` header whose value is the number of seconds to wait before retrying
