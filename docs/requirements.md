@@ -30,12 +30,23 @@
   * Artist has it
   * Track has it
 * Local/Streamed
+* Affinity
+  * This is built from **how** a track gets into the library
+  * There's an under-the-covers list of all the reasons a track is in the library:
+    * It's a favorite track
+    * It's in a favorite album
+    * It's in a favorite playlist
+    * Maybe even we grabbed it from the top _N_ of a favorite artist or genre
+  * Affinity is a function of these
+    * Count?
+    * Weighted Sum?
+      * Favorite >> Owned Playlist >> Album >> Other Playlist >> Artist >> Genre
 
 ## Browsing
 
 1. Present the user with:
    1. The attributes
-   2. All songs 
+   2. All songs
       * If they pick a song from here, **they're done** 🛑
 2. User has picked an attribute. Present them with:
    1. All remaining attributes
@@ -77,6 +88,19 @@ Genres: Classic Rock, Psychedelic Rock, Blues
 | | Popularity > 50  
 | | | Albums  
 | | | | some long list of albums, and the user has started playing from here
+
+
+## Order
+
+Within a Group, tracks can be sorted in various ways:
+
+* Name
+* Artist
+* Track Number
+* Affinity
+* Genre
+* Length
+* ??? really, any attribute ...
 
 
 # Playing Music
