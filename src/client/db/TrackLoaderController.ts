@@ -6,18 +6,28 @@ import {UIRouterReact} from "@uirouter/react";
 import {AppServices} from "app/client/app/AppServices";
 import {browserState} from "app/client/app/states";
 import {DataStoreDexieLoader, DexieStoreLoadFailure} from "app/client/db/DataStoreDexieLoader";
+import {DBTrack, PartialTrack} from "app/client/db/DBTrack";
 import {IAlbum} from "app/client/model/Album";
-import {IArtist} from "app/client/model/Artist";
+import {Artist, IArtist} from "app/client/model/Artist";
 import {DataStore} from "app/client/model/DataStore";
-import {Favorites} from "app/client/model/Favorites";
 import {Genre} from "app/client/model/Genre";
 import {IPlaylist} from "app/client/model/Playlist";
 import {ITrack, Track} from "app/client/model/Track";
 import {ArrayUtils} from "app/client/utils/ArrayUtils";
 import {TimeUtils} from "app/client/utils/TimeUtils";
+import {INCLUSTION_REASON_FAVORITE} from "app/client/utils/Types";
 import {SpotifyWebApi} from "spotify-web-api-ts";
 import * as SpotifyObjects from "spotify-web-api-ts/types/types/SpotifyObjects";
-import {Episode, Playlist, PlaylistItem, SavedAlbum, SavedTrack, SimplifiedPlaylist, SimplifiedTrack} from "spotify-web-api-ts/types/types/SpotifyObjects";
+import {
+  Episode,
+  Playlist,
+  PlaylistItem,
+  SavedAlbum,
+  SavedTrack,
+  SimplifiedArtist,
+  SimplifiedPlaylist,
+  SimplifiedTrack
+} from "spotify-web-api-ts/types/types/SpotifyObjects";
 import {
   GetMyPlaylistsResponse,
   GetPlaylistItemsResponse,
@@ -123,6 +133,8 @@ export class TrackLoaderController
   private _dbLoader: DataStoreDexieLoader | undefined;
 
   private _attemptedDBLoad: boolean = false;
+
+  private tracks: Map<string/*id*/, DBTrack> = new Map();
 
   constructor(dataStore: DataStore, router: UIRouterReact, onStatusChanged: (status: TrackLoaderStatus) => void)
   {
@@ -338,53 +350,94 @@ export class TrackLoaderController
       const results: GetSavedTracksResponse = await this.callSpotify(() => this.spotify.library.getSavedTracks({limit: 50, offset: this.status?.offset!}),
                                                                      this.status?.offset! > 0);
 
-      const artistIds: Set<string> = new Set();
-      const tracks: Track[] = [];
 
-      results.items.forEach((result: SavedTrack) => {
-        const apiTrack: SpotifyObjects.Track = result.track;
+      results.items.map((savedTrack: SavedTrack) => savedTrack.track)
+             .map((track: SpotifyObjects.Track) => {
+               const partialTrack: PartialTrack = {...track};
+               return {
+                 ...partialTrack,
 
-        const track: Track = new Track(apiTrack.id,
-                                       apiTrack.name,
-                                       apiTrack.explicit ? "explicit" : "clean",
-                                       Math.floor(apiTrack.duration_ms / 1000),
-                                       apiTrack.popularity,
-                                       "streaming",
-                                       apiTrack.disc_number,
-                                       apiTrack.track_number,
-                                       Favorites.favorites,
-                                       [],  // We'll fill this in later, when we need it.
-                                       this.convertApiArtistsToArtists(apiTrack.artists),
-                                       this.convertApiAlbumToIAlbum(apiTrack.album),
-                                       new Date(result.added_at));
+                 album_id: track.album.id,
+                 artist_ids: track.artists.map((artist: SimplifiedArtist) => artist.id),
 
-        track.artists.forEach((artist) => {
-          artistIds.add(artist.id);
-        });
+                 "inclusionReasons": [INCLUSTION_REASON_FAVORITE]
+               };
+             })
+             .forEach((dbTrack: DBTrack) => this.tracks.set(dbTrack.id, dbTrack));
 
-        tracks.push(track);
-      });
+      //
+      // TODO:
+      //  1. Do the same as the above for albums, artists, playlists.
+      //  2. Then do post-processing:
+      //    A. For each album and playlist
+      //      1. add/update its tracks (adding to inclusionReasons as needed)
+      //      2. add/update its artists (adding to inclusionReasons as needed)
+      //      3. fetch its genres
+      //    B. For each track
+      //      1. add/update its artists (adding yada yada)
+      //      2. Via the artists, fill in genre
+      //      3. add/update its album (adding yada yada)
+      //        *** Don't need to fetch album tracks, I think. They're too many steps removed ***
+      //  3. Then put in database
+      //  4. Then put into datastore as model objects
+      //  5. Profit!
+      //
+
+
+      // const tracks: Track[] = [];
+      //
+      // results.items.forEach((result: SavedTrack) => {
+      //   const apiTrack: SpotifyObjects.Track = result.track;
+      //
+      //   const track: Track = new Track(apiTrack.id,
+      //                                  apiTrack.name,
+      //                                  apiTrack.explicit ? "explicit" : "clean",
+      //                                  Math.floor(apiTrack.duration_ms / 1000),
+      //                                  apiTrack.popularity,
+      //                                  "streaming",
+      //                                  apiTrack.disc_number,
+      //                                  apiTrack.track_number,
+      //                                  Favorites.favorites,
+      //                                  [],  // We'll fill this in later, when we need it.
+      //                                  this.convertApiArtistsToArtists(apiTrack.artists),
+      //                                  this.convertApiAlbumToIAlbum(apiTrack.album),
+      //                                  new Date(result.added_at));
+      //
+      //   track.artists.forEach((artist: IArtist) => {
+      //     let existingArtist: IArtist | undefined = this.artistMap.get(artist.id);
+      //
+      //     if (!existingArtist)
+      //     {
+      //       existingArtist = artist;
+      //       this.artistMap.set(artist.id, artist);
+      //     }
+      //
+      //     existingArtist.addIncludedReason(track);
+      //   });
+      //
+      //   tracks.push(track);
+      // });
 
       this.loaderItemCount += results.items.length;
 
-      const artistIdChunks: string[][] = ArrayUtils.splitIntoChunks([...artistIds], 20);
-
-      await Promise.all(artistIdChunks.map(async (ids: string[]) => {
-        const artists: Array<SpotifyObjects.Artist | null> = await this.callSpotify(() => this.spotify.artists.getArtists(ids));
-        artists.forEach((artist: SpotifyObjects.Artist | null) => {
-          if (artist !== null)
-          {
-            tracks.filter((track: ITrack) => (track.artists.filter((trackArtist) => trackArtist.id === artist.id)))
-                  .forEach((track: ITrack) => {
-                    track.genres = artist.genres.map((name) => new Genre(name));
-                  });
-          }
-        });
-      }));
-
-      tracks.forEach((track: Track) => {
-        this._dataStore.addTrack(track);
-      });
+      // const artistIdChunks: string[][] = ArrayUtils.splitIntoChunks([...this.artistMap.keys()], 20);
+      //
+      // await Promise.all(artistIdChunks.map(async (ids: string[]) => {
+      //   const artists: Array<SpotifyObjects.Artist | null> = await this.callSpotify(() => this.spotify.artists.getArtists(ids));
+      //   artists.forEach((artist: SpotifyObjects.Artist | null) => {
+      //     if (artist !== null)
+      //     {
+      //       tracks.filter((track: ITrack) => (track.artists.filter((trackArtist) => trackArtist.id === artist.id)))
+      //             .forEach((track: ITrack) => {
+      //               track.genres = artist.genres.map((name) => new Genre(name));
+      //             });
+      //     }
+      //   });
+      // }));
+      //
+      // tracks.forEach((track: Track) => {
+      //   this._dataStore.addTrack(track);
+      // });
 
       if (this.loaderItemCount === results.total)
       {
@@ -611,12 +664,10 @@ export class TrackLoaderController
   private convertApiArtistsToArtists(apiArtists: SpotifyObjects.SimplifiedArtist[]): IArtist[]
   {
     const artists: IArtist[] = apiArtists.map((apiArtist: SpotifyObjects.SimplifiedArtist) => {
-      const artist: IArtist = {
-        id: apiArtist.id,
-        name: apiArtist.name,
-        genres: [],
-        popularity: 0
-      };
+      const artist: IArtist = new Artist(apiArtist.id,
+                                         apiArtist.name,
+                                         0,
+                                         []);
 
       return artist;
     });
