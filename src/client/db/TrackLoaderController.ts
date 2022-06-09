@@ -6,28 +6,19 @@ import {UIRouterReact} from "@uirouter/react";
 import {AppServices} from "app/client/app/AppServices";
 import {browserState} from "app/client/app/states";
 import {DataStoreDexieLoader, DexieStoreLoadFailure} from "app/client/db/DataStoreDexieLoader";
+import {DBAlbum, PartialAlbum} from "app/client/db/DBAlbum";
+import {DBArtist, PartialArtist} from "app/client/db/DBArtist";
 import {DBTrack, PartialTrack} from "app/client/db/DBTrack";
 import {IAlbum} from "app/client/model/Album";
 import {Artist, IArtist} from "app/client/model/Artist";
 import {DataStore} from "app/client/model/DataStore";
-import {Genre} from "app/client/model/Genre";
 import {IPlaylist} from "app/client/model/Playlist";
-import {ITrack, Track} from "app/client/model/Track";
-import {ArrayUtils} from "app/client/utils/ArrayUtils";
+import {Track} from "app/client/model/Track";
 import {TimeUtils} from "app/client/utils/TimeUtils";
-import {INCLUSTION_REASON_FAVORITE} from "app/client/utils/Types";
+import {InclusionReason, INCLUSTION_REASON_FAVORITE} from "app/client/utils/Types";
 import {SpotifyWebApi} from "spotify-web-api-ts";
 import * as SpotifyObjects from "spotify-web-api-ts/types/types/SpotifyObjects";
-import {
-  Episode,
-  Playlist,
-  PlaylistItem,
-  SavedAlbum,
-  SavedTrack,
-  SimplifiedArtist,
-  SimplifiedPlaylist,
-  SimplifiedTrack
-} from "spotify-web-api-ts/types/types/SpotifyObjects";
+import {Episode, Playlist, PlaylistItem, SavedAlbum, SavedTrack, SimplifiedArtist, SimplifiedPlaylist} from "spotify-web-api-ts/types/types/SpotifyObjects";
 import {
   GetMyPlaylistsResponse,
   GetPlaylistItemsResponse,
@@ -135,6 +126,13 @@ export class TrackLoaderController
   private _attemptedDBLoad: boolean = false;
 
   private tracks: Map<string/*id*/, DBTrack> = new Map();
+
+  private albums: Map<string/*id*/, DBAlbum> = new Map();
+
+  private artists: Map<string/*id*/, DBArtist> = new Map();
+
+  // @ts-ignore
+  private genres: Set<string> = new Set();
 
   constructor(dataStore: DataStore, router: UIRouterReact, onStatusChanged: (status: TrackLoaderStatus) => void)
   {
@@ -343,6 +341,32 @@ export class TrackLoaderController
     throw new Error("Too many retries on one call");
   }
 
+  private async loadMissingArtists(allIds: string[], inclusionReasons: InclusionReason[]): Promise<Set<DBArtist>>
+  {
+    const ids: string[] = allIds.filter((id) => !this.artists.has(id));
+
+    const added: Set<DBArtist> = new Set();
+
+    const artists: Array<SpotifyObjects.Artist | null> = await this.callSpotify(() => this.spotify.artists.getArtists(ids));
+
+    artists.forEach((spotifyArtist: SpotifyObjects.Artist | null) => {
+      if (spotifyArtist !== null)
+      {
+        const partialArtist: PartialArtist = {...spotifyArtist};
+        const dbArtist: DBArtist = {
+          ...partialArtist,
+          image_ids: spotifyArtist.images.map((image) => image.url),
+          inclusionReasons: inclusionReasons
+        };
+
+        this.artists.set(dbArtist.id, dbArtist);
+        added.add(dbArtist);
+      }
+    });
+
+    return added;
+  }
+
   private async loadFavorites(): Promise<void>
   {
     try
@@ -351,19 +375,11 @@ export class TrackLoaderController
                                                                      this.status?.offset! > 0);
 
 
-      results.items.map((savedTrack: SavedTrack) => savedTrack.track)
-             .map((track: SpotifyObjects.Track) => {
-               const partialTrack: PartialTrack = {...track};
-               return {
-                 ...partialTrack,
+      const dbTracks: DBTrack[] = await Promise.all(results.items.map((savedTrack: SavedTrack) => savedTrack.track)
+                                                           .map((track: SpotifyObjects.Track) => this.loadSavedTrack(track,
+                                                                                                                     INCLUSTION_REASON_FAVORITE)));
 
-                 album_id: track.album.id,
-                 artist_ids: track.artists.map((artist: SimplifiedArtist) => artist.id),
-
-                 "inclusionReasons": [INCLUSTION_REASON_FAVORITE]
-               };
-             })
-             .forEach((dbTrack: DBTrack) => this.tracks.set(dbTrack.id, dbTrack));
+      dbTracks.forEach((dbTrack: DBTrack) => this.tracks.set(dbTrack.id, dbTrack));
 
       //
       // TODO:
@@ -455,6 +471,32 @@ export class TrackLoaderController
     }
   };
 
+  private async loadSavedTrack(track: SpotifyObjects.Track, ...inclusionReasons: [InclusionReason]): Promise<DBTrack>
+  {
+    const partialTrack: PartialTrack = {...track};
+
+    let artistIds = track.artists.map((artist: SimplifiedArtist) => artist.id);
+
+
+    // Fetch/populate artists and genres
+    await this.loadMissingArtists(artistIds, [track]);
+
+    const genres: Set<string> = new Set(...artistIds.map((artistId: string) => this.artists.get(artistId))
+                                                    .map((artist: DBArtist | undefined) => artist?.genres ?? []));
+
+    let dbTrack: DBTrack = {
+      ...partialTrack,
+
+      album_id: track.album.id,
+      artist_ids: new Set(...artistIds),
+      genres: genres,
+
+      inclusionReasons: inclusionReasons
+    };
+
+    return dbTrack;
+  }
+
   private async loadAlbums(): Promise<void>
   {
     try
@@ -462,46 +504,60 @@ export class TrackLoaderController
       const results: GetSavedAlbumsResponse = await this.callSpotify(() => this.spotify.library.getSavedAlbums({limit: 50, offset: this.status?.offset!}),
                                                                      this.status?.offset! > 0);
 
-      const tracks: Track[] = [];
+      results.items.map((savedAlbum: SavedAlbum) => savedAlbum.album)
+             .map((album: SpotifyObjects.Album) => {
+               const partialAlbum: PartialAlbum = {...album};
+               return {
+                 ...partialAlbum,
 
-      results.items.forEach((result: SavedAlbum) => {
-        const apiAlbum: SpotifyObjects.Album = result.album;
-        const album: IAlbum = this.convertApiAlbumToIAlbum(apiAlbum, result.added_at);
-        apiAlbum.tracks.items.forEach((apiTrack: SimplifiedTrack) => {
+                 artist_ids: album.artists.map((artist: SimplifiedArtist) => artist.id),
+                 track_ids: [],
+                 image_ids: [],
+                 inclusionReasons: [INCLUSTION_REASON_FAVORITE]
+               };
+             })
+             .forEach((dbAlbum: DBAlbum) => this.albums.set(dbAlbum.id, dbAlbum));
 
-          const track: Track = new Track(apiTrack.id,
-                                         apiTrack.name,
-                                         apiTrack.explicit ? "explicit" : "clean",
-                                         Math.floor(apiTrack.duration_ms / 1000),
-                                         0, // We fill this in later, when we need it.
-                                         "streaming",
-                                         apiTrack.disc_number,
-                                         apiTrack.track_number,
-                                         album,
-                                         apiAlbum.genres.map((genre) => new Genre(genre)),
-                                         this.convertApiArtistsToArtists(apiTrack.artists));
-
-          tracks.push(track);
-        });
-      });
-
-      const allTrackIds: string[] = tracks.map((track: Track) => track.id);
-
-      const trackIdChunks: string[][] = ArrayUtils.splitIntoChunks(allTrackIds, 20);
-
-      await Promise.all(trackIdChunks.map(async (ids: string[]) => {
-        const artists: Array<SpotifyObjects.Track | null> = await this.callSpotify(() => this.spotify.tracks.getTracks(ids));
-        artists.forEach((apiTrack: SpotifyObjects.Track | null) => {
-          if (apiTrack !== null)
-          {
-            tracks.filter((track: ITrack) => track.id === apiTrack.id)[0].popularity = apiTrack.popularity;
-          }
-        });
-      }));
-
-      tracks.forEach((track: Track) => {
-        this._dataStore.addTrack(track);
-      });
+      // const tracks: Track[] = [];
+      //
+      // results.items.forEach((result: SavedAlbum) => {
+      //   const apiAlbum: SpotifyObjects.Album = result.album;
+      //   const album: IAlbum = this.convertApiAlbumToIAlbum(apiAlbum, result.added_at);
+      //   apiAlbum.tracks.items.forEach((apiTrack: SimplifiedTrack) => {
+      //
+      //     const track: Track = new Track(apiTrack.id,
+      //                                    apiTrack.name,
+      //                                    apiTrack.explicit ? "explicit" : "clean",
+      //                                    Math.floor(apiTrack.duration_ms / 1000),
+      //                                    0, // We fill this in later, when we need it.
+      //                                    "streaming",
+      //                                    apiTrack.disc_number,
+      //                                    apiTrack.track_number,
+      //                                    album,
+      //                                    apiAlbum.genres.map((genre) => new Genre(genre)),
+      //                                    this.convertApiArtistsToArtists(apiTrack.artists));
+      //
+      //     tracks.push(track);
+      //   });
+      // });
+      //
+      // const allTrackIds: string[] = tracks.map((track: Track) => track.id);
+      //
+      // const trackIdChunks: string[][] = ArrayUtils.splitIntoChunks(allTrackIds, 20);
+      //
+      // await Promise.all(trackIdChunks.map(async (ids: string[]) => {
+      //   const artists: Array<SpotifyObjects.Track | null> = await this.callSpotify(() => this.spotify.tracks.getTracks(ids));
+      //   artists.forEach((apiTrack: SpotifyObjects.Track | null) => {
+      //     if (apiTrack !== null)
+      //     {
+      //       tracks.filter((track: ITrack) => track.id === apiTrack.id)[0].popularity = apiTrack.popularity;
+      //     }
+      //   });
+      // }));
+      //
+      // tracks.forEach((track: Track) => {
+      //   this._dataStore.addTrack(track);
+      // });
 
       this.loaderItemCount += results.items.length;
 
@@ -515,7 +571,7 @@ export class TrackLoaderController
         this.setStatus({
                          status: this.status?.status,
                          offset: this.status?.offset! + results.items.length,
-                         subprogress: this.status?.subprogress! + tracks.length
+                         subprogress: this.status?.subprogress! + this.tracks.size
                        });
       }
     }
@@ -644,6 +700,7 @@ export class TrackLoaderController
     }
   }
 
+  // @ts-ignore
   private convertApiAlbumToIAlbum(apiAlbum: SpotifyObjects.SimplifiedAlbum, addedAt?: string): IAlbum
   {
     const album: IAlbum = {
