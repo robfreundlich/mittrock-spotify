@@ -18,7 +18,17 @@ import {TimeUtils} from "app/client/utils/TimeUtils";
 import {InclusionReason, INCLUSTION_REASON_FAVORITE} from "app/client/utils/Types";
 import {SpotifyWebApi} from "spotify-web-api-ts";
 import * as SpotifyObjects from "spotify-web-api-ts/types/types/SpotifyObjects";
-import {Episode, Playlist, PlaylistItem, SavedAlbum, SavedTrack, SimplifiedArtist, SimplifiedPlaylist} from "spotify-web-api-ts/types/types/SpotifyObjects";
+import {
+  Episode,
+  Paging,
+  Playlist,
+  PlaylistItem,
+  SavedAlbum,
+  SavedTrack,
+  SimplifiedArtist,
+  SimplifiedPlaylist,
+  SimplifiedTrack
+} from "spotify-web-api-ts/types/types/SpotifyObjects";
 import {
   GetMyPlaylistsResponse,
   GetPlaylistItemsResponse,
@@ -474,12 +484,16 @@ export class TrackLoaderController
   private async loadSavedTrack(track: SpotifyObjects.Track, ...inclusionReasons: [InclusionReason]): Promise<DBTrack>
   {
     const partialTrack: PartialTrack = {...track};
+    return await this.loadPartialTrack(partialTrack, track.album.id, track.artists, [track]);
+  }
 
-    let artistIds = track.artists.map((artist: SimplifiedArtist) => artist.id);
+  private async loadPartialTrack(partialTrack: PartialTrack, album_id: string, artists: SimplifiedArtist[], inclusionReasons: [InclusionReason])
+  {
+    let artistIds = artists.map((artist: SimplifiedArtist) => artist.id);
 
 
     // Fetch/populate artists and genres
-    await this.loadMissingArtists(artistIds, [track]);
+    await this.loadMissingArtists(artistIds, inclusionReasons);
 
     const genres: Set<string> = new Set(...artistIds.map((artistId: string) => this.artists.get(artistId))
                                                     .map((artist: DBArtist | undefined) => artist?.genres ?? []));
@@ -487,7 +501,7 @@ export class TrackLoaderController
     let dbTrack: DBTrack = {
       ...partialTrack,
 
-      album_id: track.album.id,
+      album_id: album_id,
       artist_ids: new Set(...artistIds),
       genres: genres,
 
@@ -504,19 +518,23 @@ export class TrackLoaderController
       const results: GetSavedAlbumsResponse = await this.callSpotify(() => this.spotify.library.getSavedAlbums({limit: 50, offset: this.status?.offset!}),
                                                                      this.status?.offset! > 0);
 
-      results.items.map((savedAlbum: SavedAlbum) => savedAlbum.album)
-             .map((album: SpotifyObjects.Album) => {
-               const partialAlbum: PartialAlbum = {...album};
-               return {
-                 ...partialAlbum,
+      await Promise.all(results.items.map((savedAlbum: SavedAlbum) => savedAlbum.album)
+                               .map(async (album: SpotifyObjects.Album) => {
 
-                 artist_ids: album.artists.map((artist: SimplifiedArtist) => artist.id),
-                 track_ids: [],
-                 image_ids: [],
-                 inclusionReasons: [INCLUSTION_REASON_FAVORITE]
-               };
-             })
-             .forEach((dbAlbum: DBAlbum) => this.albums.set(dbAlbum.id, dbAlbum));
+                                 const partialAlbum: PartialAlbum = {...album};
+                                 const dbAlbum: DBAlbum = {
+                                   ...partialAlbum,
+
+                                   artist_ids: album.artists.map((artist: SimplifiedArtist) => artist.id),
+                                   track_ids: [],
+                                   image_ids: [],
+                                   inclusionReasons: [INCLUSTION_REASON_FAVORITE]
+                                 };
+
+                                 await this.loadTracks(album, dbAlbum);
+
+                                 this.albums.set(dbAlbum.id, dbAlbum);
+                               }));
 
       // const tracks: Track[] = [];
       //
@@ -731,4 +749,51 @@ export class TrackLoaderController
 
     return artists;
   };
+
+  private async loadTracks(album: SpotifyObjects.Album, dbAlbum: DBAlbum): Promise<void>
+  {
+    const track_ids: string[] = [];
+
+    const loadTrackPage = async (page: Paging<SimplifiedTrack>) => {
+      await Promise.all(page.items.map(async (simplifiedTrack: SimplifiedTrack) => {
+        track_ids.push(simplifiedTrack.id);
+
+        const partialTrack: PartialTrack = {
+          ...simplifiedTrack,
+          external_ids: {},
+          popularity: 0
+        };
+
+        await this.loadPartialTrack(partialTrack, album.id, album.artists, [dbAlbum]);
+      }));
+
+      const next: string | null = page.next;
+
+      if (!next)
+      {
+        return null;
+      }
+
+
+      const results: Paging<SimplifiedTrack> = await this.callSpotify(() => this.spotify.albums.getAlbumTracks(album.id,
+                                                                                                               {
+                                                                                                                 limit: page.limit,
+                                                                                                                 offset: page.offset
+                                                                                                               }));
+
+      dbAlbum.track_ids = track_ids;
+      return results;
+    };
+
+    const pages: Paging<SimplifiedTrack>[] = [];
+
+    pages.push(album.tracks);
+    await Promise.all(pages.map(async (page: Paging<SimplifiedTrack>) => {
+      const next: Paging<SimplifiedTrack> | null = await loadTrackPage(page);
+      if (next)
+      {
+        pages.push(next);
+      }
+    }));
+  }
 }

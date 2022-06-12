@@ -6,7 +6,7 @@ import {IdentifiedObject} from "app/client/model/IdentifiedObject";
 import {IncludedObject} from "app/client/model/IncludedObject";
 import {Track} from "spotify-web-api-ts/src/types/SpotifyObjects";
 
-export type PartialTrack = Omit<Track, "albums" | "artists">;
+export type PartialTrack = Omit<Track, "album" | "artists">;
 
 export interface DBTrack extends IncludedObject, IdentifiedObject, PartialTrack
 {

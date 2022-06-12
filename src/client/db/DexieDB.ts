@@ -2,13 +2,13 @@
  * Copyright (c) 2022. Rob Freundlich <rob@freundlichs.com> - All rights reserved.
  */
 
-import {IAlbum} from "app/client/model/Album";
-import {IArtist} from "app/client/model/Artist";
-import {IGenre} from "app/client/model/Genre";
+import {DBAlbum} from "app/client/db/DBAlbum";
+import {DBArtist} from "app/client/db/DBArtist";
+import {DBGenre} from "app/client/db/DBGenre";
+import {DBTrack} from "app/client/db/DBTrack";
 import {IdentifiedObject} from "app/client/model/IdentifiedObject";
 import {IPlaylist} from "app/client/model/Playlist";
 import {ITitle} from "app/client/model/Title";
-import {ITrack} from "app/client/model/Track";
 import Dexie, {Table} from "dexie";
 
 export class DexieDB extends Dexie
@@ -27,15 +27,15 @@ export class DexieDB extends Dexie
     return DexieDB.instance;
   }
 
-  public readonly albums!: Table<IAlbum>;
+  public readonly albums!: Table<DBAlbum>;
 
-  public readonly artists!: Table<IArtist>;
+  public readonly artists!: Table<DBArtist>;
 
-  public readonly genres!: Table<IGenre | IdentifiedObject>;
+  public readonly genres!: Table<DBGenre | IdentifiedObject>;
 
   public readonly titles!: Table<ITitle>;
 
-  public readonly tracks!: Table<ITrack>;
+  public readonly tracks!: Table<DBTrack>;
 
   public readonly playlists!: Table<IPlaylist>;
 
