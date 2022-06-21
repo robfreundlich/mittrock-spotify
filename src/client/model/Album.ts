@@ -15,7 +15,7 @@ export interface IAlbum extends IdentifiedObject, ITrackSource
 
   name: string;
 
-  type: AlbumType;
+  albumType: AlbumType;
 
   tracks: ITrack[];
 
@@ -34,9 +34,11 @@ export class Album implements IAlbum
 
   public readonly id: string;
 
+  public readonly type: string = "album";
+
   public readonly name: string;
 
-  public readonly type: AlbumType;
+  public readonly albumType: AlbumType;
 
   public readonly tracks: ITrack[];
 
@@ -53,7 +55,7 @@ export class Album implements IAlbum
   {
     this.id = id;
     this.name = name;
-    this.type = type;
+    this.albumType = type;
     this.releaseDate = releaseDate;
     this.releaseDatePrecision = releaseDatePrecision;
     this.artists = artists;

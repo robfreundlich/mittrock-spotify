@@ -43,6 +43,8 @@ export class Title implements ITitle
 {
   public readonly id: string;
 
+  public readonly type: string = "title";
+
   public readonly name: string;
 
   public readonly albums: IAlbum[];

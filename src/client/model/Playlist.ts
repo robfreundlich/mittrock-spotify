@@ -30,6 +30,8 @@ export class Playlist implements IPlaylist
 {
   public readonly sourceType: TrackSource = "playlist";
 
+  public readonly type: string = "playlist";
+
   public collaborative: boolean;
 
   public description: string;

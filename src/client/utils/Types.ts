@@ -2,8 +2,6 @@
  * Copyright (c) 2022. Rob Freundlich <rob@freundlichs.com> - All rights reserved.
  */
 
-import {IdentifiedObject} from "app/client/model/IdentifiedObject";
-
 export type AlbumType = "album" | "single" | "compilation";
 
 export type ReleaseDatePrecision = "year" | "month" | "day";
@@ -18,4 +16,6 @@ type InclusionReasonFavorite = "favorite";
 
 export const INCLUSTION_REASON_FAVORITE: InclusionReasonFavorite = "favorite";
 
-export type InclusionReason = InclusionReasonFavorite | IdentifiedObject;
+export type InclusionReasonObject = { type: string, id: string };
+
+export type InclusionReason = InclusionReasonFavorite | InclusionReasonObject;

@@ -4,7 +4,7 @@
 
 import {IdentifiedObject} from "app/client/model/IdentifiedObject";
 import {IncludedObject} from "app/client/model/IncludedObject";
-import {Album} from "spotify-web-api-ts/src/types/SpotifyObjects";
+import {Album} from "spotify-web-api-ts/types/types/SpotifyObjects";
 
 export type PartialAlbum = Omit<Album, "artists" | "images" | "tracks">;
 

@@ -17,4 +17,4 @@ export const areIdentifiedObjectsSame = (a: IdentifiedObject, b: IdentifiedObjec
   }
 
   return a.id === b.id;
-}
+};

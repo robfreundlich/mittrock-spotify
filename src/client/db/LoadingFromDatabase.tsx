@@ -5,8 +5,8 @@
 import {UIRouterReact} from "@uirouter/react";
 import {AppServices} from "app/client/app/AppServices";
 import {browserState, loadingDatabaseState} from "app/client/app/states";
+import {DBTrack} from "app/client/db/DBTrack";
 import {DataStore} from "app/client/model/DataStore";
-import {ITrack} from "app/client/model/Track";
 import React from "react";
 
 export interface LoadingFromDatabaseProps
@@ -62,8 +62,8 @@ export class LoadingFromDatabase extends React.Component<LoadingFromDatabaseProp
     {
       this.setState({status: "loading"});
 
-      await AppServices.db.tracks.each((track: ITrack) => {
-        this.props.dataStore.addTrack(track);
+      await AppServices.db.tracks.each((track: DBTrack) => {
+        // this.props.dataStore.addTrack(track);
       });
       this.setState({status: "loaded"});
     }

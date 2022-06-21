@@ -4,7 +4,7 @@
 
 import {IdentifiedObject} from "app/client/model/IdentifiedObject";
 import {IncludedObject} from "app/client/model/IncludedObject";
-import {Track} from "spotify-web-api-ts/src/types/SpotifyObjects";
+import {Track} from "spotify-web-api-ts/types/types/SpotifyObjects";
 
 export type PartialTrack = Omit<Track, "album" | "artists">;
 

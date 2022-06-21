@@ -31,37 +31,37 @@ export class TrackLoader extends React.Component<TrackLoaderProps>
           <textarea className="error-content data" value={this.props.status?.error}/>
         </div>}
 
-        <div className="favorites-container container item">
-          <div className="label">Favorites</div>
-          <div className="data">{this.props.controller.dataStore.numFavoriteTracks}</div>
-        </div>
+        {/*<div className="favorites-container container item">*/}
+        {/*  <div className="label">Favorites</div>*/}
+        {/*  <div className="data">{this.props.controller.tracks.length}</div>*/}
+        {/*</div>*/}
 
         <div className="albums-container container">
           <div className="albums item">
             <div className="label">Albums</div>
-            <div className="data">{this.props.controller.dataStore.albums.length}</div>
+            <div className="data">{this.props.controller.albums.length}</div>
           </div>
-          <div className="tracks item">
-            <div className="label">Tracks</div>
-            <div className="data">{this.props.controller.dataStore.numAlbumTracks}</div>
-          </div>
+          {/*<div className="tracks item">*/}
+          {/*  <div className="label">Tracks</div>*/}
+          {/*  <div className="data">{this.props.controller.dataStore.numAlbumTracks}</div>*/}
+          {/*</div>*/}
         </div>
 
-        <div className="playlists-container container">
-          <div className="playlists item">
-            <div className="label">Playlists</div>
-            <div className="data">{this.props.controller.dataStore.playlists.length}</div>
-          </div>
-          <div className="tracks item">
-            <div className="label">Tracks</div>
-            <div className="data">{this.props.controller.dataStore.numPlaylistTracks}</div>
-          </div>
-        </div>
+        {/*<div className="playlists-container container">*/}
+        {/*  <div className="playlists item">*/}
+        {/*    <div className="label">Playlists</div>*/}
+        {/*    <div className="data">{this.props.controller.dataStore.playlists.length}</div>*/}
+        {/*  </div>*/}
+        {/*  <div className="tracks item">*/}
+        {/*    <div className="label">Tracks</div>*/}
+        {/*    <div className="data">{this.props.controller.dataStore.numPlaylistTracks}</div>*/}
+        {/*  </div>*/}
+        {/*</div>*/}
 
         <div className="totals-container container">
           <div className="total-tracks item">
             <div className="label">Total tracks</div>
-            <div className="data">{this.props.controller.dataStore.tracks.length}</div>
+            <div className="data">{this.props.controller.tracks.length}</div>
           </div>
           <div className="elapsed-time item">
             <div className="label">Elapsed time</div>

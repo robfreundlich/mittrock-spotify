@@ -24,6 +24,8 @@ export class Artist implements IArtist
 {
   public readonly id: string;
 
+  public readonly type: string = "artist";
+
   public readonly name: string;
 
   public readonly genres: IGenre[];

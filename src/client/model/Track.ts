@@ -49,6 +49,8 @@ export class Track implements ITrack
 {
   public id: string;
 
+  public readonly type: string = "track";
+
   public readonly name: string;
 
   public readonly explicit: Explicitness;

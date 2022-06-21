@@ -6,7 +6,6 @@ import {DBAlbum} from "app/client/db/DBAlbum";
 import {DBArtist} from "app/client/db/DBArtist";
 import {DBGenre} from "app/client/db/DBGenre";
 import {DBTrack} from "app/client/db/DBTrack";
-import {IdentifiedObject} from "app/client/model/IdentifiedObject";
 import {IPlaylist} from "app/client/model/Playlist";
 import {ITitle} from "app/client/model/Title";
 import Dexie, {Table} from "dexie";
@@ -31,15 +30,13 @@ export class DexieDB extends Dexie
 
   public readonly artists!: Table<DBArtist>;
 
-  public readonly genres!: Table<DBGenre | IdentifiedObject>;
+  public readonly genres!: Table<DBGenre>;
 
   public readonly titles!: Table<ITitle>;
 
   public readonly tracks!: Table<DBTrack>;
 
   public readonly playlists!: Table<IPlaylist>;
-
-  public readonly testing!: Table<{ id: string, name: string }>;
 
   constructor()
   {
@@ -49,9 +46,9 @@ export class DexieDB extends Dexie
                              albums: "id, name, type",
                              artists: "id",
                              genres: "id++",
-                             titles: "id, name",
+                             // titles: "id, name",
                              tracks: "id, name",
-                             playlists: "id, name",
+                             // playlists: "id, name",
                            });
   }
 }

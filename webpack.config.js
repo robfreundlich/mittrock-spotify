@@ -22,11 +22,17 @@ module.exports = {
         exclude: /node_modules|(\.spec.ts)/,
       },
       {
+        test: /\.js$/,
+        enforce: "pre",
+        use: ["source-map-loader"],
+      },
+      {
         test: /\.css$/,
         use: ["style-loader", "css-loader"]
       }
     ],
   },
+  ignoreWarnings: [/Failed to parse source map/],
   output: {
     filename: 'bundle.js',
     path: path.resolve(__dirname, 'dist'),
