@@ -6,6 +6,7 @@ import {AppServices} from "app/client/app/AppServices";
 import {DexieStoreLoadFailure} from "app/client/db/DataStoreDexieLoader";
 import {DBAlbum} from "app/client/db/DBAlbum";
 import {DBArtist} from "app/client/db/DBArtist";
+import {DBPlaylist} from "app/client/db/DBPlaylist";
 import {DBTrack} from "app/client/db/DBTrack";
 
 export class DexieLoader
@@ -20,12 +21,19 @@ export class DexieLoader
 
   private artists: Map<string/*id*/, DBArtist> = new Map();
 
+  private playlists: Map<string/*id*/, DBPlaylist> = new Map();
+
   private genres: Set<string> = new Set();
 
-  constructor(tracks: Map<string, DBTrack>, albums: Map<string, DBAlbum>, artists: Map<string, DBArtist>, genres: Set<string>)
+  constructor(tracks: Map<string, DBTrack>,
+              albums: Map<string, DBAlbum>,
+              playlists: Map<string, DBPlaylist>,
+              artists: Map<string, DBArtist>,
+              genres: Set<string>)
   {
     this.tracks = tracks;
     this.albums = albums;
+    this.playlists = playlists;
     this.artists = artists;
     this.genres = genres;
   }
@@ -42,11 +50,13 @@ export class DexieLoader
                                      AppServices.db.artists,
                                      AppServices.db.genres,
                                      AppServices.db.tracks,
+                                     AppServices.db.playlists,
                                      async () => {
                                        AppServices.db.albums.clear();
                                        AppServices.db.artists.clear();
                                        AppServices.db.genres.clear();
                                        AppServices.db.tracks.clear();
+                                       AppServices.db.playlists.clear();
                                      });
 
     this._loadFailures = [];
@@ -61,6 +71,7 @@ export class DexieLoader
     await this.loadArtists();
     await this.loadGenres();
     await this.loadTracks();
+    await this.loadPlaylists();
   }
 
   private async loadAlbums()
@@ -166,5 +177,31 @@ export class DexieLoader
                                                                                                             });
                                                                                   }
                                                                                 })));
+  }
+
+  private async loadPlaylists()
+  {
+    return Promise.all([...this.playlists.values()]
+                           .map((dbPlaylist: DBPlaylist) => AppServices.db
+                                                                       .transaction("rw",
+                                                                                    AppServices.db.playlists,
+                                                                                    async () => {
+                                                                                      try
+                                                                                      {
+                                                                                        AppServices.db.playlists.add(dbPlaylist);
+                                                                                      }
+                                                                                      catch (error)
+                                                                                      {
+                                                                                        if ((<any>error).hasOwnProperty("message"))
+                                                                                        {
+                                                                                          error = (<any>error).message;
+                                                                                        }
+                                                                                        this._loadFailures.push({
+                                                                                                                  valueType: "playlist",
+                                                                                                                  value: dbPlaylist,
+                                                                                                                  failure: <string>error
+                                                                                                                });
+                                                                                      }
+                                                                                    })));
   }
 }

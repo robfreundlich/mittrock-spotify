@@ -213,7 +213,7 @@ export class DataStoreDexieLoader
                                                                                          .transaction("rw",
                                                                                                       AppServices.db.playlists,
                                                                                                       async () => {
-                                                                                                        AppServices.db.playlists.add(playlist);
+                                                                                                        // AppServices.db.playlists.add(playlist);
                                                                                                       }).catch(Dexie.DexieError, (error) => {
           this._loadFailures.push({
                                     valueType: "playlist",

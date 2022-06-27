@@ -6,17 +6,17 @@ import {UIRouterReact} from "@uirouter/react";
 import {AppServices} from "app/client/app/AppServices";
 import {browserState} from "app/client/app/states";
 import {DexieStoreLoadFailure} from "app/client/db/DataStoreDexieLoader";
-import {DBAlbum, PartialAlbum} from "app/client/db/DBAlbum";
-import {DBArtist, PartialArtist} from "app/client/db/DBArtist";
-import {DBTrack, PartialTrack} from "app/client/db/DBTrack";
+import {DBAlbum, makePartialAlbum, PartialAlbum} from "app/client/db/DBAlbum";
+import {DBArtist, makePartialArtist, PartialArtist} from "app/client/db/DBArtist";
+import {DBPlaylist, makePartialPlaylist, PartialPlaylist} from "app/client/db/DBPlaylist";
+import {DBTrack, makePartialTrack, PartialTrack} from "app/client/db/DBTrack";
 import {DexieLoader} from "app/client/db/DexieLoader";
 import {IAlbum} from "app/client/model/Album";
 import {Artist, IArtist} from "app/client/model/Artist";
 import {DataStore} from "app/client/model/DataStore";
-import {IPlaylist} from "app/client/model/Playlist";
-import {Track} from "app/client/model/Track";
 import {TimeUtils} from "app/client/utils/TimeUtils";
 import {InclusionReason, INCLUSTION_REASON_FAVORITE} from "app/client/utils/Types";
+import pMapSeries from "p-map-series";
 import {SpotifyWebApi} from "spotify-web-api-ts";
 import * as SpotifyObjects from "spotify-web-api-ts/types/types/SpotifyObjects";
 import {
@@ -53,9 +53,11 @@ export type LoadingDatabaseStatus =
 export type TrackLoaderStatus = {
   status: LoadingDatabaseStatus;
   offset?: number;
+  limit?: number;
   subprogress?: number;
   error?: string;
   currentPlaylist?: number;
+  currentAlbum?: number;
   stopped?: boolean;
   currentTime: Date;
 }
@@ -96,23 +98,6 @@ export class TrackLoaderController
     return TimeUtils.delay(TrackLoaderController.apiDelayTimeMsec, condition);
   }
 
-  private static convertApiPlaylistToIPlaylist(apiPlaylist: SpotifyObjects.Playlist): IPlaylist
-  {
-    const playlist: IPlaylist = {
-      id: apiPlaylist.id,
-      name: apiPlaylist.name,
-      tracks: [],
-      collaborative: apiPlaylist.collaborative,
-      description: apiPlaylist.description ?? "",
-      owner: apiPlaylist.owner.display_name ?? "",
-      snapshot_id: apiPlaylist.snapshot_id,
-      visibility: apiPlaylist.public ? "public" : "private",
-      sourceType: "playlist"
-    };
-
-    return playlist;
-  };
-
   private static log(s: string): void
   {
     const now: Date = new Date();
@@ -133,7 +118,7 @@ export class TrackLoaderController
 
   private spotify: SpotifyWebApi;
 
-  private _playlists: IPlaylist[] = [];
+  private _playlists: DBPlaylist[] = [];
 
   private _currentPlaylistTotalTracks: number;
 
@@ -149,6 +134,8 @@ export class TrackLoaderController
 
   private _artistsById: Map<string/*id*/, DBArtist | undefined> = new Map();
 
+  private _playlistsById: Map<string/*id*/, DBPlaylist> = new Map();
+
   private _genres: Set<string> = new Set();
 
   constructor(dataStore: DataStore, router: UIRouterReact, onStatusChanged: (status: TrackLoaderStatus) => void)
@@ -156,7 +143,7 @@ export class TrackLoaderController
     this._dataStore = dataStore;
     this._router = router;
     this._onStatusChanged = onStatusChanged;
-    this._dbLoader = new DexieLoader(this._tracksById, this._albumsById, this._artistsById as Map<string, DBArtist>, this._genres);
+    this._dbLoader = new DexieLoader(this._tracksById, this._albumsById, this._playlistsById, this._artistsById as Map<string, DBArtist>, this._genres);
   }
 
   public get dataStore(): DataStore
@@ -177,6 +164,11 @@ export class TrackLoaderController
   public get albums(): DBAlbum[]
   {
     return [...this._albumsById.values()];
+  }
+
+  public get playlists(): DBPlaylist[]
+  {
+    return this._playlists.slice();
   }
 
   public get artists(): DBArtist[]
@@ -209,8 +201,23 @@ export class TrackLoaderController
 
   public handlePossibleStateChange(prevState: Readonly<TrackLoaderStatus> | undefined): void
   {
-    if ((prevState === undefined) || (JSON.stringify(prevState) !== JSON.stringify(this.status)))
+    const currentStatus: LoadingDatabaseStatus | undefined = this.status?.status;
+    const previousStatus: LoadingDatabaseStatus | undefined = prevState?.status;
+
+    const currentOffset: number = this.status?.offset ?? 0;
+    const previousOffset: number = prevState?.offset ?? 0;
+
+    if ((previousStatus !== currentStatus)                                        // Status change
+        || ((currentStatus === "loading_playlist_tracks")                         // Playlist changed
+            && (prevState?.currentPlaylist !== this.status?.currentPlaylist))
+        || ((previousStatus === currentStatus)
+            && (currentOffset > previousOffset)))                                 // paging
     {
+
+      TrackLoaderController.log("***************************** STATE TRANSITION ******************************");
+      TrackLoaderController.log(`${previousStatus}@${prevState?.offset}`);
+      TrackLoaderController.log(`${currentStatus}@${this.status?.offset}`);
+
       this.loadNext();
     }
   }
@@ -223,7 +230,7 @@ export class TrackLoaderController
 
       if (!this._status.stopped && !this._attemptedDBLoad)
       {
-        this.setStatus({status: "saving_to_database", stopped: true});
+        this.setStatus({...this.status, status: "saving_to_database", stopped: true});
 
         this.saveToDatabase().then(() => {
           this.setStatus(value);
@@ -249,7 +256,7 @@ export class TrackLoaderController
 
   public stop()
   {
-    this.setStatus({status: "stopped", stopped: true});
+    this.setStatus({...this.status, status: "stopped", stopped: true});
   }
 
   private isRateLimitError(error: any): boolean
@@ -307,6 +314,7 @@ export class TrackLoaderController
     this._attemptedDBLoad = true;
     this._dbLoader.onError = (err: Error) => {
       this.setStatus({
+                       ...this.status,
                        status: "error",
                        error: err.stack ?? err.message
                      });
@@ -317,6 +325,7 @@ export class TrackLoaderController
     if ((this.status.status !== "error") && (this._dbLoader!.loadFailures.length > 0))
     {
       this.setStatus({
+                       ...this.status,
                        status: "error",
                        error: this._dbLoader!.loadFailures.map((failure: DexieStoreLoadFailure) => {
                          return `${failure.valueType}: ${failure.value.name} - ${failure.failure}`;
@@ -325,7 +334,10 @@ export class TrackLoaderController
     }
     else
     {
-      this.setStatus({status: "loaded"});
+      this.setStatus({
+                       ...this.status,
+                       status: "loaded"
+                     });
     }
   }
 
@@ -333,7 +345,7 @@ export class TrackLoaderController
   {
     await this._dbLoader.clear();
     this._dataStore.clear();
-    this.setStatus({status: "loading_favorites", offset: 0, subprogress: 0});
+    this.setStatus({status: "loading_playlists" /*"loading_favorites"*/, offset: 0, limit: 50, subprogress: 0});
   }
 
   private async callSpotify<T>(getData: () => Promise<T>, message: string, apiDelayCondition: boolean = true): Promise<T>
@@ -347,13 +359,13 @@ export class TrackLoaderController
     {
       try
       {
-        TrackLoaderController.log(`${message} attempt ${i} - delay`);
+        // TrackLoaderController.log(`${message} attempt ${i} - delay`);
         await TrackLoaderController.apiDelay(apiDelayCondition);
 
-        TrackLoaderController.log(`${message} attempt ${i} - call`);
+        // TrackLoaderController.log(`${message} attempt ${i} - call`);
         const result: T = await getData();
 
-        TrackLoaderController.log(`${message} attempt ${i} - got result`);
+        // TrackLoaderController.log(`${message} attempt ${i} - got result`);
 
         return result;
       }
@@ -389,9 +401,11 @@ export class TrackLoaderController
 
   private async loadMissingArtists(allIds: string[], inclusionReasons: InclusionReason[]): Promise<Set<DBArtist>>
   {
+    // TrackLoaderController.log(`loadMissingArtists ${allIds.join(",")}`);
     const ids: string[] = allIds.filter((id) => !this._artistsById.has(id));
     if (ids.length === 0)
     {
+      // TrackLoaderController.log("  NONE");
       return new Set<DBArtist>();
     }
 
@@ -403,15 +417,15 @@ export class TrackLoaderController
 
     try
     {
-      TrackLoaderController.log(`+++Getting artists ${allIds.join(",")}`);
+      // TrackLoaderController.log(`+++Getting artists ${allIds.join(",")}`);
       const artists: Array<SpotifyObjects.Artist | null> = await this.callSpotify(() => this.spotify.artists.getArtists(ids),
                                                                                   `getArtists ${ids.join(",")}`);
-      TrackLoaderController.log(`---Getting artists ${allIds.join(".")}`);
+      // TrackLoaderController.log(`---Getting artists ${allIds.join(".")}`);
 
       artists.forEach((spotifyArtist: SpotifyObjects.Artist | null) => {
         if (spotifyArtist !== null)
         {
-          const partialArtist: PartialArtist = {...spotifyArtist};
+          const partialArtist: PartialArtist = makePartialArtist(spotifyArtist);
           const dbArtist: DBArtist = {
             ...partialArtist,
             image_ids: spotifyArtist.images.map((image) => image.url),
@@ -439,19 +453,27 @@ export class TrackLoaderController
 
   private async loadFavorites(): Promise<void>
   {
+    // TrackLoaderController.log(`loadFavorites ${this.status.offset}`);
     try
     {
-      const results: GetSavedTracksResponse = await this.callSpotify(() => this.spotify.library.getSavedTracks({limit: 50, offset: this.status?.offset!}),
+      const results: GetSavedTracksResponse = await this.callSpotify(() => this.spotify.library.getSavedTracks({
+                                                                                                                 limit: this.status?.limit!,
+                                                                                                                 offset: this.status?.offset!
+                                                                                                               }),
                                                                      `getSavedTracks ${this.status?.offset}`,
                                                                      this.status?.offset! > 0);
 
 
-      const dbTracks: DBTrack[] = await Promise.all(results.items.map(async (savedTrack: SavedTrack) => {
-        const track: SpotifyObjects.Track = savedTrack.track;
+      // TrackLoaderController.log(`  loadFavorites ${this.status.offset} +callforEach for loadSavedTrack`);
+      const dbTracks: DBTrack[] = await pMapSeries(results.items,
+                                                   async (savedTrack: SavedTrack) => {
+                                                     const track: SpotifyObjects.Track = savedTrack.track;
 
-        const dbTrack: DBTrack = await this.loadSavedTrack(track, INCLUSTION_REASON_FAVORITE);
-        return dbTrack;
-      }));
+                                                     const dbTrack: DBTrack = await this.loadSavedTrack(track, INCLUSTION_REASON_FAVORITE);
+                                                     return dbTrack;
+                                                   });
+
+      // TrackLoaderController.log(`  loadFavorites ${this.status.offset} -callforEach for loadSavedTrack`);
 
       dbTracks.forEach((dbTrack: DBTrack) => this._tracksById.set(dbTrack.id, dbTrack));
 
@@ -471,42 +493,11 @@ export class TrackLoaderController
       //  3. Then put in database
       //  4. Then put into datastore as model objects
       //  5. Profit!
-      //
 
+      // TODO:
+      //  Move all artist loading/processing (and therefore all track genre processing) to the very end.
+      //  It's just too damn slow.
 
-      // const tracks: Track[] = [];
-      //
-      // results.items.forEach((result: SavedTrack) => {
-      //   const apiTrack: SpotifyObjects.Track = result.track;
-      //
-      //   const track: Track = new Track(apiTrack.id,
-      //                                  apiTrack.name,
-      //                                  apiTrack.explicit ? "explicit" : "clean",
-      //                                  Math.floor(apiTrack.duration_ms / 1000),
-      //                                  apiTrack.popularity,
-      //                                  "streaming",
-      //                                  apiTrack.disc_number,
-      //                                  apiTrack.track_number,
-      //                                  Favorites.favorites,
-      //                                  [],  // We'll fill this in later, when we need it.
-      //                                  this.convertApiArtistsToArtists(apiTrack.artists),
-      //                                  this.convertApiAlbumToIAlbum(apiTrack.album),
-      //                                  new Date(result.added_at));
-      //
-      //   track.artists.forEach((artist: IArtist) => {
-      //     let existingArtist: IArtist | undefined = this.artistMap.get(artist.id);
-      //
-      //     if (!existingArtist)
-      //     {
-      //       existingArtist = artist;
-      //       this.artistMap.set(artist.id, artist);
-      //     }
-      //
-      //     existingArtist.addIncludedReason(track);
-      //   });
-      //
-      //   tracks.push(track);
-      // });
 
       this.loaderItemCount += results.items.length;
 
@@ -532,26 +523,29 @@ export class TrackLoaderController
       if (this.loaderItemCount === results.total)
       {
         this.loaderItemCount = 0;
-        this.setStatus({status: "loading_albums", offset: 0, subprogress: 0});
+        this.setStatus({status: "loading_albums", offset: 0, limit: 50, subprogress: 0});
       }
       else
       {
-        this.setStatus({status: this.status?.status, offset: this.status?.offset! + results.items.length});
+        this.setStatus({...this.status, offset: this.status?.offset! + results.items.length});
       }
     }
     catch (err)
     {
-      this.setStatus({status: "error", error: (err as Error).stack!});
+      this.setStatus({...this.status, status: "error", error: (err as Error).stack!});
     }
   };
 
   private async loadSavedTrack(track: SpotifyObjects.Track, ...inclusionReasons: InclusionReason[]): Promise<DBTrack>
   {
-    const partialTrack: PartialTrack = {...track};
-    return await this.loadPartialTrack(partialTrack,
-                                       track.album.id,
-                                       track.artists,
-                                       inclusionReasons);
+    // TrackLoaderController.log(`+loadSavedTrack ${track.id}`);
+    const partialTrack: PartialTrack = makePartialTrack(track);
+    const dbTrack = await this.loadPartialTrack(partialTrack,
+                                                track.album.id,
+                                                track.artists,
+                                                inclusionReasons);
+    // TrackLoaderController.log(`-loadSavedTrack ${track.id}`);
+    return dbTrack;
   }
 
   private async loadPartialTrack(partialTrack: PartialTrack,
@@ -559,11 +553,19 @@ export class TrackLoaderController
                                  artists: SimplifiedArtist[],
                                  inclusionReasons: InclusionReason[]): Promise<DBTrack>
   {
+    if (this.status.stopped)
+    {
+      return Promise.reject();
+    }
+
+    // TrackLoaderController.log(`+loadPartialTrack ${partialTrack.id}`);
     let artistIds = artists.filter((artist: SimplifiedArtist) => artist.id !== "")
                            .map((artist: SimplifiedArtist) => artist.id);
 
     // Fetch/populate artists and genres
     const artistInclusionReasons: InclusionReason[] = inclusionReasons.filter((inclusionReason) => inclusionReason !== "favorite");
+
+    // TrackLoaderController.log(`  calling loadMisssingArtists ${artistIds.join(",")}, ${inclusionReasons.join(",")}`);
     await this.loadMissingArtists(artistIds, artistInclusionReasons);
 
     const genres: Set<string> = new Set(...artistIds.map((artistId: string) => this._artistsById.get(artistId))
@@ -593,136 +595,130 @@ export class TrackLoaderController
                }
              });
 
+    // TrackLoaderController.log(`-loadPartialTrack ${partialTrack.id}`);
     return dbTrack;
   }
 
   private async loadAlbums(): Promise<void>
   {
+    if (this.status.stopped)
+    {
+      return Promise.reject();
+    }
+
     try
     {
-      const results: GetSavedAlbumsResponse = await this.callSpotify(() => this.spotify.library.getSavedAlbums({limit: 50, offset: this.status?.offset!}),
+      const results: GetSavedAlbumsResponse = await this.callSpotify(() => this.spotify.library.getSavedAlbums({
+                                                                                                                 limit: this.status?.limit!,
+                                                                                                                 offset: this.status?.offset!
+                                                                                                               }),
                                                                      `getSavedAlbums ${this.status?.offset}`,
                                                                      this.status?.offset! > 0);
 
-      await Promise.all(results.items.map((savedAlbum: SavedAlbum) => savedAlbum.album)
-                               .map(async (album: SpotifyObjects.Album) => {
+      await pMapSeries(results.items.map((savedAlbum: SavedAlbum) => savedAlbum.album),
+                       async (album: SpotifyObjects.Album) => {
 
-                                 const partialAlbum: PartialAlbum = {...album};
-                                 const dbAlbum: DBAlbum = {
-                                   ...partialAlbum,
+                         const partialAlbum: PartialAlbum = makePartialAlbum(album);
+                         const dbAlbum: DBAlbum = {
+                           ...partialAlbum,
 
-                                   artist_ids: album.artists.map((artist: SimplifiedArtist) => artist.id),
-                                   track_ids: [],
-                                   image_ids: [],
-                                   inclusionReasons: [INCLUSTION_REASON_FAVORITE]
-                                 };
+                           artist_ids: album.artists.map((artist: SimplifiedArtist) => artist.id),
+                           track_ids: [],
+                           image_ids: [],
+                           inclusionReasons: [INCLUSTION_REASON_FAVORITE]
+                         };
 
-                                 const tracks: DBTrack[] = await this.loadTracks(album, dbAlbum);
-                                 tracks.forEach((track: DBTrack) => {
-                                   this._tracksById.set(track.id, track);
-                                 });
+                         const tracks: DBTrack[] = await this.loadAlbumTracks(album, dbAlbum);
+                         tracks.forEach((track: DBTrack) => {
+                           this._tracksById.set(track.id, track);
+                         });
 
-                                 this._albumsById.set(dbAlbum.id, dbAlbum);
-                               }));
-
-      // const tracks: Track[] = [];
-      //
-      // results.items.forEach((result: SavedAlbum) => {
-      //   const apiAlbum: SpotifyObjects.Album = result.album;
-      //   const album: IAlbum = this.convertApiAlbumToIAlbum(apiAlbum, result.added_at);
-      //   apiAlbum.tracks.items.forEach((apiTrack: SimplifiedTrack) => {
-      //
-      //     const track: Track = new Track(apiTrack.id,
-      //                                    apiTrack.name,
-      //                                    apiTrack.explicit ? "explicit" : "clean",
-      //                                    Math.floor(apiTrack.duration_ms / 1000),
-      //                                    0, // We fill this in later, when we need it.
-      //                                    "streaming",
-      //                                    apiTrack.disc_number,
-      //                                    apiTrack.track_number,
-      //                                    album,
-      //                                    apiAlbum.genres.map((genre) => new Genre(genre)),
-      //                                    this.convertApiArtistsToArtists(apiTrack.artists));
-      //
-      //     tracks.push(track);
-      //   });
-      // });
-      //
-      // const allTrackIds: string[] = tracks.map((track: Track) => track.id);
-      //
-      // const trackIdChunks: string[][] = ArrayUtils.splitIntoChunks(allTrackIds, 20);
-      //
-      // await Promise.all(trackIdChunks.map(async (ids: string[]) => {
-      //   const artists: Array<SpotifyObjects.Track | null> = await this.callSpotify(() => this.spotify.tracks.getTracks(ids));
-      //   artists.forEach((apiTrack: SpotifyObjects.Track | null) => {
-      //     if (apiTrack !== null)
-      //     {
-      //       tracks.filter((track: ITrack) => track.id === apiTrack.id)[0].popularity = apiTrack.popularity;
-      //     }
-      //   });
-      // }));
-      //
-      // tracks.forEach((track: Track) => {
-      //   this._dataStore.addTrack(track);
-      // });
+                         this._albumsById.set(dbAlbum.id, dbAlbum);
+                         this.setStatus({
+                                          status: this.status?.status,
+                                          offset: this.status?.offset!,
+                                          subprogress: this.status?.subprogress! + tracks.length,
+                                          currentAlbum: this._albumsById.size
+                                        });
+                       });
 
       this.loaderItemCount += results.items.length;
 
       if (this.loaderItemCount === results.total)
       {
         this.loaderItemCount = 0;
-        this.setStatus({status: "saving_to_database" /*"loading_playlists"*/, offset: 0, subprogress: 0});
+        this.setStatus({status: "loading_playlists", offset: 0, limit: 50, subprogress: 0});
       }
       else
       {
         this.setStatus({
+                         ...this.status,
                          status: this.status?.status,
                          offset: this.status?.offset! + results.items.length,
-                         subprogress: this.status?.subprogress! + this._tracksById.size
+                         currentAlbum: this._albumsById.size
                        });
       }
     }
     catch (err)
     {
-      this.setStatus({status: "error", error: (err as Error).stack!});
+      this.setStatus({...this.status, status: "error", error: (err as Error).stack!});
     }
   }
 
   private async loadPlaylists(): Promise<void>
   {
+    if (this.status.stopped)
+    {
+      return Promise.reject();
+    }
+
     try
     {
-      const results: GetMyPlaylistsResponse = await this.callSpotify(() => this.spotify.playlists.getMyPlaylists({limit: 50, offset: this.status?.offset!}),
+      const results: GetMyPlaylistsResponse = await this.callSpotify(() => this.spotify.playlists.getMyPlaylists({
+                                                                                                                   limit: this.status?.limit!,
+                                                                                                                   offset: this.status?.offset!
+                                                                                                                 }),
                                                                      `getMyPlaylists ${this.status?.offset}`,
                                                                      this.status?.offset! > 0);
 
-      await Promise.all(results.items.map((async (result: SimplifiedPlaylist) => {
-        const apiPlaylist: Playlist = await this.callSpotify(() => this.spotify.playlists.getPlaylist(result.id),
-                                                             `getPlaylist ${result.id}`);
-        await TrackLoaderController.apiDelay(true);
-        const playlist: IPlaylist = TrackLoaderController.convertApiPlaylistToIPlaylist(apiPlaylist);
+      await pMapSeries(results.items,
+                       async (result: SimplifiedPlaylist) => {
+                         const apiPlaylist: Playlist = await this.callSpotify(() => this.spotify.playlists.getPlaylist(result.id),
+                                                                              `getPlaylist ${result.id}`);
+                         await TrackLoaderController.apiDelay(true);
 
-        this._playlists.push(playlist);
-      })));
+                         const partialPlaylist: PartialPlaylist = makePartialPlaylist(apiPlaylist);
+                         const playlist: DBPlaylist = {
+                           ...partialPlaylist,
+                           image_ids: [],
+                           track_ids: [],
+
+                           inclusionReasons: [INCLUSTION_REASON_FAVORITE]
+                         };
+
+                         this._playlists.push(playlist);
+                         this._playlistsById.set(playlist.id, playlist);
+                       });
+
 
       this.loaderItemCount += results.items.length;
 
       if (this.loaderItemCount === results.total)
       {
         this.loaderItemCount = 0;
-        this.setStatus({status: "loading_playlist_tracks", offset: 0, subprogress: 0});
+        this.setStatus({status: "loading_playlist_tracks", offset: 0, limit: 100, subprogress: 0});
       }
       else
       {
         this.setStatus({
-                         status: this.status?.status,
+                         ...this.status,
                          offset: this.status?.offset! + results.items.length
                        });
       }
     }
     catch (err)
     {
-      this.setStatus({status: "error", error: (err as Error).stack!});
+      this.setStatus({...this.status, status: "error", error: (err as Error).stack!});
     }
   }
 
@@ -739,41 +735,40 @@ export class TrackLoaderController
       const playlist = this._playlists[playlistIndex];
       const playListId = playlist.id;
 
-      const tracks: Track[] = [];
-
       const results: GetPlaylistItemsResponse = await this.callSpotify(() => this.spotify.playlists.getPlaylistItems(playListId,
                                                                                                                      {
-                                                                                                                       limit: 100,
+                                                                                                                       limit: this.status?.limit!,
                                                                                                                        offset: this.status?.offset!
                                                                                                                      }),
                                                                        `getPlaylistItems ${this.status?.offset}`,
                                                                        this.status?.offset! > 0);
-      results.items.forEach((item: PlaylistItem) => {
-        const apiTrack: SpotifyObjects.Track | Episode = item.track;
-        if (apiTrack.type === "episode")
-        {
-          // for now
-          return;
-        }
 
-        const track: Track = new Track(apiTrack.id,
-                                       apiTrack.name,
-                                       apiTrack.explicit ? "explicit" : "clean",
-                                       Math.floor(apiTrack.duration_ms / 1000),
-                                       0, // We fill this in later, when we need it.
-                                       "streaming",
-                                       apiTrack.disc_number,
-                                       apiTrack.track_number,
-                                       playlist,
-                                       [],
-                                       this.convertApiArtistsToArtists(apiTrack.artists));
+      const tracksEtc: (DBTrack | undefined)[] = await pMapSeries(results.items,
+                                                                  async (item: PlaylistItem) => {
+                                                                    const apiTrack: SpotifyObjects.Track | Episode = item.track;
+                                                                    if (apiTrack.type === "episode")
+                                                                    {
+                                                                      // for now
+                                                                      return;
+                                                                    }
 
-        tracks.push(track);
+                                                                    const partialTrack: PartialTrack = makePartialTrack(apiTrack);
+
+                                                                    const dbTrack: DBTrack = await this.loadPartialTrack(partialTrack,
+                                                                                                                         "",
+                                                                                                                         apiTrack.artists,
+                                                                                                                         [playlist]);
+                                                                    return dbTrack;
+                                                                  });
+
+      const tracks: DBTrack[] = (tracksEtc.filter((t) => t !== undefined)) as DBTrack[];
+
+      playlist.track_ids.push(...tracks.map((track) => track.id));
+
+      tracks.forEach((track: DBTrack) => {
+        this._tracksById.set(track.id, track);
       });
 
-      tracks.forEach((track: Track) => {
-        this._dataStore.addTrack(track);
-      });
 
       this._currentPlaylistTotalTracks += results.items.length;
 
@@ -786,18 +781,21 @@ export class TrackLoaderController
         }
         else
         {
+          TrackLoaderController.log(`Increasing subprogress from ${this.status?.subprogress} by ${tracks.length} before going to next playlist`);
           this.setStatus({
-                           status: this.status?.status,
+                           ...this.status,
                            offset: 0,
-                           subprogress: this.status?.subprogress!,
-                           currentPlaylist: playlistIndex + 1
+                           limit: 100,
+                           currentPlaylist: playlistIndex + 1,
+                           subprogress: this.status?.subprogress ?? 0 + tracks.length
                          });
         }
       }
       else
       {
+        TrackLoaderController.log(`Increasing subprogress from ${this.status?.subprogress} by ${tracks.length}`);
         this.setStatus({
-                         status: this.status?.status,
+                         ...this.status,
                          offset: this.status?.offset! + results.items.length,
                          subprogress: this.status?.subprogress! + tracks.length,
                          currentPlaylist: playlistIndex
@@ -806,7 +804,7 @@ export class TrackLoaderController
     }
     catch (err)
     {
-      this.setStatus({status: "error", error: (err as Error).stack!});
+      this.setStatus({...this.status, status: "error", error: (err as Error).stack!});
     }
   }
 
@@ -842,27 +840,31 @@ export class TrackLoaderController
     return artists;
   };
 
-  private async loadTracks(album: SpotifyObjects.Album, dbAlbum: DBAlbum): Promise<DBTrack[]>
+  private async loadAlbumTracks(album: SpotifyObjects.Album, dbAlbum: DBAlbum): Promise<DBTrack[]>
   {
     const track_ids: string[] = [];
     const tracks: DBTrack[] = [];
 
     const loadTrackPage = async (page: Paging<SimplifiedTrack>) => {
-      await Promise.all(page.items.map(async (simplifiedTrack: SimplifiedTrack) => {
-        track_ids.push(simplifiedTrack.id);
+      await pMapSeries(page.items,
+                       async (simplifiedTrack: SimplifiedTrack) => {
+                         track_ids.push(simplifiedTrack.id);
 
-        const partialTrack: PartialTrack = {
-          ...simplifiedTrack,
-          external_ids: {},
-          popularity: 0
-        };
+                         const {artists, ...basicTrack} = {...simplifiedTrack};
 
-        const dbTrack: DBTrack = await this.loadPartialTrack(partialTrack,
-                                                             album.id,
-                                                             album.artists,
-                                                             [{type: "album", id: dbAlbum.id}]);
-        tracks.push(dbTrack);
-      }));
+
+                         const partialTrack: PartialTrack = {
+                           ...basicTrack,
+                           external_ids: {},
+                           popularity: 0
+                         };
+
+                         const dbTrack: DBTrack = await this.loadPartialTrack(partialTrack,
+                                                                              album.id,
+                                                                              album.artists,
+                                                                              [{type: "album", id: dbAlbum.id}]);
+                         tracks.push(dbTrack);
+                       });
 
       const next: string | null = page.next;
 
@@ -875,9 +877,9 @@ export class TrackLoaderController
       const results: Paging<SimplifiedTrack> = await this.callSpotify(() => this.spotify.albums.getAlbumTracks(album.id,
                                                                                                                {
                                                                                                                  limit: page.limit,
-                                                                                                                 offset: page.offset
+                                                                                                                 offset: page.offset + page.limit
                                                                                                                }),
-                                                                      `getAlbumTracks ${album.id} - ${page.offset}`);
+                                                                      `getAlbumTracks ${album.id} - ${page.offset + page.limit}`);
 
       return results;
     };
@@ -885,13 +887,14 @@ export class TrackLoaderController
     const pages: Paging<SimplifiedTrack>[] = [];
 
     pages.push(album.tracks);
-    await Promise.all(pages.map(async (page: Paging<SimplifiedTrack>) => {
-      const next: Paging<SimplifiedTrack> | null = await loadTrackPage(page);
-      if (next)
-      {
-        pages.push(next);
-      }
-    }));
+    await pMapSeries(pages,
+                     async (page: Paging<SimplifiedTrack>) => {
+                       const next: Paging<SimplifiedTrack> | null = await loadTrackPage(page);
+                       if (next)
+                       {
+                         pages.push(next);
+                       }
+                     });
 
     dbAlbum.track_ids = track_ids;
     return tracks;

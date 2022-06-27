@@ -8,6 +8,12 @@ import {Album} from "spotify-web-api-ts/types/types/SpotifyObjects";
 
 export type PartialAlbum = Omit<Album, "artists" | "images" | "tracks">;
 
+export const makePartialAlbum = (t: Album): PartialAlbum => {
+  const {artists, images, tracks, ...rest} = {...t};
+  return rest;
+};
+
+
 export interface DBAlbum extends IncludedObject, IdentifiedObject, PartialAlbum
 {
   artist_ids: string[];

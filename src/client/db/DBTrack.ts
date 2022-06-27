@@ -8,6 +8,11 @@ import {Track} from "spotify-web-api-ts/types/types/SpotifyObjects";
 
 export type PartialTrack = Omit<Track, "album" | "artists">;
 
+export const makePartialTrack = (t: Track): PartialTrack => {
+  const {album, artists, ...rest} = {...t};
+  return rest;
+};
+
 export interface DBTrack extends IncludedObject, IdentifiedObject, PartialTrack
 {
   album_id: string;

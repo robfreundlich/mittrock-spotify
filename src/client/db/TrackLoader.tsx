@@ -39,29 +39,40 @@ export class TrackLoader extends React.Component<TrackLoaderProps>
         <div className="albums-container container">
           <div className="albums item">
             <div className="label">Albums</div>
-            <div className="data">{this.props.controller.albums.length}</div>
+            <div className="data">{(this.props.controller.status?.status === "loading_albums")
+                                   ? this.props.controller.status.currentAlbum
+                                   : this.props.controller.albums.length}</div>
           </div>
-          {/*<div className="tracks item">*/}
-          {/*  <div className="label">Tracks</div>*/}
-          {/*  <div className="data">{this.props.controller.dataStore.numAlbumTracks}</div>*/}
-          {/*</div>*/}
+          {this.props.controller.status?.status === "loading_albums" &&
+           <div className="tracks item">
+             <div className="label">Tracks</div>
+             <div className="data">{this.props.controller.status.subprogress}</div>
+           </div>}
         </div>
 
-        {/*<div className="playlists-container container">*/}
-        {/*  <div className="playlists item">*/}
-        {/*    <div className="label">Playlists</div>*/}
-        {/*    <div className="data">{this.props.controller.dataStore.playlists.length}</div>*/}
-        {/*  </div>*/}
-        {/*  <div className="tracks item">*/}
-        {/*    <div className="label">Tracks</div>*/}
-        {/*    <div className="data">{this.props.controller.dataStore.numPlaylistTracks}</div>*/}
-        {/*  </div>*/}
-        {/*</div>*/}
+        <div className="playlists-container container">
+          <div className="playlists item">
+            <div className="label">Playlists</div>
+            <div className="data">{(this.props.controller.status?.status === "loading_playlists")
+                                   || (this.props.controller.status?.status === "loading_playlist_tracks")
+                                   ? this.props.controller.status.currentPlaylist
+                                   : this.props.controller.playlists.length}</div>
+          </div>
+
+          {((this.props.controller.status?.status === "loading_playlists")
+            || (this.props.controller.status?.status === "loading_playlist_tracks")) &&
+           <div className="tracks item">
+             <div className="label">Tracks</div>
+             <div className="data">{this.props.controller.status.subprogress}</div>
+           </div>}
+        </div>
 
         <div className="totals-container container">
           <div className="total-tracks item">
             <div className="label">Total tracks</div>
-            <div className="data">{this.props.controller.tracks.length}</div>
+            <div className="data">{(this.props.controller.status?.status === "loading_favorites")
+                                   ? this.props.controller.status.subprogress
+                                   : this.props.controller.tracks.length}</div>
           </div>
           <div className="elapsed-time item">
             <div className="label">Elapsed time</div>
@@ -88,7 +99,7 @@ export class TrackLoader extends React.Component<TrackLoaderProps>
     const previousAuthToken: string | undefined = prevProps?.authToken;
 
     this.props.controller.onAuthTokenChanged(currentAuthToken, previousAuthToken);
-    this.props.controller.handlePossibleStateChange(prevState);
+    this.props.controller.handlePossibleStateChange(prevProps?.status);
   }
 
 }

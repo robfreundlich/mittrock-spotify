@@ -5,8 +5,8 @@
 import {DBAlbum} from "app/client/db/DBAlbum";
 import {DBArtist} from "app/client/db/DBArtist";
 import {DBGenre} from "app/client/db/DBGenre";
+import {DBPlaylist} from "app/client/db/DBPlaylist";
 import {DBTrack} from "app/client/db/DBTrack";
-import {IPlaylist} from "app/client/model/Playlist";
 import {ITitle} from "app/client/model/Title";
 import Dexie, {Table} from "dexie";
 
@@ -36,19 +36,19 @@ export class DexieDB extends Dexie
 
   public readonly tracks!: Table<DBTrack>;
 
-  public readonly playlists!: Table<IPlaylist>;
+  public readonly playlists!: Table<DBPlaylist>;
 
   constructor()
   {
     super("mittrock-spotify");
 
-    this.version(1).stores({
-                             albums: "id, name, type",
-                             artists: "id",
-                             genres: "id++",
-                             // titles: "id, name",
-                             tracks: "id, name",
-                             // playlists: "id, name",
-                           });
+    this.version(11).stores({
+                              albums: "id, name, type",
+                              artists: "id",
+                              genres: "id++",
+                              // titles: "id, name",
+                              tracks: "id, name",
+                              playlists: "id, name",
+                            });
   }
 }
