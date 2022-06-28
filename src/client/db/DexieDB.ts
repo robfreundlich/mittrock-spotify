@@ -44,7 +44,7 @@ export class DexieDB extends Dexie
 
     this.version(11).stores({
                               albums: "id, name, type",
-                              artists: "id",
+                              artists: "id, name",
                               genres: "id++",
                               // titles: "id, name",
                               tracks: "id, name",

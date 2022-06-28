@@ -11,9 +11,8 @@ import {DBArtist, makePartialArtist, PartialArtist} from "app/client/db/DBArtist
 import {DBPlaylist, makePartialPlaylist, PartialPlaylist} from "app/client/db/DBPlaylist";
 import {DBTrack, makePartialTrack, PartialTrack} from "app/client/db/DBTrack";
 import {DexieLoader} from "app/client/db/DexieLoader";
-import {IAlbum} from "app/client/model/Album";
-import {Artist, IArtist} from "app/client/model/Artist";
 import {DataStore} from "app/client/model/DataStore";
+import {ArrayUtils} from "app/client/utils/ArrayUtils";
 import {TimeUtils} from "app/client/utils/TimeUtils";
 import {InclusionReason, INCLUSTION_REASON_FAVORITE} from "app/client/utils/Types";
 import pMapSeries from "p-map-series";
@@ -45,6 +44,7 @@ export type LoadingDatabaseStatus =
     | "loading_albums"
     | "loading_playlists"
     | "loading_playlist_tracks"
+    | "loading_artists"
     | "saving_to_database"
     | "loaded"
     | "error"
@@ -133,6 +133,8 @@ export class TrackLoaderController
   private _albumsById: Map<string/*id*/, DBAlbum> = new Map();
 
   private _artistsById: Map<string/*id*/, DBArtist | undefined> = new Map();
+
+  private _artistInclusionReasons: Map<string/*id*/, InclusionReason[]> = new Map();
 
   private _playlistsById: Map<string/*id*/, DBPlaylist> = new Map();
 
@@ -298,6 +300,10 @@ export class TrackLoaderController
     {
       this.loadPlaylistTracks(this.status?.currentPlaylist);
     }
+    else if (this.status?.status === "loading_artists")
+    {
+      this.loadArtists();
+    }
     else if (this.status?.status === "saving_to_database")
     {
       this.saveToDatabase();
@@ -345,7 +351,7 @@ export class TrackLoaderController
   {
     await this._dbLoader.clear();
     this._dataStore.clear();
-    this.setStatus({status: "loading_playlists" /*"loading_favorites"*/, offset: 0, limit: 50, subprogress: 0});
+    this.setStatus({status: "loading_favorites", offset: 0, limit: 50, subprogress: 0});
   }
 
   private async callSpotify<T>(getData: () => Promise<T>, message: string, apiDelayCondition: boolean = true): Promise<T>
@@ -399,58 +405,6 @@ export class TrackLoaderController
     throw new Error(`${message} Too many retries on one call`);
   }
 
-  private async loadMissingArtists(allIds: string[], inclusionReasons: InclusionReason[]): Promise<Set<DBArtist>>
-  {
-    // TrackLoaderController.log(`loadMissingArtists ${allIds.join(",")}`);
-    const ids: string[] = allIds.filter((id) => !this._artistsById.has(id));
-    if (ids.length === 0)
-    {
-      // TrackLoaderController.log("  NONE");
-      return new Set<DBArtist>();
-    }
-
-    // Add undefineds to this.artists to prevent any other caller from also looking for these artists.
-    // We'll then fill in the real values when we get them.
-    allIds.forEach((id) => this._artistsById.set(id, undefined));
-
-    const added: Set<DBArtist> = new Set();
-
-    try
-    {
-      // TrackLoaderController.log(`+++Getting artists ${allIds.join(",")}`);
-      const artists: Array<SpotifyObjects.Artist | null> = await this.callSpotify(() => this.spotify.artists.getArtists(ids),
-                                                                                  `getArtists ${ids.join(",")}`);
-      // TrackLoaderController.log(`---Getting artists ${allIds.join(".")}`);
-
-      artists.forEach((spotifyArtist: SpotifyObjects.Artist | null) => {
-        if (spotifyArtist !== null)
-        {
-          const partialArtist: PartialArtist = makePartialArtist(spotifyArtist);
-          const dbArtist: DBArtist = {
-            ...partialArtist,
-            image_ids: spotifyArtist.images.map((image) => image.url),
-            inclusionReasons: inclusionReasons
-          };
-
-          this._artistsById.set(dbArtist.id, dbArtist);
-          added.add(dbArtist);
-        }
-      });
-    }
-    finally
-    {
-      // Remove any leftover undefineds
-      allIds.forEach((id) => {
-        if (!this._artistsById.get(id))
-        {
-          this._artistsById.delete(id);
-        }
-      });
-    }
-
-    return added;
-  }
-
   private async loadFavorites(): Promise<void>
   {
     // TrackLoaderController.log(`loadFavorites ${this.status.offset}`);
@@ -465,60 +419,19 @@ export class TrackLoaderController
 
 
       // TrackLoaderController.log(`  loadFavorites ${this.status.offset} +callforEach for loadSavedTrack`);
-      const dbTracks: DBTrack[] = await pMapSeries(results.items,
-                                                   async (savedTrack: SavedTrack) => {
-                                                     const track: SpotifyObjects.Track = savedTrack.track;
+      const dbTracks: DBTrack[] = results.items.map((savedTrack: SavedTrack) => {
+        const track: SpotifyObjects.Track = savedTrack.track;
 
-                                                     const dbTrack: DBTrack = await this.loadSavedTrack(track, INCLUSTION_REASON_FAVORITE);
-                                                     return dbTrack;
-                                                   });
+        const dbTrack: DBTrack | null = this.loadSavedTrack(track, INCLUSTION_REASON_FAVORITE);
+        return dbTrack;
+      })
+                                         .filter((dbTrack: DBTrack | null) => dbTrack !== null) as DBTrack[];
 
       // TrackLoaderController.log(`  loadFavorites ${this.status.offset} -callforEach for loadSavedTrack`);
 
       dbTracks.forEach((dbTrack: DBTrack) => this._tracksById.set(dbTrack.id, dbTrack));
 
-      //
-      // TODO:
-      //  1. Do the same as the above for albums, artists, playlists.
-      //  2. Then do post-processing:
-      //    A. For each album and playlist
-      //      1. add/update its tracks (adding to inclusionReasons as needed)
-      //      2. add/update its artists (adding to inclusionReasons as needed)
-      //      3. fetch its genres
-      //    B. For each track
-      //      1. add/update its artists (adding yada yada)
-      //      2. Via the artists, fill in genre
-      //      3. add/update its album (adding yada yada)
-      //        *** Don't need to fetch album tracks, I think. They're too many steps removed ***
-      //  3. Then put in database
-      //  4. Then put into datastore as model objects
-      //  5. Profit!
-
-      // TODO:
-      //  Move all artist loading/processing (and therefore all track genre processing) to the very end.
-      //  It's just too damn slow.
-
-
       this.loaderItemCount += results.items.length;
-
-      // const artistIdChunks: string[][] = ArrayUtils.splitIntoChunks([...this.artistMap.keys()], 20);
-      //
-      // await Promise.all(artistIdChunks.map(async (ids: string[]) => {
-      //   const artists: Array<SpotifyObjects.Artist | null> = await this.callSpotify(() => this.spotify.artists.getArtists(ids));
-      //   artists.forEach((artist: SpotifyObjects.Artist | null) => {
-      //     if (artist !== null)
-      //     {
-      //       tracks.filter((track: ITrack) => (track.artists.filter((trackArtist) => trackArtist.id === artist.id)))
-      //             .forEach((track: ITrack) => {
-      //               track.genres = artist.genres.map((name) => new Genre(name));
-      //             });
-      //     }
-      //   });
-      // }));
-      //
-      // tracks.forEach((track: Track) => {
-      //   this._dataStore.addTrack(track);
-      // });
 
       if (this.loaderItemCount === results.total)
       {
@@ -536,26 +449,26 @@ export class TrackLoaderController
     }
   };
 
-  private async loadSavedTrack(track: SpotifyObjects.Track, ...inclusionReasons: InclusionReason[]): Promise<DBTrack>
+  private loadSavedTrack(track: SpotifyObjects.Track, ...inclusionReasons: InclusionReason[]): DBTrack | null
   {
     // TrackLoaderController.log(`+loadSavedTrack ${track.id}`);
     const partialTrack: PartialTrack = makePartialTrack(track);
-    const dbTrack = await this.loadPartialTrack(partialTrack,
-                                                track.album.id,
-                                                track.artists,
-                                                inclusionReasons);
+    const dbTrack: DBTrack | null = this.loadPartialTrack(partialTrack,
+                                                          track.album.id,
+                                                          track.artists,
+                                                          inclusionReasons);
     // TrackLoaderController.log(`-loadSavedTrack ${track.id}`);
     return dbTrack;
   }
 
-  private async loadPartialTrack(partialTrack: PartialTrack,
-                                 album_id: string,
-                                 artists: SimplifiedArtist[],
-                                 inclusionReasons: InclusionReason[]): Promise<DBTrack>
+  private loadPartialTrack(partialTrack: PartialTrack,
+                           album_id: string,
+                           artists: SimplifiedArtist[],
+                           inclusionReasons: InclusionReason[]): DBTrack | null
   {
     if (this.status.stopped)
     {
-      return Promise.reject();
+      return null;
     }
 
     // TrackLoaderController.log(`+loadPartialTrack ${partialTrack.id}`);
@@ -566,34 +479,17 @@ export class TrackLoaderController
     const artistInclusionReasons: InclusionReason[] = inclusionReasons.filter((inclusionReason) => inclusionReason !== "favorite");
 
     // TrackLoaderController.log(`  calling loadMisssingArtists ${artistIds.join(",")}, ${inclusionReasons.join(",")}`);
-    await this.loadMissingArtists(artistIds, artistInclusionReasons);
-
-    const genres: Set<string> = new Set(...artistIds.map((artistId: string) => this._artistsById.get(artistId))
-                                                    .map((artist: DBArtist | undefined) => artist?.genres ?? []));
-
-    genres.forEach((genre) => this._genres.add(genre));
+    this.createMissingArtists(artistIds, [...artistInclusionReasons, {type: "track", id: partialTrack.id}]);
 
     let dbTrack: DBTrack = {
       ...partialTrack,
 
       album_id: album_id,
       artist_ids: new Set(artistIds),
-      genres: genres,
+      genres: new Set(),    // Will be filled in later when we do the massive artist fetch
 
       inclusionReasons: inclusionReasons
     };
-
-    artistIds.map((artistId) => this._artistsById
-                                    .get(artistId))
-             .forEach((dbArtist: DBArtist | undefined) => {
-               if (dbArtist)
-               {
-                 if (dbArtist.inclusionReasons.indexOf({type: "track", id: dbTrack.id}) === -1)
-                 {
-                   dbArtist.inclusionReasons.push({type: "track", id: dbTrack.id});
-                 }
-               }
-             });
 
     // TrackLoaderController.log(`-loadPartialTrack ${partialTrack.id}`);
     return dbTrack;
@@ -743,25 +639,24 @@ export class TrackLoaderController
                                                                        `getPlaylistItems ${this.status?.offset}`,
                                                                        this.status?.offset! > 0);
 
-      const tracksEtc: (DBTrack | undefined)[] = await pMapSeries(results.items,
-                                                                  async (item: PlaylistItem) => {
-                                                                    const apiTrack: SpotifyObjects.Track | Episode = item.track;
-                                                                    if (apiTrack.type === "episode")
-                                                                    {
-                                                                      // for now
-                                                                      return;
-                                                                    }
+      const tracksEtc: (null | DBTrack)[] = results.items.map((item: PlaylistItem) => {
+        const apiTrack: SpotifyObjects.Track | Episode = item.track;
+        if (apiTrack.type === "episode")
+        {
+          // for now
+          return null;
+        }
 
-                                                                    const partialTrack: PartialTrack = makePartialTrack(apiTrack);
+        const partialTrack: PartialTrack = makePartialTrack(apiTrack);
 
-                                                                    const dbTrack: DBTrack = await this.loadPartialTrack(partialTrack,
-                                                                                                                         "",
-                                                                                                                         apiTrack.artists,
-                                                                                                                         [playlist]);
-                                                                    return dbTrack;
-                                                                  });
+        const dbTrack: DBTrack | null = this.loadPartialTrack(partialTrack,
+                                                              "",
+                                                              apiTrack.artists,
+                                                              [playlist]);
+        return dbTrack;
+      });
 
-      const tracks: DBTrack[] = (tracksEtc.filter((t) => t !== undefined)) as DBTrack[];
+      const tracks: DBTrack[] = (tracksEtc.filter((t) => t !== null)) as DBTrack[];
 
       playlist.track_ids.push(...tracks.map((track) => track.id));
 
@@ -777,7 +672,7 @@ export class TrackLoaderController
         this._currentPlaylistTotalTracks = 0;
         if (playlistIndex == this._playlists.length - 1)
         {
-          this.setStatus({status: "saving_to_database"});
+          this.setStatus({status: "loading_artists"});
         }
         else
         {
@@ -787,7 +682,7 @@ export class TrackLoaderController
                            offset: 0,
                            limit: 100,
                            currentPlaylist: playlistIndex + 1,
-                           subprogress: this.status?.subprogress ?? 0 + tracks.length
+                           subprogress: (this.status?.subprogress ?? 0) + tracks.length
                          });
         }
       }
@@ -808,37 +703,36 @@ export class TrackLoaderController
     }
   }
 
-  // @ts-ignore
-  private convertApiAlbumToIAlbum(apiAlbum: SpotifyObjects.SimplifiedAlbum, addedAt?: string): IAlbum
+  private async loadArtists(): Promise<void>
   {
-    const album: IAlbum = {
-      id: apiAlbum.id,
-      name: apiAlbum.name,
-      albumType: apiAlbum.type,
-      tracks: [],
-      releaseDate: apiAlbum.release_date,
-      releaseDatePrecision: apiAlbum.release_date_precision,
-      artists: this.convertApiArtistsToArtists(apiAlbum.artists),
-      sourceType: "album",
-      addedAt: addedAt ? new Date(addedAt) : undefined
-    };
+    const artistIdChunks: string[][] = ArrayUtils.splitIntoChunks([...this._artistInclusionReasons.keys()], 20);
+    const tracks: DBTrack[] = this.tracks;
 
-    return album;
-  };
+    await Promise.all(artistIdChunks.map(async (ids: string[]) => {
+      const artists: Array<SpotifyObjects.Artist | null> = await this.callSpotify(() => this.spotify.artists.getArtists(ids),
+                                                                                  `Get artists ${ids.join(",")}`);
+      artists.forEach((spotifyArtist: SpotifyObjects.Artist | null) => {
+        if (spotifyArtist !== null)
+        {
+          const partialArtist: PartialArtist = makePartialArtist(spotifyArtist);
+          const dbArtist: DBArtist = {
+            ...partialArtist,
+            image_ids: spotifyArtist.images.map((image) => image.url),
+            inclusionReasons: this._artistInclusionReasons.get(partialArtist.id)!
+          };
 
-  private convertApiArtistsToArtists(apiArtists: SpotifyObjects.SimplifiedArtist[]): IArtist[]
-  {
-    const artists: IArtist[] = apiArtists.map((apiArtist: SpotifyObjects.SimplifiedArtist) => {
-      const artist: IArtist = new Artist(apiArtist.id,
-                                         apiArtist.name,
-                                         0,
-                                         []);
+          this._artistsById.set(dbArtist.id, dbArtist);
 
-      return artist;
-    });
+          tracks.filter((track: DBTrack) => (track.artist_ids.has(dbArtist.id)))
+                .forEach((track: DBTrack) => {
+                  track.genres = new Set(dbArtist.genres);
+                });
+        }
+      });
+    }));
 
-    return artists;
-  };
+    this.setStatus({status: "saving_to_database"});
+  }
 
   private async loadAlbumTracks(album: SpotifyObjects.Album, dbAlbum: DBAlbum): Promise<DBTrack[]>
   {
@@ -846,25 +740,27 @@ export class TrackLoaderController
     const tracks: DBTrack[] = [];
 
     const loadTrackPage = async (page: Paging<SimplifiedTrack>) => {
-      await pMapSeries(page.items,
-                       async (simplifiedTrack: SimplifiedTrack) => {
-                         track_ids.push(simplifiedTrack.id);
+      page.items.map((simplifiedTrack: SimplifiedTrack) => {
+        track_ids.push(simplifiedTrack.id);
 
-                         const {artists, ...basicTrack} = {...simplifiedTrack};
+        const {artists, ...basicTrack} = {...simplifiedTrack};
 
 
-                         const partialTrack: PartialTrack = {
-                           ...basicTrack,
-                           external_ids: {},
-                           popularity: 0
-                         };
+        const partialTrack: PartialTrack = {
+          ...basicTrack,
+          external_ids: {},
+          popularity: 0
+        };
 
-                         const dbTrack: DBTrack = await this.loadPartialTrack(partialTrack,
-                                                                              album.id,
-                                                                              album.artists,
-                                                                              [{type: "album", id: dbAlbum.id}]);
-                         tracks.push(dbTrack);
-                       });
+        const dbTrack: DBTrack | null = this.loadPartialTrack(partialTrack,
+                                                              album.id,
+                                                              album.artists,
+                                                              [{type: "album", id: dbAlbum.id}]);
+        if (dbTrack != null)
+        {
+          tracks.push(dbTrack);
+        }
+      });
 
       const next: string | null = page.next;
 
@@ -898,5 +794,14 @@ export class TrackLoaderController
 
     dbAlbum.track_ids = track_ids;
     return tracks;
+  }
+
+  private createMissingArtists(allIds: string[], inclusionReasons: InclusionReason[]): void
+  {
+    allIds.forEach((id: string) => {
+      const existingInclusionReasons: InclusionReason[] = this._artistInclusionReasons.get(id) ?? [];
+      ArrayUtils.pushAllMissing(existingInclusionReasons, inclusionReasons);
+      this._artistInclusionReasons.set(id, existingInclusionReasons);
+    });
   }
 }
