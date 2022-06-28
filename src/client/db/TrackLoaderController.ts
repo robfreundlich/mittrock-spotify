@@ -52,6 +52,7 @@ export type LoadingDatabaseStatus =
 
 export type TrackLoaderStatus = {
   status: LoadingDatabaseStatus;
+  subStatus?: string;
   offset?: number;
   limit?: number;
   subprogress?: number;
@@ -132,7 +133,7 @@ export class TrackLoaderController
 
   private _albumsById: Map<string/*id*/, DBAlbum> = new Map();
 
-  private _artistsById: Map<string/*id*/, DBArtist | undefined> = new Map();
+  private _artistsById: Map<string/*id*/, DBArtist> = new Map();
 
   private _artistInclusionReasons: Map<string/*id*/, InclusionReason[]> = new Map();
 
@@ -145,7 +146,11 @@ export class TrackLoaderController
     this._dataStore = dataStore;
     this._router = router;
     this._onStatusChanged = onStatusChanged;
-    this._dbLoader = new DexieLoader(this._tracksById, this._albumsById, this._playlistsById, this._artistsById as Map<string, DBArtist>, this._genres);
+    this._dbLoader = new DexieLoader(this._tracksById, this._albumsById, this._playlistsById, this._artistsById, this._genres);
+
+    this._dbLoader.onProgress = (message) => {
+      this.setStatus({...this.status, subStatus: message});
+    };
   }
 
   public get dataStore(): DataStore
@@ -163,6 +168,11 @@ export class TrackLoaderController
     return [...this._tracksById.values()];
   }
 
+  public get favorites(): DBTrack[]
+  {
+    return this.tracks.filter((track: DBTrack) => track.inclusionReasons.indexOf(INCLUSTION_REASON_FAVORITE) !== -1);
+  }
+
   public get albums(): DBAlbum[]
   {
     return [...this._albumsById.values()];
@@ -175,9 +185,7 @@ export class TrackLoaderController
 
   public get artists(): DBArtist[]
   {
-    const artists: (DBArtist | undefined)[] = [...this._artistsById.values()];
-
-    return artists.filter((artist) => artist !== undefined) as DBArtist[];
+    return [...this._artistsById.values()];
   }
 
   public get genres(): Set<string>
@@ -525,8 +533,11 @@ export class TrackLoaderController
                          };
 
                          const tracks: DBTrack[] = await this.loadAlbumTracks(album, dbAlbum);
+
+                         const albumInclusion: InclusionReason = {type: "album", id: dbAlbum.id};
+
                          tracks.forEach((track: DBTrack) => {
-                           this._tracksById.set(track.id, track);
+                           this.addOrUpdateTrack(track, albumInclusion, dbAlbum.id);
                          });
 
                          this._albumsById.set(dbAlbum.id, dbAlbum);
@@ -559,6 +570,28 @@ export class TrackLoaderController
     {
       this.setStatus({...this.status, status: "error", error: (err as Error).stack!});
     }
+  }
+
+  private addOrUpdateTrack(track: DBTrack, inclusionReason: InclusionReason, album_id: string)
+  {
+    let existingTrack: DBTrack | undefined = this._tracksById.get(track.id);
+    if (existingTrack)
+    {
+      existingTrack = {
+        ...track,
+        inclusionReasons: (existingTrack.inclusionReasons.indexOf(inclusionReason) === -1)
+                          ? [...existingTrack.inclusionReasons, inclusionReason]
+                          : existingTrack.inclusionReasons,
+        album_id: existingTrack.album_id ?? album_id
+      };
+
+    }
+    else
+    {
+      existingTrack = track;
+    }
+
+    this._tracksById.set(track.id, existingTrack);
   }
 
   private async loadPlaylists(): Promise<void>
@@ -661,7 +694,7 @@ export class TrackLoaderController
       playlist.track_ids.push(...tracks.map((track) => track.id));
 
       tracks.forEach((track: DBTrack) => {
-        this._tracksById.set(track.id, track);
+        this.addOrUpdateTrack(track, {type: "playlist", id: playlist.id}, "");
       });
 
 

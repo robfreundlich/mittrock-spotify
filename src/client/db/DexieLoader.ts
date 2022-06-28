@@ -13,6 +13,8 @@ export class DexieLoader
 {
   public onError: (err: Error) => void;
 
+  public onProgress?: (progress: string) => void;
+
   private _loadFailures: DexieStoreLoadFailure[];
 
   private tracks: Map<string/*id*/, DBTrack> = new Map();
@@ -45,6 +47,7 @@ export class DexieLoader
 
   public async clear(): Promise<void>
   {
+    this.reportProgress("Clearing");
     await AppServices.db.transaction("rw",
                                      AppServices.db.albums,
                                      AppServices.db.artists,
@@ -52,11 +55,17 @@ export class DexieLoader
                                      AppServices.db.tracks,
                                      AppServices.db.playlists,
                                      async () => {
+                                       this.reportProgress("Clearing albums");
                                        AppServices.db.albums.clear();
+                                       this.reportProgress("Clearing artists");
                                        AppServices.db.artists.clear();
+                                       this.reportProgress("Clearing genres");
                                        AppServices.db.genres.clear();
+                                       this.reportProgress("Clearing tracks");
                                        AppServices.db.tracks.clear();
+                                       this.reportProgress("Clearing playlists");
                                        AppServices.db.playlists.clear();
+                                       this.reportProgress("Done clearing");
                                      });
 
     this._loadFailures = [];
@@ -76,6 +85,7 @@ export class DexieLoader
 
   private async loadAlbums()
   {
+    this.reportProgress("Loading albums");
     return Promise.all([...this.albums.values()]
                            .map((dbAlbum: DBAlbum) => AppServices.db
                                                                  .transaction("rw",
@@ -102,6 +112,7 @@ export class DexieLoader
 
   private async loadTracks()
   {
+    this.reportProgress("Loading tracks");
     return Promise.all([...this.tracks.values()]
                            .map((dbTrack: DBTrack) => AppServices.db
                                                                  .transaction("rw",
@@ -128,6 +139,7 @@ export class DexieLoader
 
   private async loadGenres()
   {
+    this.reportProgress("Loading genres");
     return Promise.all([...this.genres.values()]
                            .map((dbGenre: string) => AppServices.db
                                                                 .transaction("rw",
@@ -155,6 +167,7 @@ export class DexieLoader
 
   private async loadArtists()
   {
+    this.reportProgress("Loading artists");
     return Promise.all([...this.artists.values()]
                            .map((dbArtist: DBArtist) => AppServices.db
                                                                    .transaction("rw",
@@ -181,6 +194,7 @@ export class DexieLoader
 
   private async loadPlaylists()
   {
+    this.reportProgress("Loading playlists");
     return Promise.all([...this.playlists.values()]
                            .map((dbPlaylist: DBPlaylist) => AppServices.db
                                                                        .transaction("rw",
@@ -203,5 +217,15 @@ export class DexieLoader
                                                                                                                 });
                                                                                       }
                                                                                     })));
+  }
+
+  private reportProgress(message: string): void
+  {
+    console.log(message);
+
+    if (this.onProgress)
+    {
+      this.onProgress(message);
+    }
   }
 }

@@ -57,7 +57,7 @@ export class LoadingDatabase extends React.Component<LoadingDatabaseProps, Track
 
   private renderFooter(): React.ReactNode
   {
-    return <div>{this._trackLoaderController.status?.status}</div>;
+    return <div>{this._trackLoaderController.status?.status} {this._trackLoaderController.status?.subStatus}</div>;
   }
 
   public override render(): React.ReactNode
