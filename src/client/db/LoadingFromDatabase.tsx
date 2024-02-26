@@ -5,9 +5,12 @@
 import {UIRouterReact} from "@uirouter/react";
 import {AppServices} from "app/client/app/AppServices";
 import {browserState, loadingDatabaseState} from "app/client/app/states";
-import {DBTrack} from "app/client/db/DBTrack";
 import {DataStore} from "app/client/model/DataStore";
 import React from "react";
+import {DBTrack} from "app/client/db/DBTrack";
+import {Track} from "app/client/model/Track";
+import {ModelUtils} from "app/client/utils/ModelUtils";
+import {Transaction} from "dexie";
 
 export interface LoadingFromDatabaseProps
 {
@@ -21,6 +24,7 @@ export interface LoadingFromDatabaseProps
 export interface LoadingState
 {
   status: "uninitialized" | "no_data" | "loading" | "loaded";
+  track?: Track;
 }
 
 export class LoadingFromDatabase extends React.Component<LoadingFromDatabaseProps, LoadingState>
@@ -43,7 +47,7 @@ export class LoadingFromDatabase extends React.Component<LoadingFromDatabaseProp
         return <div>Going to data loader page ...</div>;
 
       case "loading":
-        return <div>Loading track information ...</div>;
+        return <div>Loading track information {this.state.track?.name ?? ""} ...</div>;
 
       case "loaded":
         return <div>Going to the browser...</div>;
@@ -58,14 +62,43 @@ export class LoadingFromDatabase extends React.Component<LoadingFromDatabaseProp
     {
       this.setState({status: "no_data"});
     }
-    else
+    else if (this.state.status !== "loading")
     {
       this.setState({status: "loading"});
 
-      await AppServices.db.tracks.each((track: DBTrack) => {
-        // this.props.dataStore.addTrack(track);
-      });
-      this.setState({status: "loaded"});
+      const trackPromises: Promise<void>[] = [];
+
+      const makeTrack = async (track: DBTrack): Promise<void> => {
+        const tracks: Track[] = await ModelUtils.makeTracks(AppServices.db, this.props.dataStore, track);
+        tracks.forEach((track: Track) => {
+          this.setState( {status: "loading", track: track });
+          this.props.dataStore.addTrack(track)
+        });
+        return Promise.resolve();
+      };
+
+      await AppServices.db.transaction("r",
+        "tracks", "artists", "albums", "playlists",
+        async (trans: Transaction) => {
+
+
+          // let i: number = 0;
+          AppServices.db.tracks.each(async (track: DBTrack) => {
+            // if (i > 100)
+            // {
+            //   return;
+            // }
+            trackPromises.push(makeTrack(track));
+
+            // i++;
+          })
+            .then(() => {
+              Promise.all([...trackPromises])
+                .then(() => {
+                  this.setState({status: "loaded"});
+                });
+            });
+        });
     }
   }
 

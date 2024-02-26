@@ -5,7 +5,8 @@
   "screenshotsFolder": "src/test/cypress/screenshots",
   "videosFolder": "src/test/cypress/videos",
   "fixturesFolder": "src/test/cypress/fixtures",
-  "pluginsFile": "test/cypress/plugins/index.js",
+  "pluginsFile": false,
+  "_pluginsFile": "test/cypress/plugins/index.js",
   "testFiles": [
     "src/client/**/*.spec.ts",
     "src/test/cypress/integration/**/*.spec.ts"

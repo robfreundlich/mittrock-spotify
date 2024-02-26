@@ -124,6 +124,21 @@ export class DataStore implements IdentifiedObject
     this.addToStore(track, track.album, track.playlist, track.artists, track.genres, track.explicit, track.length, track.popularity, track.local);
   }
 
+  public getAlbum(id: string): IAlbum | undefined
+  {
+    return this._albums.find((album) => album.id === id);
+  }
+
+  public getArtist(id: string): IArtist | undefined
+  {
+    return this._artists.find((artist) => artist.id === id);
+  }
+
+  public getPlaylist(id: string): IPlaylist | undefined
+  {
+    return this._playlists.find((playlist) => playlist.id === id);
+  }
+  
   public clear(): void
   {
     this._tracks = [];

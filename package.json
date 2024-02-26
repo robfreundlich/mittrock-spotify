@@ -31,10 +31,10 @@
     "webpack-dev-server": "^4.8.1"
   },
   "scripts": {
-    "clean": "rm -rf dist/*",
-    "prepare": "if [ ! -d \"./dist/\" ]; then mkdir dist ; fi",
-    "build:dev": "npm run prepare && cp src/index.html dist/index.html && webpack --mode development",
-    "build:prod": "npm run prepare && cp src/index.html dist/index.html && webpack --mode production",
+    "clean": "C:\\PROGRA~1\\Git\\bin\\bash -c rm -rf dist/*",
+    "prepare": "C:\\PROGRA~1\\Git\\bin\\bash -c ./prepare.sh",
+    "build:dev": "C:\\PROGRA~1\\Git\\bin\\bash -c \"npm run prepare && cp src/index.html dist/index.html && webpack --mode development\"",
+    "build:prod": "C:\\PROGRA~1\\Git\\bin\\bash -c \"npm run prepare && cp src/index.html dist/index.html && webpack --mode production\"",
     "start": "webpack-dev-server --mode development --open",
     "watch": "webpack --watch"
   },

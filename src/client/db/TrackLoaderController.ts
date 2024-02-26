@@ -3,7 +3,6 @@
  */
 
 import {UIRouterReact} from "@uirouter/react";
-import {AppServices} from "app/client/app/AppServices";
 import {browserState} from "app/client/app/states";
 import {DexieStoreLoadFailure} from "app/client/db/DataStoreDexieLoader";
 import {DBAlbum, makePartialAlbum, PartialAlbum} from "app/client/db/DBAlbum";
@@ -14,7 +13,7 @@ import {DexieLoader} from "app/client/db/DexieLoader";
 import {DataStore} from "app/client/model/DataStore";
 import {ArrayUtils} from "app/client/utils/ArrayUtils";
 import {TimeUtils} from "app/client/utils/TimeUtils";
-import {InclusionReason, INCLUSTION_REASON_FAVORITE} from "app/client/utils/Types";
+import {InclusionReason, INCLUSION_REASON_FAVORITE} from "app/client/utils/Types";
 import pMapSeries from "p-map-series";
 import {SpotifyWebApi} from "spotify-web-api-ts";
 import * as SpotifyObjects from "spotify-web-api-ts/types/types/SpotifyObjects";
@@ -80,8 +79,8 @@ export class TrackLoaderController
 
   public static isBrowsable(status: LoadingDatabaseStatus): boolean
   {
-    return ((status === "loaded") || (status === "stopped") || (status === "error"))
-           && (AppServices.dataStore.tracks.length > 0);
+    return ((status === "loaded") || (status === "stopped") || (status === "error"));
+           // && (AppServices.db.tracks.length > 0);
   }
 
   public static isRunning(status: LoadingDatabaseStatus): boolean
@@ -170,7 +169,7 @@ export class TrackLoaderController
 
   public get favorites(): DBTrack[]
   {
-    return this.tracks.filter((track: DBTrack) => track.inclusionReasons.indexOf(INCLUSTION_REASON_FAVORITE) !== -1);
+    return this.tracks.filter((track: DBTrack) => track.inclusionReasons.indexOf(INCLUSION_REASON_FAVORITE) !== -1);
   }
 
   public get albums(): DBAlbum[]
@@ -302,6 +301,8 @@ export class TrackLoaderController
     }
     else if (this.status?.status === "loading_playlists")
     {
+      // Temp
+      this.setStatus({status: "saving_to_database"});
       this.loadPlaylists();
     }
     else if (this.status?.status === "loading_playlist_tracks")
@@ -430,7 +431,7 @@ export class TrackLoaderController
       const dbTracks: DBTrack[] = results.items.map((savedTrack: SavedTrack) => {
         const track: SpotifyObjects.Track = savedTrack.track;
 
-        const dbTrack: DBTrack | null = this.loadSavedTrack(track, INCLUSTION_REASON_FAVORITE);
+        const dbTrack: DBTrack | null = this.loadSavedTrack(track, INCLUSION_REASON_FAVORITE);
         return dbTrack;
       })
                                          .filter((dbTrack: DBTrack | null) => dbTrack !== null) as DBTrack[];
@@ -529,7 +530,7 @@ export class TrackLoaderController
                            artist_ids: album.artists.map((artist: SimplifiedArtist) => artist.id),
                            track_ids: [],
                            image_ids: [],
-                           inclusionReasons: [INCLUSTION_REASON_FAVORITE]
+                           inclusionReasons: [INCLUSION_REASON_FAVORITE]
                          };
 
                          const tracks: DBTrack[] = await this.loadAlbumTracks(album, dbAlbum);
@@ -622,7 +623,7 @@ export class TrackLoaderController
                            image_ids: [],
                            track_ids: [],
 
-                           inclusionReasons: [INCLUSTION_REASON_FAVORITE]
+                           inclusionReasons: [INCLUSION_REASON_FAVORITE]
                          };
 
                          this._playlists.push(playlist);

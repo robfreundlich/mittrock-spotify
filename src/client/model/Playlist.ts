@@ -2,10 +2,11 @@
  * Copyright (c) 2022. Rob Freundlich <rob@freundlichs.com> - All rights reserved.
  */
 
-import {IdentifiedObject} from "app/client/model/IdentifiedObject";
+import {areIdentifiedObjectsSame, IdentifiedObject} from "app/client/model/IdentifiedObject";
 import {ITrack} from "app/client/model/Track";
 import {ITrackSource, TrackSource} from "app/client/model/TrackSource";
 import {Visibility} from "app/client/utils/Types";
+import {ArrayUtils} from "app/client/utils/ArrayUtils";
 
 export interface IPlaylist extends IdentifiedObject, ITrackSource
 {
@@ -65,5 +66,10 @@ export class Playlist implements IPlaylist
     this.visibility = visibility;
     this.snapshot_id = snapshot_id;
     this.tracks = tracks;
+  }
+
+  public addTrack(track: ITrack): void
+  {
+    ArrayUtils.pushIfMissing(this.tracks, track, areIdentifiedObjectsSame);
   }
 }

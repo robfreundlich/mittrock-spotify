@@ -25,9 +25,9 @@ export interface ITrack extends IdentifiedObject
 
   local: "local" | "streaming";
 
-  discNumber: number;
+  disc_number: number;
 
-  trackNumber: number;
+  track_number: number;
 
   album: IAlbum | undefined;
 
@@ -61,9 +61,9 @@ export class Track implements ITrack
 
   public readonly local: TrackStorageOrigin;
 
-  public readonly discNumber: number;
+  public readonly disc_number: number;
 
-  public readonly trackNumber: number;
+  public readonly track_number: number;
 
   public readonly album: IAlbum | undefined;
 
@@ -97,8 +97,8 @@ export class Track implements ITrack
     this.length = length;
     this.popularity = popularity;
     this.local = local;
-    this.discNumber = discNumber;
-    this.trackNumber = trackNumber;
+    this.disc_number = discNumber;
+    this.track_number = trackNumber;
 
     if (isAlbum(source))
     {

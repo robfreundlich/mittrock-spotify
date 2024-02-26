@@ -14,7 +14,7 @@ export type Visibility = "private" | "public";
 
 type InclusionReasonFavorite = "favorite";
 
-export const INCLUSTION_REASON_FAVORITE: InclusionReasonFavorite = "favorite";
+export const INCLUSION_REASON_FAVORITE: InclusionReasonFavorite = "favorite";
 
 export type InclusionReasonObject = { type: string, id: string };
 
