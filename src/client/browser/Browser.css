@@ -30,6 +30,7 @@
   font-family: sans-serif;
   font-variant: unicase;
   align-self: flex-end;
+  cursor: pointer;
 }
 
 .browser .genre {

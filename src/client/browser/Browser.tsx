@@ -13,12 +13,24 @@ import {IPlaylist} from "app/client/model/Playlist";
 import {ITrack} from "app/client/model/Track";
 import * as React from "react";
 import Accordion from "app/client/controls/Accordion";
+import {browserState} from "app/client/app/states";
+
+export interface BrowserProvider
+{
+  tracks: ITrack[];
+  getFavorites: () => ITrack[];
+  albums: IAlbum[];
+  artists: IArtist[];
+  genres: IGenre[];
+  playlists: IPlaylist[];
+}
 
 interface BrowserProps
 {
   dataStore: DataStore;
-
   router: UIRouterReact;
+  provider: BrowserProvider;
+  path: string;
 }
 
 export class Browser extends React.Component<BrowserProps>
@@ -33,7 +45,7 @@ export class Browser extends React.Component<BrowserProps>
 
   public override render()
   {
-    if (!this.props.dataStore.tracks)
+    if (!this.props.provider.tracks)
     {
       return null;
     }
@@ -53,11 +65,8 @@ export class Browser extends React.Component<BrowserProps>
   {
     return <>
       <div className="track-count">
-        {this.props.dataStore.tracks.length} Tracks
-      </div>
-      {/*{this.renderTrackLoaderButton()}*/}
-      <div className="app-state">
-        {/*{this.controller.state}*/}
+        {this.props.path === "" ? "" : `${this.props.path}: `}
+        {this.props.provider.tracks.length} Tracks
       </div>
     </>;
   }
@@ -70,12 +79,22 @@ export class Browser extends React.Component<BrowserProps>
       {this.renderArtists()}
       {this.renderGenres()}
       {this.renderPlaylists()}
+      {this.renderTracks()}
     </div>;
   }
 
   private renderFavorites(): React.ReactNode
   {
-    const favorites: ITrack[] = this.props.dataStore.getFavorites();
+    const favorites: ITrack[] = this.props.provider.getFavorites();
+
+    if (favorites.length === 0)
+    {
+      return null;
+    }
+
+    const onMoreClicked = () => {
+      this.props.router.stateService.go(browserState.name, {path: "favorites"}, {location: true, reload: true});
+    };
 
     return <Accordion className="favorites"
                       header={`Favorites (${favorites.length})`}
@@ -92,14 +111,19 @@ export class Browser extends React.Component<BrowserProps>
             </div>
           </div>)}
 
-        {this.controller.hasMore(favorites) && <div className="more" key="more">More...</div>}
+        {this.controller.hasMore(favorites) && <div className="more" key="more" onClick={onMoreClicked}>More...</div>}
       </div>
     </Accordion>;
   }
 
   private renderAlbums(): React.ReactNode
   {
-    const albums: IAlbum[] = this.props.dataStore.albums;
+    const albums: IAlbum[] = this.props.provider.albums;
+
+    if (albums.length === 0)
+    {
+      return null;
+    }
 
     return <Accordion className="albums"
                       header={`Albums (${albums.length})`}>
@@ -125,7 +149,12 @@ export class Browser extends React.Component<BrowserProps>
 
   private renderArtists(): React.ReactNode
   {
-    const artists: IArtist[] = this.props.dataStore.artists.filter((artist: IArtist) => artist.name !== "");
+    const artists: IArtist[] = this.props.provider.artists.filter((artist: IArtist) => artist.name !== "");
+
+    if (artists.length === 0)
+    {
+      return null;
+    }
 
     return <Accordion className="artists"
       header={`Artists (${artists.length})`}>
@@ -148,7 +177,13 @@ export class Browser extends React.Component<BrowserProps>
 
   private renderGenres(): React.ReactNode
   {
-    const genres: IGenre[] = this.props.dataStore.genres;
+    const genres: IGenre[] = this.props.provider.genres;
+
+    if (genres.length === 0)
+    {
+      return null;
+    }
+
     return <Accordion className="genres"
                       header={`Genres (${genres.length})`}>
       <div className="item-container">
@@ -164,7 +199,12 @@ export class Browser extends React.Component<BrowserProps>
 
   private renderPlaylists(): React.ReactNode
   {
-    const playlists: IPlaylist[] = this.props.dataStore.playlists;
+    const playlists: IPlaylist[] = this.props.provider.playlists;
+
+    if (playlists.length === 0)
+    {
+      return null;
+    }
 
     return <Accordion className="Playlists"
       header={`Playlists (${playlists.length})`}>
@@ -187,6 +227,28 @@ export class Browser extends React.Component<BrowserProps>
         {this.controller.hasMore(playlists) && <div className="more" key="more">More...</div>}
       </div>
     </Accordion>;
+  }
+
+  private renderTracks(): React.ReactNode
+  {
+    const tracks: ITrack[] = this.props.provider.tracks;
+
+    return <Accordion className="tracks"
+                      header={`Tracks (${tracks.length})`}>
+      <div className={"item-container"}>
+        {this.controller.getFirstN(tracks, compareByName)
+          .map((track: ITrack) => <div className="track item" key={track.id}>
+            <div className="track-name">{track.name}</div>
+            <div className="album-name">{track.album?.name}</div>
+            <div className="genres">
+              {this.controller.getFirstN(track.genres, compareByName, 3)
+                .map((genre: IGenre, index: number) => <div className="genre" key={`${index}`}>{genre.name}</div>)}
+              {(track.genres.length > 3) && <div className="genre more">...</div>}
+            </div>
+          </div>)}
+        {this.controller.hasMore(tracks) && <div className="more" key="more">More...</div>}
+      </div>
+    </Accordion>
   }
 
   public override componentDidMount(): void
