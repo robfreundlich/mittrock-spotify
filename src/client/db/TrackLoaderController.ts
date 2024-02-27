@@ -301,8 +301,8 @@ export class TrackLoaderController
     }
     else if (this.status?.status === "loading_playlists")
     {
-      // Temp
-      this.setStatus({status: "saving_to_database"});
+      // // Temp
+      // this.setStatus({status: "saving_to_database"});
       this.loadPlaylists();
     }
     else if (this.status?.status === "loading_playlist_tracks")
