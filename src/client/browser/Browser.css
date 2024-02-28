@@ -7,6 +7,30 @@
   --artist-name-font: Georgia, sans-serif;
 }
 
+.app .header {
+  display: flex;
+  flex-direction: row;
+}
+
+.app .header .path {
+  flex-grow: 1;
+  flex-shrink: 1;
+}
+
+.app .header .home {
+  cursor: pointer;
+}
+
+.app .header .path-part {
+  cursor: pointer;
+}
+
+
+.app  .header .track-count {
+  flex-grow: 0;
+  flex-shrink: 0;
+}
+
 .browser .accordion h1 {
   background-color: var(--color-spotify-green-darker);
   color: var(--color-spotify-white);

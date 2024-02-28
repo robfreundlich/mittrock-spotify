@@ -24,10 +24,12 @@ export class TracksProvider implements BrowserProvider
   {
     this._tracks = tracks;
 
-    this._albums = this._tracks
-      .filter((track: ITrack) => track.source === "album")
+    this._albums = [];
+
+    this._tracks
+      .filter((track: ITrack) => track.album !== undefined)
       .map((track: ITrack) => track.album)
-      .filter((album: IAlbum | undefined) => album !== undefined) as IAlbum[];
+      .forEach((album) => ArrayUtils.pushIfMissing(this._albums, album!, areIdentifiedObjectsSame));
 
     this._artists = [];
 
@@ -41,10 +43,12 @@ export class TracksProvider implements BrowserProvider
       .map((track: ITrack) => track.genres)
       .forEach((genres: IGenre[]) => ArrayUtils.pushAllMissing(this._genres, genres, areGenresSame));
     
-    this._playlists = this._tracks
-      .filter((track: ITrack) => track.source === "playlist")
+    this._playlists = [];
+
+    this._tracks
+      .filter((track: ITrack) => track.playlist !== undefined)
       .map((track: ITrack) => track.playlist)
-      .filter((playlist: IPlaylist | undefined) => playlist !== undefined) as IPlaylist[];
+      .forEach((playlist) => ArrayUtils.pushIfMissing(this._playlists, playlist!, areIdentifiedObjectsSame));
 
     this._favorites = this._tracks
       .filter((track: ITrack) => track.source === "favorite");

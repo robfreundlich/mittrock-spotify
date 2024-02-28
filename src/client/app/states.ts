@@ -8,7 +8,7 @@ import {spotifyAuthToken} from "app/client/app/Authorization";
 import {Browser} from "app/client/browser/Browser";
 import {LoadingDatabase} from "app/client/db/LoadingDatabase";
 import {LoadingFromDatabase} from "app/client/db/LoadingFromDatabase";
-import {TracksProvider} from "app/client/app/TracksProvider";
+import {BrowserProviderFactory} from "app/client/app/BrowserProviderFactory";
 
 export const getDataStore = () => AppServices.dataStore;
 export const getAuthToken = () => spotifyAuthToken;
@@ -87,18 +87,7 @@ export const browserState = {
       deps: [`$transition$`],
       resolveFn: ($transition$: Transition) => {
         let path = $transition$.params().path;
-        if (path === "")
-        {
-          return getDataStore();
-        }
-        else if (path === "favorites")
-        {
-          return new TracksProvider(getDataStore().getFavorites());
-        }
-        else
-        {
-          return getDataStore();
-        }
+        return BrowserProviderFactory.getProvider(path);
       }
     }
   ]

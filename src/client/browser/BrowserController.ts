@@ -4,10 +4,13 @@
 
 import {UIRouterReact} from "@uirouter/react";
 import {DataStore} from "app/client/model/DataStore";
+import {browserState} from "app/client/app/states";
 
 export class BrowserController
 {
-  private static readonly PREVIEW_COUNT = 8;
+  public static readonly PREVIEW_COUNT = 8;
+
+  public static readonly PATH_SEP: string = "\u241C";
 
   private _dataStore: DataStore;
 
@@ -45,5 +48,23 @@ export class BrowserController
   public hasMore<T>(array: T[]): boolean
   {
     return array.length > BrowserController.PREVIEW_COUNT;
+  }
+
+  public goHome(): void
+  {
+    this._router.stateService.go(browserState.name, {path: ""}, {location: true, reload: true});
+  }
+
+  public goTo(path: string, child?: string): void
+  {
+    const pathParts: string[] = path === "" ? [] : path.split(BrowserController.PATH_SEP);
+    if (child)
+    {
+      pathParts.push(child);
+    }
+
+    const newPath: string = pathParts.join(BrowserController.PATH_SEP);
+
+    this._router.stateService.go(browserState.name, {path: newPath}, {location: true, reload: true});
   }
 }
