@@ -94,7 +94,7 @@ export class Track implements ITrack
       }
       else if (isPlaylist(source))
       {
-        this.playlists.push(source);
+        this._playlists.push(source);
         if (album)
         {
           this._album = album;

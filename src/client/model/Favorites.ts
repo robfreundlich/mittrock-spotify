@@ -11,7 +11,7 @@ export interface IFavorites extends ITrackSource
 
 export class Favorites implements IFavorites
 {
-  private static readonly guardValue: Object = new Object();
+  private static readonly guardValue: Object = {};
 
   public static readonly favorites: Favorites = new Favorites(Favorites.guardValue);
 

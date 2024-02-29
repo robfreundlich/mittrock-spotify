@@ -10,7 +10,6 @@ import React from "react";
 import {DBTrack} from "app/client/db/DBTrack";
 import {Track} from "app/client/model/Track";
 import {ModelUtils} from "app/client/utils/ModelUtils";
-import {Transaction} from "dexie";
 
 export interface LoadingFromDatabaseProps
 {
@@ -77,7 +76,7 @@ export class LoadingFromDatabase extends React.Component<LoadingFromDatabaseProp
 
       await AppServices.db.transaction("r",
         "tracks", "artists", "albums", "playlists",
-        async (trans: Transaction) => {
+        async (/*trans: Transaction*/) => {
 
 
           // let i: number = 0;

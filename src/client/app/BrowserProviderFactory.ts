@@ -12,11 +12,6 @@ import {isTrackFavorite} from "app/client/model/TrackSource";
 
 export class BrowserProviderFactory
 {
-  private constructor()
-  {
-    //
-  }
-
   public static getProvider(path: string): BrowserProvider
   {
     let provider: BrowserProvider;
