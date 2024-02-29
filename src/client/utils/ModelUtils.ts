@@ -78,14 +78,14 @@ export class ModelUtils {
         album,
         new Date());
 
-    if (album)
-    {
-      album.addTrack(track);
-    }
-
-    track.playlists.forEach((playlist) => {
-      playlist.addTrack(track);
-    });
+    // if (album)
+    // {
+    //   album.addTrack(track);
+    // }
+    //
+    // track.playlists.forEach((playlist) => {
+    //   playlist.addTrack(track);
+    // });
 
     return track;
   }
