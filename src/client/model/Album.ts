@@ -5,7 +5,7 @@
 import {IArtist} from "app/client/model/Artist";
 import {areIdentifiedObjectsSame, IdentifiedObject} from "app/client/model/IdentifiedObject";
 import {ITrack} from "app/client/model/Track";
-import {ITrackSource, TrackSource} from "app/client/model/TrackSource";
+import {ITrackSource, TrackSourceType} from "app/client/model/TrackSource";
 import {ArrayUtils} from "app/client/utils/ArrayUtils";
 import {AlbumType, ReleaseDatePrecision} from "app/client/utils/Types";
 
@@ -30,7 +30,7 @@ export interface IAlbum extends IdentifiedObject, ITrackSource
 
 export class Album implements IAlbum
 {
-  public readonly sourceType: TrackSource = "album";
+  public readonly sourceType: TrackSourceType = "album";
 
   public readonly id: string;
 

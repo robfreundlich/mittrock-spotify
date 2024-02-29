@@ -7,6 +7,7 @@ import {ITrack} from "app/client/model/Track";
 import {AppServices} from "app/client/app/AppServices";
 import {BrowserProvider} from "app/client/browser/Browser";
 import {BrowserController} from "app/client/browser/BrowserController";
+import {isTrackFavorite} from "app/client/model/TrackSource";
 
 
 export class BrowserProviderFactory
@@ -43,7 +44,7 @@ export class BrowserProviderFactory
     }
     else if (pathPart === "favorites")
     {
-      return new TracksProvider(tracks.filter((track) => track.source === "favorite"));
+      return new TracksProvider(tracks.filter((track) => isTrackFavorite(track)));
     }
     else if (pathPart === "albums")
     {
@@ -59,7 +60,7 @@ export class BrowserProviderFactory
     }
     else if (pathPart === "playlists")
     {
-      return new TracksProvider(tracks.filter((track) => track.playlist !== undefined));
+      return new TracksProvider(tracks.filter((track) => track.playlists.length > 0));
     }
     else if (pathPart === "tracks")
     {

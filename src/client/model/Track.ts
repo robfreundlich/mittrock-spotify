@@ -31,9 +31,9 @@ export interface ITrack extends IdentifiedObject
 
   album: IAlbum | undefined;
 
-  playlist: IPlaylist | undefined;
+  playlists: IPlaylist[];
 
-  source: TrackSource;
+  sources: TrackSource[];
 
   genres: IGenre[];
 
@@ -48,34 +48,20 @@ export interface ITrack extends IdentifiedObject
 export class Track implements ITrack
 {
   public id: string;
-
   public readonly type: string = "track";
-
   public readonly name: string;
-
   public readonly explicit: Explicitness;
-
   public readonly length: number; // seconds
-
   public popularity: number; // integer 0 - 100
-
   public readonly local: TrackStorageOrigin;
-
   public readonly disc_number: number;
-
   public readonly track_number: number;
-
-  public readonly album: IAlbum | undefined;
-
-  public playlist: IPlaylist | undefined;
-
   public readonly genres: IGenre[];
-
   public readonly artists: IArtist[];
-
-  public source: TrackSource;
-
+  public readonly sources: TrackSource[] = [];
   public addedAt: Date;
+  private _album: IAlbum | undefined;
+  private _playlists: IPlaylist[] = [];
 
   constructor(id: string,
               name: string,
@@ -85,7 +71,7 @@ export class Track implements ITrack
               local: TrackStorageOrigin,
               discNumber: number,
               trackNumber: number,
-              source: IAlbum | IPlaylist | IFavorites,
+              sources: (IAlbum | IPlaylist | IFavorites)[],
               genres: IGenre[],
               artists: IArtist[],
               album?: IAlbum,
@@ -100,34 +86,44 @@ export class Track implements ITrack
     this.disc_number = discNumber;
     this.track_number = trackNumber;
 
-    if (isAlbum(source))
-    {
-      this.album = source;
-      this.source = "album";
-    }
-    else if (isPlaylist(source))
-    {
-      this.playlist = source;
-      this.source = "playlist";
-      if (album)
+    this.sources = sources;
+    sources.forEach((source) => {
+      if (isAlbum(source))
       {
-        this.album = album;
+        this._album = source;
       }
-    }
-    else
-    {
-      this.source = "favorite";
-      if (album)
+      else if (isPlaylist(source))
       {
-        this.album = album;
+        this.playlists.push(source);
+        if (album)
+        {
+          this._album = album;
+        }
       }
-      if (addedAt)
+      else
       {
-        this.addedAt = addedAt;
+        if (album)
+        {
+          this._album = album;
+        }
+        if (addedAt)
+        {
+          this.addedAt = addedAt;
+        }
       }
-    }
+    });
 
     this.genres = genres.slice();
     this.artists = artists.slice();
+  }
+
+  get album(): IAlbum | undefined
+  {
+    return this._album;
+  }
+
+  public get playlists(): IPlaylist[]
+  {
+    return this._playlists.slice();
   }
 }

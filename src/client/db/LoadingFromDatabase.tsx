@@ -68,12 +68,10 @@ export class LoadingFromDatabase extends React.Component<LoadingFromDatabaseProp
 
       const trackPromises: Promise<void>[] = [];
 
-      const makeTrack = async (track: DBTrack): Promise<void> => {
-        const tracks: Track[] = await ModelUtils.makeTracks(AppServices.db, this.props.dataStore, track);
-        tracks.forEach((track: Track) => {
-          this.setState( {status: "loading", track: track });
-          this.props.dataStore.addTrack(track)
-        });
+      const makeTrack = async (dbTrack: DBTrack): Promise<void> => {
+        const track: Track = await ModelUtils.makeTrack(AppServices.db, this.props.dataStore, dbTrack);
+        this.setState( {status: "loading", track: track });
+        this.props.dataStore.addTrack(track)
         return Promise.resolve();
       };
 

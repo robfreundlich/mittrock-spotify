@@ -14,6 +14,7 @@ import {Favorites, IFavorites} from "app/client/model/Favorites";
 import {IPlaylist, Playlist} from "app/client/model/Playlist";
 import {DBPlaylist} from "app/client/db/DBPlaylist";
 import {DataStore} from "app/client/model/DataStore";
+import {TrackSource} from "app/client/model/TrackSource";
 
 export class ModelUtils {
   private static readonly BASE62 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -32,12 +33,11 @@ export class ModelUtils {
     return s;
   }
 
-  public static async makeTracks(db: DexieDB, dataStore: DataStore, dbTrack: DBTrack): Promise<Track[]> {
-    const tracks: Track[] = [];
+  public static async makeTrack(db: DexieDB, dataStore: DataStore, dbTrack: DBTrack): Promise<Track> {
+    const album: Album | undefined = await ModelUtils.makeAlbum(db, dataStore, dbTrack.album_id);
+    const artists: Artist[] = await ModelUtils.makeArtists(db, dataStore, dbTrack.artist_ids);
 
-    await Promise.all(dbTrack.inclusionReasons.map(async (reason: InclusionReason) => {
-      const album: Album | undefined = await ModelUtils.makeAlbum(db, dataStore, dbTrack.album_id);
-      const artists: Artist[] = await ModelUtils.makeArtists(db, dataStore, dbTrack.artist_ids);
+    const sources: TrackSource[] = await Promise.all(dbTrack.inclusionReasons.map(async (reason: InclusionReason) => {
       let playlist: Playlist | undefined;
 
       let source: IAlbum | IPlaylist | IFavorites;
@@ -58,6 +58,9 @@ export class ModelUtils {
         }
       }
 
+      return source;
+    }));
+
       const track: Track = new Track(
         dbTrack.id,
         dbTrack.name,
@@ -67,7 +70,7 @@ export class ModelUtils {
         "streaming",
         dbTrack.disc_number,
         dbTrack.track_number,
-        source,
+        sources,
         [...dbTrack.genres].map((name: string) => {
           return {name: name};
         }),
@@ -75,19 +78,16 @@ export class ModelUtils {
         album,
         new Date());
 
-      tracks.push(track);
+    if (album)
+    {
+      album.addTrack(track);
+    }
 
-      if (album && (source === album))
-      {
-        album.addTrack(track);
-      }
-      else if (playlist && (source === playlist))
-      {
-        playlist.addTrack(track)
-      }
-    }));
+    track.playlists.forEach((playlist) => {
+      playlist.addTrack(track);
+    });
 
-    return tracks;
+    return track;
   }
 
   public static async makeAlbum(db: DexieDB, dataStore: DataStore, album_id?: string): Promise<Album | undefined> {

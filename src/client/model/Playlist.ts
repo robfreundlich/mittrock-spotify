@@ -4,7 +4,7 @@
 
 import {areIdentifiedObjectsSame, IdentifiedObject} from "app/client/model/IdentifiedObject";
 import {ITrack} from "app/client/model/Track";
-import {ITrackSource, TrackSource} from "app/client/model/TrackSource";
+import {ITrackSource, TrackSourceType} from "app/client/model/TrackSource";
 import {Visibility} from "app/client/utils/Types";
 import {ArrayUtils} from "app/client/utils/ArrayUtils";
 
@@ -25,11 +25,13 @@ export interface IPlaylist extends IdentifiedObject, ITrackSource
   snapshot_id: string;
 
   tracks: ITrack[];
+
+  addTrack(track: ITrack): void;
 }
 
 export class Playlist implements IPlaylist
 {
-  public readonly sourceType: TrackSource = "playlist";
+  public readonly sourceType: TrackSourceType = "playlist";
 
   public readonly type: string = "playlist";
 

@@ -12,6 +12,7 @@ import {ArrayUtils} from "app/client/utils/ArrayUtils";
 import {ModelUtils} from "app/client/utils/ModelUtils";
 import {Explicitness, TrackStorageOrigin} from "app/client/utils/Types";
 import {areIdentifiedObjectsSame, IdentifiedObject} from "./IdentifiedObject";
+import {isTrackAlbum, isTrackFavorite, isTrackPlaylist} from "app/client/model/TrackSource";
 
 
 export class DataStore implements IdentifiedObject
@@ -56,7 +57,7 @@ export class DataStore implements IdentifiedObject
 
   public get numAlbumTracks(): number
   {
-    return this._tracks.filter((track) => track.source === "album").length;
+    return this._tracks.filter((track) => isTrackAlbum(track)).length;
   }
 
   public get playlists(): IPlaylist[]
@@ -116,12 +117,12 @@ export class DataStore implements IdentifiedObject
 
   public get numPlaylistTracks(): number
   {
-    return this._tracks.filter((track) => track.source === "playlist").length;
+    return this._tracks.filter((track) => isTrackPlaylist(track)).length;
   }
 
   public addTrack(track: ITrack): void
   {
-    this.addToStore(track, track.album, track.playlist, track.artists, track.genres, track.explicit, track.length, track.popularity, track.local);
+    this.addToStore(track, track.album, track.playlists, track.artists, track.genres, track.explicit, track.length, track.popularity, track.local);
   }
 
   public getAlbum(id: string): IAlbum | undefined
@@ -166,12 +167,12 @@ export class DataStore implements IdentifiedObject
 
   public getFavorites(): ITrack[]
   {
-    return this._tracks.filter((track) => track.source === "favorite");
+    return this._tracks.filter((track) => isTrackFavorite(track));
   }
 
   private addToStore(track: ITrack,
                      album: IAlbum | undefined,
-                     playlist: IPlaylist | undefined,
+                     playlists: IPlaylist[],
                      artists: IArtist[],
                      genres: IGenre[],
                      explicit: Explicitness,
@@ -185,10 +186,7 @@ export class DataStore implements IdentifiedObject
       ArrayUtils.pushIfMissing(this._albums, album, areIdentifiedObjectsSame);
     }
 
-    if (playlist)
-    {
-      ArrayUtils.pushIfMissing(this._playlists, playlist, areIdentifiedObjectsSame);
-    }
+    ArrayUtils.pushAllMissing(this._playlists, playlists, areIdentifiedObjectsSame);
 
     ArrayUtils.pushIfMissing(this._explicits, explicit);
     ArrayUtils.pushIfMissing(this._lengths, length);
@@ -210,7 +208,7 @@ export class DataStore implements IdentifiedObject
       title = new Title(ModelUtils.generateId(),
                         track.name,
                         track.album ? [track.album] : [],
-                        track.playlist ? [track.playlist] : [],
+                        track.playlists,
                         track.genres,
                         track.artists,
                         [track.explicit],
