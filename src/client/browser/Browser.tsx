@@ -12,7 +12,7 @@ import {IGenre} from "app/client/model/Genre";
 import {IPlaylist} from "app/client/model/Playlist";
 import {ITrack} from "app/client/model/Track";
 import * as React from "react";
-import Accordion from "app/client/controls/Accordion";
+import BrowserSection, {GenresSection} from "app/client/browser/BrowserSection";
 
 export interface BrowserProvider
 {
@@ -34,7 +34,7 @@ interface BrowserProps
 
 export class Browser extends React.Component<BrowserProps>
 {
-  private controller: BrowserController;
+  private readonly controller: BrowserController;
 
   constructor(props: Readonly<BrowserProps> | BrowserProps)
   {
@@ -105,221 +105,102 @@ export class Browser extends React.Component<BrowserProps>
 
   private renderFavorites(): React.ReactNode
   {
-    const favorites: ITrack[] = this.props.provider.getFavorites();
-
-    if (favorites.length === 0)
-    {
-      return null;
-    }
-
-    const isAll: boolean = (this.props.path !== "") && (this.props.path.split(BrowserController.PATH_SEP).reverse()[0] === "favorites");
-
-    const onMoreClicked = () => {
-      this.controller.goTo(this.props.path, "favorites");
-    };
-
-    return <Accordion className="favorites"
-                      header={`Favorites (${favorites.length})`}
-                      open={isAll}>
-      <div className="tracks item-container">
-        {this.controller.getFirstN(favorites, compareByAddedAtDesc, isAll ? favorites.length : BrowserController.PREVIEW_COUNT)
-          .map((track: ITrack) => <div className="track item" key={track.id}>
-            <div className="track-name">{track.name}</div>
-            <div className="album-name">{track.album?.name}</div>
-            <div className="genres">
-              {this.controller.getFirstN(track.genres, compareByName, 3)
-                .map((genre: IGenre, index: number) => <div className="genre" key={`${index}`}>{genre.name}</div>)}
-              {(track.genres.length > 3) && <div className="genre more">...</div>}
-            </div>
-          </div>)}
-
-        {!isAll && this.controller.hasMore(favorites) && <div className="more" key="more" onClick={onMoreClicked}>More...</div>}
-      </div>
-    </Accordion>;
+    return <BrowserSection className={"favorites"}
+                           headerText={"Favorites"}
+                           controller={this.controller}
+                           objects={this.props.provider.getFavorites()}
+                           compare={compareByAddedAtDesc}
+                           render={(track: ITrack) => {
+                             return <div className="track item" key={track.id}>
+                               <div className="track-name">{track.name}</div>
+                               <div className="album-name">{track.album?.name}</div>
+                               <GenresSection genres={track.genres} controller={this.controller}/>
+                             </div>;
+                           }}/>;
   }
 
   private renderAlbums(): React.ReactNode
   {
-    const albums: IAlbum[] = this.props.provider.albums;
+    return <BrowserSection className={"albums"}
+                           headerText={"Albums"}
+                           controller={this.controller}
+                           objects={this.props.provider.albums}
+                           compare={compareByAddedAtDesc}
+                           render={(album: IAlbum) => {
+                             const genres: Set<IGenre> = new Set();
+                             album.tracks.forEach((track: ITrack) => track.genres
+                               .forEach((genre: IGenre) => genres.add(genre)));
 
-    if (albums.length === 0)
-    {
-      return null;
-    }
-
-    const isAll: boolean = (this.props.path !== "") && (this.props.path.split(BrowserController.PATH_SEP).reverse()[0] === "albums");
-
-    const onMoreClicked = () => {
-      this.controller.goTo(this.props.path, "albums");
-    };
-
-    return <Accordion className="albums"
-                      header={`Albums (${albums.length})`}
-                      open={isAll}>
-      <div className="item-container">
-        {this.controller.getFirstN(albums, compareByAddedAtDesc, isAll ? albums.length : BrowserController.PREVIEW_COUNT).map((album: IAlbum) => {
-          const genres: Set<IGenre> = new Set();
-          album.tracks.forEach((track: ITrack) => track.genres.forEach((genre: IGenre) => genres.add(genre)));
-
-          return <div className="album item" key={album.id}>
-            <div className="album-name">{album.name}</div>
-            <div className="genres">
-              {this.controller.getFirstN([...genres], compareByName, 3)
-                   .map((genre: IGenre, index: number) => <div className="genre" key={`${index}`}>{genre.name}</div>)}
-              {(genres.size > 3) && <div className="genre more">...</div>}
-            </div>
-          </div>;
-        })}
-
-        {!isAll && this.controller.hasMore(albums) && <div className="more" key="more" onClick={onMoreClicked}>More...</div>}
-      </div>
-    </Accordion>;
+                             return <div className="album item" key={album.id}>
+                               <div className="album-name">{album.name}</div>
+                               <GenresSection genres={[ ...genres ]} controller={this.controller}/>
+                             </div>;
+                           }}/>;
   }
 
   private renderArtists(): React.ReactNode
   {
-    const artists: IArtist[] = this.props.provider.artists.filter((artist: IArtist) => artist.name !== "");
-
-    if (artists.length === 0)
-    {
-      return null;
-    }
-
-    const isAll: boolean = (this.props.path !== "") && (this.props.path.split(BrowserController.PATH_SEP).reverse()[0] === "artists");
-
-    const onMoreClicked = () => {
-      this.controller.goTo(this.props.path, "artists");
-    };
-
-    return <Accordion className="artists"
-                      header={`Artists (${artists.length})`}
-                      open={isAll}>
-      <div className="item-container">
-        {this.controller.getFirstN(artists,
-                                   compareByName,
-                                   isAll ? artists.length : BrowserController.PREVIEW_COUNT)
-          .map((artist: IArtist) =>
-                 <div className="artist item" key={artist.id}>
-                   <div className="artist-name">{artist.name}</div>
-                   <div className="genres">
-                     {this.controller.getFirstN(artist.genres, compareByName, 3)
-                       .map((genre: IGenre, index: number) => <div className="genre"
-                                                                   key={index}>{genre.name}</div>)}
-                     {(artist.genres.length > 3) && <div className="genre more">...</div>}
-                   </div>
-                 </div>)}
-
-        {!isAll && this.controller.hasMore(artists)
-          && <div className="more"
-                  key="more"
-                  onClick={onMoreClicked}
-            >More...</div>}
-      </div>
-    </Accordion>;
+    return <BrowserSection className={"artists"}
+                           headerText={"Artists"}
+                           controller={this.controller}
+                           objects={this.props.provider.artists.filter((artist: IArtist) => artist.name !== "")}
+                           compare={compareByName}
+                           render={(artist: IArtist) => {
+                             return <div className="artist item" key={artist.id}>
+                               <div className="artist-name">{artist.name}</div>
+                               <GenresSection genres={artist.genres}
+                                              controller={this.controller}/>
+                             </div>;
+                           }}/>
   }
 
   private renderGenres(): React.ReactNode
   {
-    const genres: IGenre[] = this.props.provider.genres;
-
-    if (genres.length === 0)
-    {
-      return null;
-    }
-
-    const isAll: boolean = (this.props.path !== "") && (this.props.path.split(BrowserController.PATH_SEP).reverse()[0] === "genres");
-
-    const onMoreClicked = () => {
-      this.controller.goTo(this.props.path, "genres");
-    };
-
-    return <Accordion className="genres"
-                      header={`Genres (${genres.length})`}
-                      open={isAll}>
-      <div className="item-container">
-        {this.controller.getFirstN(genres,
-                                   compareByName,
-                                   isAll ? genres.length : BrowserController.PREVIEW_COUNT)
-          .map((genre: IGenre, index: number) =>
-                 <div className="genre item" key={index}>
-                   <div className="name">{genre.name}</div>
-                 </div>)}
-
-        {!isAll && this.controller.hasMore(genres) && <div className="more" key="more" onClick={onMoreClicked}>More...</div>}
-      </div>
-    </Accordion>;
+    return <BrowserSection className={"genres"}
+                           headerText={"Genres"}
+                           controller={this.controller}
+                           objects={this.props.provider.genres}
+                           compare={compareByName}
+                           render={(genre: IGenre) => {
+                             return <div className="genre item">
+                               <div className="name">{genre.name}</div>
+                             </div>;
+                           }}/>;
   }
 
   private renderPlaylists(): React.ReactNode
   {
-    const playlists: IPlaylist[] = this.props.provider.playlists;
-
-    if (playlists.length === 0)
-    {
-      return null;
-    }
-
-    const onMoreClicked = () => {
-      this.controller.goTo(this.props.path, "playlists");
-    };
-
-    const isAll: boolean = (this.props.path !== "") && (this.props.path.split(BrowserController.PATH_SEP).reverse()[0] === "playlists");
-
-    return <Accordion className="Playlists"
-                      header={`Playlists (${playlists.length})`}
-                      open={isAll}>
-
-      <div className="item-container">
-        {this.controller.getFirstN(playlists,
-                                   compareByName,
-                                   isAll ? playlists.length : BrowserController.PREVIEW_COUNT).map((playlist: IPlaylist) => {
-          const genres: Set<IGenre> = new Set();
-          playlist.tracks.forEach((track: ITrack) => track.genres.forEach((genre: IGenre) => genres.add(genre)));
-
-          return <div className="playlist item" key={playlist.id}>
-            <div className="playlist-name">{playlist.name}</div>
-            <div className="genres">
-              {this.controller.getFirstN([...genres], compareByName, 3)
-                .map((genre: IGenre, index: number) => <div className="genre" key={`${index}`}>{genre.name}</div>)}
-              {(genres.size > 3) && <div className="genre more">...</div>}
-            </div>
-          </div>;
-        })}
-
-        {!isAll && this.controller.hasMore(playlists) && <div className="more" key="more" onClick={onMoreClicked}>More...</div>}
-      </div>
-    </Accordion>;
+    return <BrowserSection className={"playlists"}
+                           headerText={"Playlists"}
+                           controller={this.controller}
+                           objects={this.props.provider.playlists}
+                           compare={compareByName}
+                           render={(playlist: IPlaylist) => {
+                             const genres: Set<IGenre> = new Set();
+                             playlist.tracks.forEach((track: ITrack) => track.genres.forEach((genre: IGenre) => genres.add(genre)));
+                             return <div className="playlist item" key={playlist.id}>
+                               <div className="playlist-name">{playlist.name}</div>
+                               <GenresSection genres={[... genres]}
+                                              controller={this.controller}/>
+                             </div>;
+                           }}/>;
   }
 
   private renderTracks(): React.ReactNode
   {
-    const tracks: ITrack[] = this.props.provider.tracks;
-
-    const onMoreClicked = () => {
-      this.controller.goTo(this.props.path, "tracks");
-    };
-
-    const isAll: boolean = (this.props.path !== "") && (this.props.path.split(BrowserController.PATH_SEP).reverse()[0] === "tracks");
-
-    return <Accordion className="tracks"
-                      header={`Tracks (${tracks.length})`}
-                      open={isAll}>
-      <div className={"item-container"}>
-        {this.controller.getFirstN(tracks,
-                                   compareByName,
-                                   isAll ? tracks.length : BrowserController.PREVIEW_COUNT)
-          .map((track: ITrack) => <div className="track item" key={track.id}>
-            <div className="track-name">{track.name}</div>
-            <div className="album-name">{track.album?.name}</div>
-            <div className="genres">
-              {this.controller.getFirstN(track.genres, compareByName, 3)
-                .map((genre: IGenre, index: number) => <div className="genre" key={`${index}`}>{genre.name}</div>)}
-              {(track.genres.length > 3) && <div className="genre more">...</div>}
-            </div>
-          </div>)}
-        {!isAll && this.controller.hasMore(tracks) && <div className="more" key="more" onClick={onMoreClicked}>More...</div>}
-      </div>
-    </Accordion>
+    return <BrowserSection className={"tracks"}
+                           headerText={"Tracks"}
+                           controller={this.controller}
+                           objects={this.props.provider.tracks}
+                           compare={compareByName}
+                           render={(track: ITrack) => {
+                             return <div className="track item" key={track.id}>
+                               <div className="track-name">{track.name}</div>
+                               <div className="album-name">{track.album?.name}</div>
+                               <GenresSection genres={track.genres}
+                                              controller={this.controller}/>
+                             </div>;
+                           }}/>;
   }
 
   public override componentDidMount(): void
