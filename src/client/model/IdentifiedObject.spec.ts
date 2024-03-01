@@ -8,9 +8,12 @@ class TestObject implements IdentifiedObject
 {
   public id: string;
 
+  public name: string;
+
   constructor(id: string)
   {
     this.id = id;
+    this.name = id;
   }
 }
 

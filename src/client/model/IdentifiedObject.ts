@@ -5,6 +5,8 @@
 export interface IdentifiedObject
 {
   id: string;
+
+  name: string;
 }
 
 export const areIdentifiedObjectsSame = (a: IdentifiedObject, b: IdentifiedObject): boolean => {

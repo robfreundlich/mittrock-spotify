@@ -83,14 +83,15 @@ export const browserState = {
       resolveFn: ($transition$: Transition) => $transition$.params().path
     },
     {
-      token: "provider",
+      token: "providers",
       deps: [`$transition$`],
       resolveFn: ($transition$: Transition) => {
         let path = $transition$.params().path;
-        return BrowserProviderFactory.getProvider(path);
+        return BrowserProviderFactory.getProviders(path);
       }
     }
   ]
 };
+
 
 export default [loadingDatabaseState, loadingFromDatabaseState, browserState];

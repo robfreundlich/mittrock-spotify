@@ -13,6 +13,7 @@ import {IPlaylist} from "app/client/model/Playlist";
 import {ITrack} from "app/client/model/Track";
 import * as React from "react";
 import BrowserSection, {GenresSection} from "app/client/browser/BrowserSection";
+import {IdentifiedObject} from "app/client/model/IdentifiedObject";
 
 export interface BrowserProvider
 {
@@ -22,13 +23,19 @@ export interface BrowserProvider
   artists: IArtist[];
   genres: IGenre[];
   playlists: IPlaylist[];
+  compareTracks?: (a: ITrack, b: ITrack) => number;
+}
+
+export interface BrowserObjectProvider
+{
+  getObject(): IdentifiedObject | IGenre | undefined;
 }
 
 interface BrowserProps
 {
   dataStore: DataStore;
   router: UIRouterReact;
-  provider: BrowserProvider;
+  providers: BrowserProvider[];
   path: string;
 }
 
@@ -41,10 +48,15 @@ export class Browser extends React.Component<BrowserProps>
     super(props);
     this.controller = new BrowserController(props.dataStore, this.props.router);
   }
+  
+  private get provider(): BrowserProvider
+  {
+    return this.props.providers[this.props.providers.length - 1];
+  }
 
   public override render()
   {
-    if (!this.props.provider.tracks)
+    if (!this.provider.tracks)
     {
       return null;
     }
@@ -80,15 +92,30 @@ export class Browser extends React.Component<BrowserProps>
             return <span>{arrow}
               <span className={"path-part"}
                     onClick={gotoSubPath(parts.slice(0, index + 1).join(BrowserController.PATH_SEP))}>
-                {pathPart}
+                {this.renderPathPart(pathPart, index + 1)}
               </span>
           </span>;
           })}
       </div>
       <div className="track-count">
-        {this.props.provider.tracks.length} Tracks
+        {this.provider.tracks.length} Tracks
       </div>
     </>;
+  }
+
+  private renderPathPart(pathPart: string, index: number): React.ReactNode
+  {
+    if (pathPart.indexOf(BrowserController.PART_SEP) !== -1)
+    {
+      const object: IdentifiedObject | IGenre | undefined = (this.props.providers[index] as unknown as BrowserObjectProvider).getObject();
+
+      if (object)
+      {
+        return object.name
+      }
+    }
+
+    return pathPart;
   }
 
   private renderBody(): React.ReactNode
@@ -108,7 +135,7 @@ export class Browser extends React.Component<BrowserProps>
     return <BrowserSection className={"favorites"}
                            headerText={"Favorites"}
                            controller={this.controller}
-                           objects={this.props.provider.getFavorites()}
+                           objects={this.provider.getFavorites()}
                            compare={compareByAddedAtDesc}
                            render={(track: ITrack) => {
                              return <div className="track item" key={track.id}>
@@ -121,10 +148,14 @@ export class Browser extends React.Component<BrowserProps>
 
   private renderAlbums(): React.ReactNode
   {
+    const onAlbumClicked = (album: IAlbum) => () => {
+      this.controller.gotoObject(this.props.path, "album", album.id);
+    };
+
     return <BrowserSection className={"albums"}
                            headerText={"Albums"}
                            controller={this.controller}
-                           objects={this.props.provider.albums}
+                           objects={this.provider.albums}
                            compare={compareByAddedAtDesc}
                            render={(album: IAlbum) => {
                              const genres: Set<IGenre> = new Set();
@@ -132,7 +163,7 @@ export class Browser extends React.Component<BrowserProps>
                                .forEach((genre: IGenre) => genres.add(genre)));
 
                              return <div className="album item" key={album.id}>
-                               <div className="album-name">{album.name}</div>
+                               <div className="album-name" onClick={onAlbumClicked(album)}>{album.name}</div>
                                <GenresSection genres={[ ...genres ]} controller={this.controller}/>
                              </div>;
                            }}/>;
@@ -140,13 +171,20 @@ export class Browser extends React.Component<BrowserProps>
 
   private renderArtists(): React.ReactNode
   {
+    const onArtistClicked = (artist: IArtist) => () => {
+      this.controller.gotoObject(this.props.path, "artist", artist.id);
+    };
+
     return <BrowserSection className={"artists"}
                            headerText={"Artists"}
                            controller={this.controller}
-                           objects={this.props.provider.artists.filter((artist: IArtist) => artist.name !== "")}
+                           objects={this.provider.artists.filter((artist: IArtist) => artist.name !== "")}
                            compare={compareByName}
                            render={(artist: IArtist) => {
-                             return <div className="artist item" key={artist.id}>
+                             return <div className="artist item"
+                                         key={artist.id}
+                                         onClick={onArtistClicked(artist)}
+                             >
                                <div className="artist-name">{artist.name}</div>
                                <GenresSection genres={artist.genres}
                                               controller={this.controller}/>
@@ -159,7 +197,7 @@ export class Browser extends React.Component<BrowserProps>
     return <BrowserSection className={"genres"}
                            headerText={"Genres"}
                            controller={this.controller}
-                           objects={this.props.provider.genres}
+                           objects={this.provider.genres}
                            compare={compareByName}
                            render={(genre: IGenre) => {
                              return <div className="genre item">
@@ -170,15 +208,22 @@ export class Browser extends React.Component<BrowserProps>
 
   private renderPlaylists(): React.ReactNode
   {
+    const onPlaylistClicked = (playlist: IPlaylist) => () => {
+      this.controller.gotoObject(this.props.path, "playlist", playlist.id);
+    };
+
     return <BrowserSection className={"playlists"}
                            headerText={"Playlists"}
                            controller={this.controller}
-                           objects={this.props.provider.playlists}
+                           objects={this.provider.playlists}
                            compare={compareByName}
                            render={(playlist: IPlaylist) => {
                              const genres: Set<IGenre> = new Set();
                              playlist.tracks.forEach((track: ITrack) => track.genres.forEach((genre: IGenre) => genres.add(genre)));
-                             return <div className="playlist item" key={playlist.id}>
+                             return <div className="playlist item"
+                                         key={playlist.id}
+                                         onClick={onPlaylistClicked(playlist)}
+                             >
                                <div className="playlist-name">{playlist.name}</div>
                                <GenresSection genres={[... genres]}
                                               controller={this.controller}/>
@@ -191,8 +236,8 @@ export class Browser extends React.Component<BrowserProps>
     return <BrowserSection className={"tracks"}
                            headerText={"Tracks"}
                            controller={this.controller}
-                           objects={this.props.provider.tracks}
-                           compare={compareByName}
+                           objects={this.provider.tracks}
+                           compare={this.provider.compareTracks ?? compareByName}
                            render={(track: ITrack) => {
                              return <div className="track item" key={track.id}>
                                <div className="track-name">{track.name}</div>

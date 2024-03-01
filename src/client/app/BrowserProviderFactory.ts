@@ -8,27 +8,33 @@ import {AppServices} from "app/client/app/AppServices";
 import {BrowserProvider} from "app/client/browser/Browser";
 import {BrowserController} from "app/client/browser/BrowserController";
 import {isTrackFavorite} from "app/client/model/TrackSource";
+import {AlbumTracksProvider} from "app/client/app/AlbumTracksProvider";
+import {PlaylistTracksProvider} from "app/client/app/PlaylistTracksProvider";
+import {ArtistTracksProvider} from "app/client/app/ArtistTracksProvider";
 
 
 export class BrowserProviderFactory
 {
-  public static getProvider(path: string): BrowserProvider
+  public static getProviders(path: string): BrowserProvider[]
   {
+    const providers: BrowserProvider[] = [];
     let provider: BrowserProvider;
     let tracks: ITrack[] = [];
 
     provider = this.getProviderFromTracks("", tracks);
+    providers.push(provider);
     tracks = provider.tracks;
 
     if (path !== "")
     {
       path.split(BrowserController.PATH_SEP).forEach((pathPart) => {
         provider = this.getProviderFromTracks(pathPart, tracks);
+        providers.push(provider);
         tracks = provider.tracks;
       });
     }
 
-    return provider;
+    return providers;
   }
 
   private static getProviderFromTracks(pathPart: string, tracks: ITrack[]): BrowserProvider
@@ -45,9 +51,17 @@ export class BrowserProviderFactory
     {
       return new TracksProvider(tracks.filter((track) => track.album !== undefined));
     }
+    else if (pathPart.split(BrowserController.PART_SEP)[0] == "album")
+    {
+      return new AlbumTracksProvider(tracks, pathPart.split(BrowserController.PART_SEP)[1]);
+    }
     else if (pathPart === "artists")
     {
       return new TracksProvider(tracks);
+    }
+    else if (pathPart.split(BrowserController.PART_SEP)[0] == "artist")
+    {
+      return new ArtistTracksProvider(tracks, pathPart.split(BrowserController.PART_SEP)[1]);
     }
     else if (pathPart === "genres")
     {
@@ -56,6 +70,10 @@ export class BrowserProviderFactory
     else if (pathPart === "playlists")
     {
       return new TracksProvider(tracks.filter((track) => track.playlists.length > 0));
+    }
+    else if (pathPart.split(BrowserController.PART_SEP)[0] == "playlist")
+    {
+      return new PlaylistTracksProvider(tracks, pathPart.split(BrowserController.PART_SEP)[1]);
     }
     else if (pathPart === "tracks")
     {

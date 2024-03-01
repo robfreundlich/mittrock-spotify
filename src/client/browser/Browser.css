@@ -93,6 +93,8 @@
   overflow: auto;
   text-align: center;
   background-color: var(--color-spotify-white);
+
+  cursor: pointer;
 }
 
 

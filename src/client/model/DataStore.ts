@@ -24,6 +24,8 @@ export class DataStore implements IdentifiedObject
 
   private _id: string;
 
+  public readonly name: string = "DataStore";
+
   private _tracks: ITrack[] = [];
 
   private _albums: IAlbum[] = [];
