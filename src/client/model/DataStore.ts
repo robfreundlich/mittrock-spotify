@@ -142,6 +142,11 @@ export class DataStore implements IdentifiedObject
     return this._artists.find((artist) => artist.id === id);
   }
 
+  public getGenre(name: string): IGenre | undefined
+  {
+    return this._genres.find((genre) => genre.name === name);
+  }
+
   public getPlaylist(id: string): IPlaylist | undefined
   {
     return this._playlists.find((playlist) => playlist.id === id);

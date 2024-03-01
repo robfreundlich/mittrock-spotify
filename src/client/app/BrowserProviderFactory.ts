@@ -11,6 +11,7 @@ import {isTrackFavorite} from "app/client/model/TrackSource";
 import {AlbumTracksProvider} from "app/client/app/AlbumTracksProvider";
 import {PlaylistTracksProvider} from "app/client/app/PlaylistTracksProvider";
 import {ArtistTracksProvider} from "app/client/app/ArtistTracksProvider";
+import {GenreTracksProvider} from "app/client/app/GenreTracksProvider";
 
 
 export class BrowserProviderFactory
@@ -66,6 +67,10 @@ export class BrowserProviderFactory
     else if (pathPart === "genres")
     {
       return new TracksProvider(tracks);
+    }
+    else if (pathPart.split(BrowserController.PART_SEP)[0] == "genre")
+    {
+      return new GenreTracksProvider(tracks, pathPart.split(BrowserController.PART_SEP)[1]);
     }
     else if (pathPart === "playlists")
     {

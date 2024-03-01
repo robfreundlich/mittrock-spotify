@@ -194,13 +194,19 @@ export class Browser extends React.Component<BrowserProps>
 
   private renderGenres(): React.ReactNode
   {
+    const onGenreClicked = (genre: IGenre) => () => {
+      this.controller.gotoObject(this.props.path, "genre", genre.name);
+    };
+
     return <BrowserSection className={"genres"}
                            headerText={"Genres"}
                            controller={this.controller}
                            objects={this.provider.genres}
                            compare={compareByName}
                            render={(genre: IGenre) => {
-                             return <div className="genre item">
+                             return <div className="genre item"
+                                         onClick={onGenreClicked(genre)}
+                             >
                                <div className="name">{genre.name}</div>
                              </div>;
                            }}/>;
