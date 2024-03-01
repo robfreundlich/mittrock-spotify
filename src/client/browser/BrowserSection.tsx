@@ -10,6 +10,8 @@ import {BrowserController} from "app/client/browser/BrowserController";
 import {compareByName} from "app/client/model/ComparisonFunctions";
 import {ArrayUtils} from "app/client/utils/ArrayUtils";
 
+export type ItemDisplayType = "cards" | "rows";
+
 export interface BrowserSectionProps<T extends IGenre | IdentifiedObject>
 {
   className: string;
@@ -18,6 +20,7 @@ export interface BrowserSectionProps<T extends IGenre | IdentifiedObject>
   objects: T[];
   compare: (a: T, B: T) => number;
   render: (object: T) => React.ReactNode;
+  type?: ItemDisplayType;
 }
 
 function BrowserSection<T extends IGenre | IdentifiedObject>(props: BrowserSectionProps<T>)
@@ -33,24 +36,33 @@ function BrowserSection<T extends IGenre | IdentifiedObject>(props: BrowserSecti
     setIsAll(!isAll);
   }
 
+  const isRows: boolean = (props.type === "rows");
+
   return <Accordion className={`${props.className}`}
                     header={`${props.headerText}(${props.objects.length})`}
                     open={isAll}>
-    <div className="tracks item-container">
+    <div className={`item-container ${props.type ?? "cards"}`}>
       {props.controller.getFirstN(props.objects,
                                  props.compare,
-                                 isAll ? props.objects.length : BrowserController.PREVIEW_COUNT)
+                                  (isRows || isAll) ? props.objects.length : BrowserController.PREVIEW_COUNT)
         .map((object: T) => props.render(object))}
 
-      {props.controller.hasMore(props.objects) &&
+      {!isRows && props.controller.hasMore(props.objects) &&
           <div className="more" key="more" onClick={onMoreClicked}>{isAll ? "Less" : "More"}...</div>}
     </div>
   </Accordion>;
 }
 
-export function GenresSection(props: {genres: IGenre[], controller: BrowserController})
+interface GenresSectionProps
 {
-  const [isAll, setIsAll] = useState(false);
+  genres: IGenre[];
+  controller: BrowserController;
+  type?: ItemDisplayType;
+}
+
+export function GenresSection(props: GenresSectionProps)
+{
+  const [isAll, setIsAll] = useState(props.type === "rows");
 
   const onMoreClicked = () => {
     setIsAll(!isAll);
@@ -67,7 +79,7 @@ export function GenresSection(props: {genres: IGenre[], controller: BrowserContr
                    isAll ? uniqueGenres.length : 3)
         .map((genre: IGenre, index: number) => <div className="genre"
                                                     key={`${index}`}>{genre.name}</div>)}
-      {(uniqueGenres.length > 3) && <div className="genre more" onClick={onMoreClicked}>{isAll ? "<<<" : "..."}</div>}
+      {(props.type !== "rows") && (uniqueGenres.length > 3) && <div className="genre more" onClick={onMoreClicked}>{isAll ? "<<<" : "..."}</div>}
     </div>
   );
 }

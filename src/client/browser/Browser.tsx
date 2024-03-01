@@ -12,8 +12,10 @@ import {IGenre} from "app/client/model/Genre";
 import {IPlaylist} from "app/client/model/Playlist";
 import {ITrack} from "app/client/model/Track";
 import * as React from "react";
-import BrowserSection, {GenresSection} from "app/client/browser/BrowserSection";
+import BrowserSection, {GenresSection, ItemDisplayType} from "app/client/browser/BrowserSection";
 import {IdentifiedObject} from "app/client/model/IdentifiedObject";
+import {AlbumTracksProvider} from "app/client/app/AlbumTracksProvider";
+import {PlaylistTracksProvider} from "app/client/app/PlaylistTracksProvider";
 
 export interface BrowserProvider
 {
@@ -239,7 +241,12 @@ export class Browser extends React.Component<BrowserProps>
 
   private renderTracks(): React.ReactNode
   {
+    const type: ItemDisplayType = (this.provider instanceof AlbumTracksProvider) || (this.provider instanceof PlaylistTracksProvider)
+      ? "rows"
+      : "cards";
+
     return <BrowserSection className={"tracks"}
+                           type={type}
                            headerText={"Tracks"}
                            controller={this.controller}
                            objects={this.provider.tracks}
@@ -249,7 +256,8 @@ export class Browser extends React.Component<BrowserProps>
                                <div className="track-name">{track.name}</div>
                                <div className="album-name">{track.album?.name}</div>
                                <GenresSection genres={track.genres}
-                                              controller={this.controller}/>
+                                              controller={this.controller}
+                                              type={type}/>
                              </div>;
                            }}/>;
   }

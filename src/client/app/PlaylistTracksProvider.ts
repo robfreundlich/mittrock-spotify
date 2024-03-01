@@ -18,6 +18,13 @@ export class PlaylistTracksProvider implements BrowserProvider, BrowserObjectPro
   private _tracks: ITrack[];
   private _playlist: IPlaylist | undefined;
 
+  public readonly compareTracks = (a: ITrack, b: ITrack) => {
+    const a_track_num = this._playlist?.tracks?.indexOf(a);
+    const b_track_num = this._playlist?.tracks?.indexOf(b);
+
+    return (a_track_num ?? 0) - (b_track_num ?? 0);
+  };
+
   constructor(tracks: ITrack[], id: string)
   {
     this._playlist = AppServices.dataStore.getPlaylist(id);
