@@ -2,7 +2,7 @@
  * Copyright (c) 2024. Rob Freundlich <rob@freundlichs.com> - All rights reserved.
  */
 
-import React, {useState} from 'react';
+import React, {MouseEvent, useState} from 'react';
 import {IdentifiedObject} from "app/client/model/IdentifiedObject";
 import {areGenresSame, IGenre} from "app/client/model/Genre";
 import Accordion from "app/client/controls/Accordion";
@@ -64,7 +64,8 @@ export function GenresSection(props: GenresSectionProps)
 {
   const [isAll, setIsAll] = useState(props.type === "rows");
 
-  const onMoreClicked = () => {
+  const onMoreClicked = (event: MouseEvent) => {
+    event.stopPropagation();
     setIsAll(!isAll);
   }
 
