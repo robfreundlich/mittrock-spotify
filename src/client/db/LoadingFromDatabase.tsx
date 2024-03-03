@@ -27,9 +27,9 @@ export interface LoadingFromDatabaseProps
 export interface LoadingState
 {
   status: "uninitialized" | "no_data" | "loading" | "loaded";
-  track?: Track;
-  album?: Album;
-  playlist?: Playlist;
+  track?: Track | undefined;
+  album?: Album | undefined;
+  playlist?: Playlist | undefined;
 }
 
 export class LoadingFromDatabase extends React.Component<LoadingFromDatabaseProps, LoadingState>
@@ -52,10 +52,11 @@ export class LoadingFromDatabase extends React.Component<LoadingFromDatabaseProp
         return <div>Going to data loader page ...</div>;
 
       case "loading":
-        return <div>Loading track information {this.state.track?.name
-          ?? this.state.album?.name
-          ?? this.state.playlist?.name
-          ?? ""} ...</div>;
+        return <div>Loading
+          {this.state.track && ` Track ${this.state.track.name}`}
+          {this.state.album && ` Album ${this.state.album.name}`}
+          {this.state.playlist && ` Playlist ${this.state.playlist.name}`}
+          ...</div>;
 
       case "loaded":
         return <div>Going to the browser...</div>;
@@ -92,7 +93,7 @@ export class LoadingFromDatabase extends React.Component<LoadingFromDatabaseProp
 
         if (album)
         {
-          this.setState({status: "loading", album: album});
+          this.setState({status: "loading", album: album, track: undefined});
           dbAlbum.track_ids.forEach((track_id) => {
             const track: ITrack | undefined = this.props.dataStore.getTrack(track_id);
 
@@ -111,7 +112,7 @@ export class LoadingFromDatabase extends React.Component<LoadingFromDatabaseProp
 
         if (playlist)
         {
-          this.setState({status: "loading", playlist: playlist});
+          this.setState({status: "loading", playlist: playlist, album: undefined, track: undefined});
           dbPlaylist.track_ids.forEach((track_id) => {
             const track: ITrack | undefined = this.props.dataStore.getTrack(track_id);
 
@@ -137,7 +138,6 @@ export class LoadingFromDatabase extends React.Component<LoadingFromDatabaseProp
                                            //   return;
                                            // }
                                            trackPromises.push(makeTrack(track));
-
                                            // i++;
                                          });
 

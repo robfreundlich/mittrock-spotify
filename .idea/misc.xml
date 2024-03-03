@@ -4,6 +4,7 @@
     <option name="defaultAhkSdk" value="AutoHotkey v1.1.24" />
   </component>
   <component name="PWA">
+    <option name="enabled" value="true" />
     <option name="wasEnabledAtLeastOnce" value="true" />
   </component>
   <component name="ProjectRootManager">
