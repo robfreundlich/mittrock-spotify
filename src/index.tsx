@@ -7,6 +7,7 @@ import * as ReactDOM from "react-dom";
 import {Scopes, SpotifyAuth} from "react-spotify-auth";
 import {getCookie} from "typescript-cookie";
 
+import "./index.css";
 
 console.log("setup: router:", router);
 
