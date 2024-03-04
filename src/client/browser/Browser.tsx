@@ -136,6 +136,7 @@ export class Browser extends React.Component<BrowserProps>
   {
     return <BrowserSection className={"favorites"}
                            headerText={"Favorites"}
+                           key={"favorites"}
                            controller={this.controller}
                            objects={this.provider.getFavorites()}
                            compare={compareByAddedAtDesc}
@@ -156,6 +157,7 @@ export class Browser extends React.Component<BrowserProps>
 
     return <BrowserSection className={"albums"}
                            headerText={"Albums"}
+                           key={"albums"}
                            controller={this.controller}
                            objects={this.provider.albums}
                            compare={compareByAddedAtDesc}
@@ -179,6 +181,7 @@ export class Browser extends React.Component<BrowserProps>
 
     return <BrowserSection className={"artists"}
                            headerText={"Artists"}
+                           key={"artists"}
                            controller={this.controller}
                            objects={this.provider.artists.filter((artist: IArtist) => artist.name !== "")}
                            compare={compareByName}
@@ -202,11 +205,13 @@ export class Browser extends React.Component<BrowserProps>
 
     return <BrowserSection className={"genres"}
                            headerText={"Genres"}
+                           key={"genres"}
                            controller={this.controller}
                            objects={this.provider.genres}
                            compare={compareByName}
                            render={(genre: IGenre) => {
                              return <div className="genre item"
+                                         key={genre.name}
                                          onClick={onGenreClicked(genre)}
                              >
                                <div className="name">{genre.name}</div>
@@ -222,6 +227,7 @@ export class Browser extends React.Component<BrowserProps>
 
     return <BrowserSection className={"playlists"}
                            headerText={"Playlists"}
+                           key={"playlists"}
                            controller={this.controller}
                            objects={this.provider.playlists}
                            compare={compareByName}
@@ -248,6 +254,7 @@ export class Browser extends React.Component<BrowserProps>
     return <BrowserSection className={"tracks"}
                            type={type}
                            headerText={"Tracks"}
+                           key={"tracks"}
                            controller={this.controller}
                            objects={this.provider.tracks}
                            compare={this.provider.compareTracks ?? compareByName}
