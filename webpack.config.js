@@ -1,30 +1,30 @@
+const HtmlWebpackPlugin = require("html-webpack-plugin");
+
 const path = require('path');
 
 module.exports = {
-  target: "web",
-  mode: "development",
+  devServer: {
+    static: "./dist",
+    hot: true
+  },
+  devtool: "inline-source-map",
   entry: [
     './src/index.tsx',
     'react-hot-loader/patch',
   ],
-  devtool: "inline-source-map",
-  devServer: {
-    static: {
-      directory: path.resolve(__dirname, "src"),
-    },
-    hot: true
-  },
+  // ignoreWarnings: [/Failed to parse source map/],
+  mode: "none",
   module: {
     rules: [
+      // {
+      //   test: /\.js$/,
+      //   enforce: "pre",
+      //   use: ["source-map-loader"],
+      // },
       {
         test: /\.tsx?$/,
         use: 'ts-loader',
         exclude: /node_modules|(\.spec.ts)/,
-      },
-      {
-        test: /\.js$/,
-        enforce: "pre",
-        use: ["source-map-loader"],
       },
       {
         test: /\.css$/,
@@ -32,12 +32,21 @@ module.exports = {
       }
     ],
   },
-  ignoreWarnings: [/Failed to parse source map/],
+  optimization: {
+    nodeEnv: 'development',
+  },
   output: {
     filename: 'bundle.js',
     path: path.resolve(__dirname, 'dist'),
     publicPath: "/dist/",
+    clean: true,
   },
+  plugins: [
+    new HtmlWebpackPlugin({
+      filename: "index.html",
+      template: "./src/index.html",
+    }),
+  ],
   resolve: {
     extensions: ['.tsx', '.ts', '.js'],
     alias: {
@@ -45,4 +54,5 @@ module.exports = {
       "test": path.resolve(__dirname, "test/"),
     }
   },
+  // target: "web",
 };
