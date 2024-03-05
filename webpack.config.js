@@ -1,30 +1,56 @@
 const HtmlWebpackPlugin = require("html-webpack-plugin");
+const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
+const webpack = require("webpack");
 
 const path = require('path');
+
+const isDevelopment = process.env.NODE_ENV !== 'production';
+
+const plugins = [
+  new HtmlWebpackPlugin({
+    filename: "index.html",
+    template: "./src/index.html",
+  }),
+];
+
+if (isDevelopment)
+{
+  plugins.push(new webpack.HotModuleReplacementPlugin());
+  plugins.push(new ReactRefreshWebpackPlugin());
+}
+
 
 module.exports = {
   devServer: {
     static: "./dist",
-    hot: true
+    hot: "only"
   },
   devtool: "inline-source-map",
-  entry: [
-    './src/index.tsx',
-    'react-hot-loader/patch',
-  ],
-  // ignoreWarnings: [/Failed to parse source map/],
-  mode: "none",
+  entry: './src/index.tsx',
+  ignoreWarnings: [/Failed to parse source map/],
+  mode: "development",
   module: {
     rules: [
-      // {
-      //   test: /\.js$/,
-      //   enforce: "pre",
-      //   use: ["source-map-loader"],
-      // },
+      {
+        test: /\.(js|jsx|ts|tsx)$/,
+        exclude: /(node_modules|bower_components)/,
+        use: {
+          loader: "babel-loader",
+          options: {
+            presets: [
+              "@babel/preset-env",
+              ["@babel/preset-react", { runtime: "automatic" }],
+            ],
+            plugins: [
+              isDevelopment && require.resolve('react-refresh/babel'),
+            ].filter(Boolean),
+          },
+        },
+      },
       {
         test: /\.tsx?$/,
-        use: 'ts-loader',
-        exclude: /node_modules|(\.spec.ts)/,
+        loader: "ts-loader",
+        exclude: /node_modules/,
       },
       {
         test: /\.css$/,
@@ -41,12 +67,7 @@ module.exports = {
     publicPath: "/dist/",
     clean: true,
   },
-  plugins: [
-    new HtmlWebpackPlugin({
-      filename: "index.html",
-      template: "./src/index.html",
-    }),
-  ],
+  plugins: plugins,
   resolve: {
     extensions: ['.tsx', '.ts', '.js'],
     alias: {

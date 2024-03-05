@@ -2,7 +2,7 @@
  * Copyright (c) 2024. Rob Freundlich <rob@freundlichs.com> - All rights reserved.
  */
 
-import React, {useState} from 'react';
+import {useState} from 'react';
 
 export class AccordionProps
 {
