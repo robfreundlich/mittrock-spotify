@@ -13,14 +13,17 @@ import {ModelUtils} from "app/client/utils/ModelUtils";
 import {Explicitness, TrackStorageOrigin} from "app/client/utils/Types";
 import {areIdentifiedObjectsSame, IdentifiedObject} from "./IdentifiedObject";
 import {isTrackAlbum, isTrackFavorite, isTrackPlaylist} from "app/client/model/TrackSource";
+import {BrowserProvider, BrowserProviderType} from "app/client/browser/Browser";
 
 
-export class DataStore implements IdentifiedObject
+export class DataStore implements IdentifiedObject, BrowserProvider
 {
   private static canonicalName(name: string): string
   {
     return name.toLowerCase().replace(/\s/g, "");
   }
+
+  public browserProviderType: BrowserProviderType = "dataStore";
 
   private _id: string;
 

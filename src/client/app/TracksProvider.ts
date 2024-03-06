@@ -2,7 +2,7 @@
  * Copyright (c) 2024. Rob Freundlich <rob@freundlichs.com> - All rights reserved.
  */
 
-import {BrowserProvider} from "app/client/browser/Browser";
+import {BrowserProvider, BrowserProviderType} from "app/client/browser/Browser";
 import {IAlbum} from "../model/Album";
 import {IArtist} from "../model/Artist";
 import {areGenresSame, IGenre} from "../model/Genre";
@@ -20,9 +20,11 @@ export class TracksProvider implements BrowserProvider
   private _genres: IGenre[];
   private _playlists: IPlaylist[];
   private _favorites: ITrack[]
+  public browserProviderType: BrowserProviderType;
 
-  public constructor(tracks: ITrack[])
+  public constructor(type: BrowserProviderType, tracks: ITrack[])
   {
+    this.browserProviderType = type;
     this._tracks = tracks;
 
     this._albums = [];

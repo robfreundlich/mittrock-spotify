@@ -3,6 +3,7 @@
  */
 
 import * as React from "react";
+import {useState} from "react";
 import BrowserSection, {GenresSection, ItemDisplayType} from "app/client/browser/BrowserSection";
 import {compareByAddedAtDesc, compareByName} from "app/client/model/ComparisonFunctions";
 import {ITrack} from "app/client/model/Track";
@@ -12,8 +13,10 @@ import {IAlbum} from "app/client/model/Album";
 import {IGenre} from "app/client/model/Genre";
 import {IArtist} from "app/client/model/Artist";
 import {IPlaylist} from "app/client/model/Playlist";
-import {AlbumTracksProvider} from "app/client/app/AlbumTracksProvider";
-import {PlaylistTracksProvider} from "app/client/app/PlaylistTracksProvider";
+import {Album} from "app/client/browser/Album";
+import {Playlist} from "app/client/browser/Playlist";
+import {Artist} from "app/client/browser/Artist";
+import {Genre} from "app/client/browser/Genre";
 
 export interface BrowserBodyProps
 {
@@ -24,6 +27,40 @@ export interface BrowserBodyProps
 
 export function BrowserBody(props: BrowserBodyProps)
 {
+/*
+    {renderFavorites()}
+    {renderAlbums()}
+    {renderArtists()}
+    {renderGenres()}
+    {renderPlaylists()}
+    {renderTracks()}
+ */
+  const [isAlbum, setIsAlbum] = useState(props.provider.browserProviderType === "album");
+  const [isPlaylist, setIsPlaylist] = useState(props.provider.browserProviderType === "playlist");
+  const [isArtist, setIsArtist] = useState(props.provider.browserProviderType === "artist");
+  const [isGenre, setIsGenre] = useState(props.provider.browserProviderType === "genre");
+
+  if (isAlbum !== (props.provider.browserProviderType === "album"))
+  {
+    setIsAlbum((props.provider.browserProviderType === "album"));
+  }
+
+  if (isPlaylist !== (props.provider.browserProviderType === "playlist"))
+  {
+    setIsPlaylist((props.provider.browserProviderType === "playlist"));
+  }
+
+  if (isArtist !== (props.provider.browserProviderType === "artist"))
+  {
+    setIsArtist((props.provider.browserProviderType === "artist"));
+  }
+
+  if (isGenre !== (props.provider.browserProviderType === "genre"))
+  {
+    setIsGenre((props.provider.browserProviderType === "genre"));
+  }
+
+
   const renderFavorites = () => {
     return <BrowserSection className={"favorites"}
                            headerText={"Favorites"}
@@ -51,16 +88,18 @@ export function BrowserBody(props: BrowserBodyProps)
                            controller={props.controller}
                            objects={props.provider.albums}
                            compare={compareByAddedAtDesc}
-                           render={(album: IAlbum) => {
-                             const genres: Set<IGenre> = new Set();
-                             album.tracks.forEach((track: ITrack) => track.genres
-                               .forEach((genre: IGenre) => genres.add(genre)));
+                           render={(album: IAlbum) => <Album album={album}
+                                                             controller={props.controller}
+                                                             onAlbumClicked={onAlbumClicked}/>
+                           }/>;
 
-                             return <div className="album item" key={album.id}>
-                               <div className="album-name" onClick={onAlbumClicked(album)}>{album.name}</div>
-                               <GenresSection genres={[ ...genres ]} controller={props.controller}/>
-                             </div>;
-                           }}/>;
+  }
+
+  const renderAlbum = () => {
+    return <div className={"item-container cards"}>
+      <Album album={props.provider.albums[0]}
+                  controller={props.controller}/>
+    </div>;
   }
 
   const onArtistClicked = (artist: IArtist) => () => {
@@ -74,16 +113,17 @@ export function BrowserBody(props: BrowserBodyProps)
                            controller={props.controller}
                            objects={props.provider.artists.filter((artist: IArtist) => artist.name !== "")}
                            compare={compareByName}
-                           render={(artist: IArtist) => {
-                             return <div className="artist item"
-                                         key={artist.id}
-                                         onClick={onArtistClicked(artist)}
-                             >
-                               <div className="artist-name">{artist.name}</div>
-                               <GenresSection genres={artist.genres}
-                                              controller={props.controller}/>
-                             </div>;
-                           }}/>
+                           render={(artist: IArtist) => <Artist artist={artist}
+                                                                controller={props.controller}
+                                                                onArtistClicked={onArtistClicked}/>}
+                           />;
+  }
+
+  const renderArtist = () => {
+    return <div className={"item-container cards"}>
+      <Artist artist={props.provider.artists[0]}
+             controller={props.controller}/>
+    </div>;
   }
 
   const onGenreClicked = (genre: IGenre) => () => {
@@ -97,15 +137,18 @@ export function BrowserBody(props: BrowserBodyProps)
                            controller={props.controller}
                            objects={props.provider.genres}
                            compare={compareByName}
-                           render={(genre: IGenre) => {
-                             return <div className="genre item"
-                                         key={genre.name}
-                                         onClick={onGenreClicked(genre)}
-                             >
-                               <div className="name">{genre.name}</div>
-                             </div>;
-                           }}/>;
+                           render={(genre: IGenre) => <Genre genre={genre}
+                                                             onGenreClicked={onGenreClicked}/>}
+                             />;
   }
+
+  const renderGenre = () => {
+    return <div className={"item-container cards"}>
+      <Genre genre={props.provider.genres[0]}/>
+    </div>;
+  }
+
+
 
   const onPlaylistClicked = (playlist: IPlaylist) => () => {
     props.controller.gotoObject(props.path, "playlist", playlist.id);
@@ -118,22 +161,22 @@ export function BrowserBody(props: BrowserBodyProps)
                            controller={props.controller}
                            objects={props.provider.playlists}
                            compare={compareByName}
-                           render={(playlist: IPlaylist) => {
-                             const genres: Set<IGenre> = new Set();
-                             playlist.tracks.forEach((track: ITrack) => track.genres.forEach((genre: IGenre) => genres.add(genre)));
-                             return <div className="playlist item"
-                                         key={playlist.id}
-                                         onClick={onPlaylistClicked(playlist)}
-                             >
-                               <div className="playlist-name">{playlist.name}</div>
-                               <GenresSection genres={[... genres]}
-                                              controller={props.controller}/>
-                             </div>;
-                           }}/>;
+                           render={(playlist: IPlaylist) => <Playlist playlist={playlist}
+                                                                      controller={props.controller}
+                                                                      onPlaylistClicked={onPlaylistClicked}/>}
+                           />;
   }
 
+  const renderPlaylist = () => {
+    return <div className={"item-container cards"}>
+      <Playlist playlist={props.provider.playlists[0]}
+             controller={props.controller}/>
+    </div>;
+  }
+
+
   const renderTracks = () => {
-    const type: ItemDisplayType = (props.provider instanceof AlbumTracksProvider) || (props.provider instanceof PlaylistTracksProvider)
+    const type: ItemDisplayType = isAlbum || isPlaylist
       ? "rows"
       : "cards";
 
@@ -154,14 +197,17 @@ export function BrowserBody(props: BrowserBodyProps)
                              </div>;
                            }}/>;
   }
-  
-  
+
   return <div className="browser">
+    {isAlbum && renderAlbum()}
+    {isPlaylist && renderPlaylist()}
+    {isArtist && renderArtist()}
+    {isGenre && renderGenre()}
     {renderFavorites()}
-    {renderAlbums()}
-    {renderArtists()}
-    {renderGenres()}
-    {renderPlaylists()}
+    {!isAlbum && renderAlbums()}
+    {!isArtist && renderArtists()}
+    {!isGenre && renderGenres()}
+    {!isPlaylist && renderPlaylists()}
     {renderTracks()}
   </div>;
 }

@@ -14,8 +14,21 @@ import * as React from "react";
 import {IdentifiedObject} from "app/client/model/IdentifiedObject";
 import {BrowserBody} from "app/client/browser/BrowserBody";
 
+export type BrowserProviderType = "dataStore"
+  | "favorites"
+  | "albums"
+  | "album"
+  | "artists"
+  | "artist"
+  | "genres"
+  | "genre"
+  | "playlists"
+  | "playlist"
+  | "tracks";
+
 export interface BrowserProvider
 {
+  browserProviderType: BrowserProviderType;
   tracks: ITrack[];
   getFavorites: () => ITrack[];
   albums: IAlbum[];

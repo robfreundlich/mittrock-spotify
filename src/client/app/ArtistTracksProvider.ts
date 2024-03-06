@@ -10,11 +10,13 @@ import {ITrack} from "../model/Track";
 import {isTrackFavorite} from "app/client/model/TrackSource";
 import {ArrayUtils} from "app/client/utils/ArrayUtils";
 import {areIdentifiedObjectsSame, IdentifiedObject} from "app/client/model/IdentifiedObject";
-import {BrowserObjectProvider, BrowserProvider} from "app/client/browser/Browser";
+import {BrowserObjectProvider, BrowserProvider, BrowserProviderType} from "app/client/browser/Browser";
 import {AppServices} from "app/client/app/AppServices";
 
 export class ArtistTracksProvider implements BrowserProvider, BrowserObjectProvider
 {
+  public browserProviderType: BrowserProviderType = "artist";
+
   private _tracks: ITrack[];
   private _artist: IArtist | undefined;
 

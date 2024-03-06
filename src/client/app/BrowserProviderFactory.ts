@@ -46,11 +46,11 @@ export class BrowserProviderFactory
     }
     else if (pathPart === "favorites")
     {
-      return new TracksProvider(tracks.filter((track) => isTrackFavorite(track)));
+      return new TracksProvider("favorites", tracks.filter((track) => isTrackFavorite(track)));
     }
     else if (pathPart === "albums")
     {
-      return new TracksProvider(tracks.filter((track) => track.album !== undefined));
+      return new TracksProvider("albums", tracks.filter((track) => track.album !== undefined));
     }
     else if (pathPart.split(BrowserController.PART_SEP)[0] == "album")
     {
@@ -58,7 +58,7 @@ export class BrowserProviderFactory
     }
     else if (pathPart === "artists")
     {
-      return new TracksProvider(tracks);
+      return new TracksProvider("artists", tracks);
     }
     else if (pathPart.split(BrowserController.PART_SEP)[0] == "artist")
     {
@@ -66,7 +66,7 @@ export class BrowserProviderFactory
     }
     else if (pathPart === "genres")
     {
-      return new TracksProvider(tracks);
+      return new TracksProvider("genres", tracks);
     }
     else if (pathPart.split(BrowserController.PART_SEP)[0] == "genre")
     {
@@ -74,7 +74,7 @@ export class BrowserProviderFactory
     }
     else if (pathPart === "playlists")
     {
-      return new TracksProvider(tracks.filter((track) => track.playlists.length > 0));
+      return new TracksProvider("playlists", tracks.filter((track) => track.playlists.length > 0));
     }
     else if (pathPart.split(BrowserController.PART_SEP)[0] == "playlist")
     {
@@ -82,7 +82,7 @@ export class BrowserProviderFactory
     }
     else if (pathPart === "tracks")
     {
-      return new TracksProvider(tracks);
+      return new TracksProvider("tracks", tracks);
     }
     else
     {
