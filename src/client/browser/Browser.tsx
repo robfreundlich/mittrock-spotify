@@ -6,16 +6,13 @@ import {UIRouterReact} from "@uirouter/react";
 import {BrowserController} from "app/client/browser/BrowserController";
 import {IAlbum} from "app/client/model/Album";
 import {IArtist} from "app/client/model/Artist";
-import {compareByAddedAtDesc, compareByName} from "app/client/model/ComparisonFunctions";
 import {DataStore} from "app/client/model/DataStore";
 import {IGenre} from "app/client/model/Genre";
 import {IPlaylist} from "app/client/model/Playlist";
 import {ITrack} from "app/client/model/Track";
 import * as React from "react";
-import BrowserSection, {GenresSection, ItemDisplayType} from "app/client/browser/BrowserSection";
 import {IdentifiedObject} from "app/client/model/IdentifiedObject";
-import {AlbumTracksProvider} from "app/client/app/AlbumTracksProvider";
-import {PlaylistTracksProvider} from "app/client/app/PlaylistTracksProvider";
+import {BrowserBody} from "app/client/browser/BrowserBody";
 
 export interface BrowserProvider
 {
@@ -122,151 +119,9 @@ export class Browser extends React.Component<BrowserProps>
 
   private renderBody(): React.ReactNode
   {
-    return <div className="browser">
-      {this.renderFavorites()}
-      {this.renderAlbums()}
-      {this.renderArtists()}
-      {this.renderGenres()}
-      {this.renderPlaylists()}
-      {this.renderTracks()}
-    </div>;
-  }
-
-  private renderFavorites(): React.ReactNode
-  {
-    return <BrowserSection className={"favorites"}
-                           headerText={"Favorites"}
-                           key={"favorites"}
-                           controller={this.controller}
-                           objects={this.provider.getFavorites()}
-                           compare={compareByAddedAtDesc}
-                           render={(track: ITrack) => {
-                             return <div className="track item" key={track.id}>
-                               <div className="track-name">{track.name}</div>
-                               <div className="album-name">{track.album?.name}</div>
-                               <GenresSection genres={track.genres} controller={this.controller}/>
-                             </div>;
-                           }}/>;
-  }
-
-  private renderAlbums(): React.ReactNode
-  {
-    const onAlbumClicked = (album: IAlbum) => () => {
-      this.controller.gotoObject(this.props.path, "album", album.id);
-    };
-
-    return <BrowserSection className={"albums"}
-                           headerText={"Albums"}
-                           key={"albums"}
-                           controller={this.controller}
-                           objects={this.provider.albums}
-                           compare={compareByAddedAtDesc}
-                           render={(album: IAlbum) => {
-                             const genres: Set<IGenre> = new Set();
-                             album.tracks.forEach((track: ITrack) => track.genres
-                               .forEach((genre: IGenre) => genres.add(genre)));
-
-                             return <div className="album item" key={album.id}>
-                               <div className="album-name" onClick={onAlbumClicked(album)}>{album.name}</div>
-                               <GenresSection genres={[ ...genres ]} controller={this.controller}/>
-                             </div>;
-                           }}/>;
-  }
-
-  private renderArtists(): React.ReactNode
-  {
-    const onArtistClicked = (artist: IArtist) => () => {
-      this.controller.gotoObject(this.props.path, "artist", artist.id);
-    };
-
-    return <BrowserSection className={"artists"}
-                           headerText={"Artists"}
-                           key={"artists"}
-                           controller={this.controller}
-                           objects={this.provider.artists.filter((artist: IArtist) => artist.name !== "")}
-                           compare={compareByName}
-                           render={(artist: IArtist) => {
-                             return <div className="artist item"
-                                         key={artist.id}
-                                         onClick={onArtistClicked(artist)}
-                             >
-                               <div className="artist-name">{artist.name}</div>
-                               <GenresSection genres={artist.genres}
-                                              controller={this.controller}/>
-                             </div>;
-                           }}/>
-  }
-
-  private renderGenres(): React.ReactNode
-  {
-    const onGenreClicked = (genre: IGenre) => () => {
-      this.controller.gotoObject(this.props.path, "genre", genre.name);
-    };
-
-    return <BrowserSection className={"genres"}
-                           headerText={"Genres"}
-                           key={"genres"}
-                           controller={this.controller}
-                           objects={this.provider.genres}
-                           compare={compareByName}
-                           render={(genre: IGenre) => {
-                             return <div className="genre item"
-                                         key={genre.name}
-                                         onClick={onGenreClicked(genre)}
-                             >
-                               <div className="name">{genre.name}</div>
-                             </div>;
-                           }}/>;
-  }
-
-  private renderPlaylists(): React.ReactNode
-  {
-    const onPlaylistClicked = (playlist: IPlaylist) => () => {
-      this.controller.gotoObject(this.props.path, "playlist", playlist.id);
-    };
-
-    return <BrowserSection className={"playlists"}
-                           headerText={"Playlists"}
-                           key={"playlists"}
-                           controller={this.controller}
-                           objects={this.provider.playlists}
-                           compare={compareByName}
-                           render={(playlist: IPlaylist) => {
-                             const genres: Set<IGenre> = new Set();
-                             playlist.tracks.forEach((track: ITrack) => track.genres.forEach((genre: IGenre) => genres.add(genre)));
-                             return <div className="playlist item"
-                                         key={playlist.id}
-                                         onClick={onPlaylistClicked(playlist)}
-                             >
-                               <div className="playlist-name">{playlist.name}</div>
-                               <GenresSection genres={[... genres]}
-                                              controller={this.controller}/>
-                             </div>;
-                           }}/>;
-  }
-
-  private renderTracks(): React.ReactNode
-  {
-    const type: ItemDisplayType = (this.provider instanceof AlbumTracksProvider) || (this.provider instanceof PlaylistTracksProvider)
-      ? "rows"
-      : "cards";
-
-    return <BrowserSection className={"tracks"}
-                           type={type}
-                           headerText={"Tracks"}
-                           key={"tracks"}
-                           controller={this.controller}
-                           objects={this.provider.tracks}
-                           compare={this.provider.compareTracks ?? compareByName}
-                           render={(track: ITrack) => {
-                             return <div className="track item" key={track.id}>
-                               <div className="track-name">{track.name}</div>
-                               <div className="album-name">{track.album?.name}</div>
-                               <GenresSection genres={track.genres}
-                                              controller={this.controller}
-                                              type={type}/>
-                             </div>;
-                           }}/>;
+    return <BrowserBody controller={this.controller}
+                        path={this.props.path}
+                        provider={this.provider}/>;
   }
 
   public override componentDidMount(): void
