@@ -15,6 +15,7 @@ import {IPlaylist, Playlist} from "app/client/model/Playlist";
 import {DBPlaylist} from "app/client/db/DBPlaylist";
 import {DataStore} from "app/client/model/DataStore";
 import {TrackSource} from "app/client/model/TrackSource";
+import {SpotifyImage} from "spotify-web-api-ts/types/types/SpotifyObjects";
 
 export class ModelUtils {
   private static readonly BASE62 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -119,6 +120,7 @@ export class ModelUtils {
       dbAlbum.release_date,
       dbAlbum.release_date_precision,
       artists,
+      dbAlbum.images,
       new Date()
     );
 
@@ -152,7 +154,8 @@ export class ModelUtils {
         dbArtist.popularity,
         [...dbArtist.genres].map((name: string) => {
           return {name: name};
-        })
+        }),
+        dbArtist.images
       );
 
       return artist;
@@ -187,6 +190,23 @@ export class ModelUtils {
       dbPlaylist.collaborative,
       dbPlaylist.owner.display_name ?? "",
       dbPlaylist.snapshot_id,
+      dbPlaylist.images,
       []);
+  }
+
+  public static getImageNearSize(images: SpotifyImage[], size: number): SpotifyImage | undefined
+  {
+    let result: SpotifyImage | undefined = undefined;
+    let distance:  number = Infinity;
+
+    images.forEach((image) => {
+      if (image.width && (Math.abs(image.width - size) < distance))
+      {
+        distance = Math.abs(image.width - size);
+        result = image;
+      }
+    });
+
+    return result;
   }
 }

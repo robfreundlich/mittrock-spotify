@@ -4,7 +4,7 @@
 
 import * as React from "react";
 import {useState} from "react";
-import BrowserSection, {GenresSection, ItemDisplayType} from "app/client/browser/BrowserSection";
+import BrowserSection, {ItemDisplayType} from "app/client/browser/BrowserSection";
 import {compareByAddedAtDesc, compareByName} from "app/client/model/ComparisonFunctions";
 import {ITrack} from "app/client/model/Track";
 import {BrowserController} from "app/client/browser/BrowserController";
@@ -17,6 +17,7 @@ import {Album} from "app/client/browser/Album";
 import {Playlist} from "app/client/browser/Playlist";
 import {Artist} from "app/client/browser/Artist";
 import {Genre} from "app/client/browser/Genre";
+import {Track} from "app/client/browser/Track";
 
 export interface BrowserBodyProps
 {
@@ -68,13 +69,9 @@ export function BrowserBody(props: BrowserBodyProps)
                            controller={props.controller}
                            objects={props.provider.getFavorites()}
                            compare={compareByAddedAtDesc}
-                           render={(track: ITrack) => {
-                             return <div className="track item" key={track.id}>
-                               <div className="track-name">{track.name}</div>
-                               <div className="album-name">{track.album?.name}</div>
-                               <GenresSection genres={track.genres} controller={props.controller}/>
-                             </div>;
-                           }}/>;
+                           render={(track: ITrack) => <Track track={track}
+                                                             controller={props.controller}
+                                                             type="cards"/>}/>;
   }
 
   const onAlbumClicked = (album: IAlbum) => () => {
@@ -187,15 +184,9 @@ export function BrowserBody(props: BrowserBodyProps)
                            controller={props.controller}
                            objects={props.provider.tracks}
                            compare={props.provider.compareTracks ?? compareByName}
-                           render={(track: ITrack) => {
-                             return <div className="track item" key={track.id}>
-                               <div className="track-name">{track.name}</div>
-                               <div className="album-name">{track.album?.name}</div>
-                               <GenresSection genres={track.genres}
-                                              controller={props.controller}
-                                              type={type}/>
-                             </div>;
-                           }}/>;
+                           render={(track: ITrack) => <Track track={track}
+                                                             controller={props.controller}
+                                                             type={type}/>}/>;
   }
 
   return <div className="browser">

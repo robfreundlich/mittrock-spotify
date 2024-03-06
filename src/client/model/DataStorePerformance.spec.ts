@@ -39,7 +39,8 @@ describe("Load tests the DataStore", () => {
         .map((name: string) => new Artist(ModelUtils.generateId(),
                                           name,
                                           Math.random() * 100,
-                                          pickRandom(genres, 1, 5)));
+                                          pickRandom(genres, 1, 5),
+                                          []));
 
     const albums: Album[] = loremIpsum({p: 1000, avgSentencesPerParagraph: 1, avgWordsPerSentence: 3})
         .map((name: string) => new Album(ModelUtils.generateId(),
@@ -48,6 +49,7 @@ describe("Load tests the DataStore", () => {
                                          "" + getRandomNumber(1920, 2022),
                                          "year",
                                          pickRandom(artists, 1, 3),
+                                         [],
                                          new Date()));
 
     const trackNames: string[] = loremIpsum({p: 1000, avgSentencesPerParagraph: 1, avgWordsPerSentence: 5});

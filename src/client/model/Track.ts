@@ -10,6 +10,7 @@ import {IdentifiedObject} from "app/client/model/IdentifiedObject";
 import {IPlaylist} from "app/client/model/Playlist";
 import {isAlbum, isPlaylist, TrackSource} from "app/client/model/TrackSource";
 import {Explicitness, TrackStorageOrigin} from "app/client/utils/Types";
+import {SpotifyImage} from "spotify-web-api-ts/types/types/SpotifyObjects";
 
 export interface ITrack extends IdentifiedObject
 {
@@ -40,6 +41,8 @@ export interface ITrack extends IdentifiedObject
   artists: IArtist[];
 
   addedAt: Date;
+
+  images: SpotifyImage[];
 }
 
 /**
@@ -125,5 +128,20 @@ export class Track implements ITrack
   public get playlists(): IPlaylist[]
   {
     return this._playlists.slice();
+  }
+
+  public get images(): SpotifyImage[]
+  {
+    if (this._album)
+    {
+      return this._album.images;
+    }
+
+    // if (this._playlists)
+    // {
+    //   return this._playlists.find((p) => p.images.length > 0)?.images ?? [];
+    // }
+
+    return [];
   }
 }

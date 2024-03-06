@@ -7,6 +7,7 @@ import {ITrack} from "app/client/model/Track";
 import {ITrackSource, TrackSourceType} from "app/client/model/TrackSource";
 import {Visibility} from "app/client/utils/Types";
 import {ArrayUtils} from "app/client/utils/ArrayUtils";
+import {SpotifyImage} from "spotify-web-api-ts/types/types/SpotifyObjects";
 
 export interface IPlaylist extends IdentifiedObject, ITrackSource
 {
@@ -25,6 +26,8 @@ export interface IPlaylist extends IdentifiedObject, ITrackSource
   snapshot_id: string;
 
   tracks: ITrack[];
+
+  images: SpotifyImage[];
 
   addTrack(track: ITrack): void;
 }
@@ -51,6 +54,8 @@ export class Playlist implements IPlaylist
 
   public tracks: ITrack[];
 
+  public images: SpotifyImage[];
+
   constructor(id: string,
               name: string,
               description: string,
@@ -58,6 +63,7 @@ export class Playlist implements IPlaylist
               collaborative: boolean,
               owner: string,
               snapshot_id: string,
+              images: SpotifyImage[],
               tracks: ITrack[])
   {
     this.collaborative = collaborative;
@@ -67,6 +73,7 @@ export class Playlist implements IPlaylist
     this.owner = owner;
     this.visibility = visibility;
     this.snapshot_id = snapshot_id;
+    this.images = images;
     this.tracks = tracks;
   }
 

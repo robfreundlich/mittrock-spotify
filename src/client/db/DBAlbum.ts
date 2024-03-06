@@ -6,10 +6,10 @@ import {IdentifiedObject} from "app/client/model/IdentifiedObject";
 import {IncludedObject} from "app/client/model/IncludedObject";
 import {Album} from "spotify-web-api-ts/types/types/SpotifyObjects";
 
-export type PartialAlbum = Omit<Album, "artists" | "images" | "tracks">;
+export type PartialAlbum = Omit<Album, "artists" | "tracks">;
 
 export const makePartialAlbum = (t: Album): PartialAlbum => {
-  const {artists, images, tracks, ...rest} = {...t};
+  const {artists, tracks, ...rest} = {...t};
   return rest;
 };
 
@@ -19,6 +19,4 @@ export interface DBAlbum extends IncludedObject, IdentifiedObject, PartialAlbum
   artist_ids: string[];
 
   track_ids: string[];
-
-  image_ids: string[];
 }

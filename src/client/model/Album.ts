@@ -8,6 +8,7 @@ import {ITrack} from "app/client/model/Track";
 import {ITrackSource, TrackSourceType} from "app/client/model/TrackSource";
 import {ArrayUtils} from "app/client/utils/ArrayUtils";
 import {AlbumType, ReleaseDatePrecision} from "app/client/utils/Types";
+import {SpotifyImage} from "spotify-web-api-ts/types/types/SpotifyObjects";
 
 export interface IAlbum extends IdentifiedObject, ITrackSource
 {
@@ -26,6 +27,8 @@ export interface IAlbum extends IdentifiedObject, ITrackSource
   artists: IArtist[];
 
   addedAt: Date | undefined;
+
+  images: SpotifyImage[];
 }
 
 export class Album implements IAlbum
@@ -50,7 +53,16 @@ export class Album implements IAlbum
 
   public readonly addedAt: Date | undefined;
 
-  constructor(id: string, name: string, type: AlbumType, releaseDate: string, releaseDatePrecision: ReleaseDatePrecision, artists: IArtist[], addedAt?: Date,
+  public readonly images: SpotifyImage[];
+
+  constructor(id: string,
+              name: string,
+              type: AlbumType,
+              releaseDate: string,
+              releaseDatePrecision: ReleaseDatePrecision,
+              artists: IArtist[],
+              images: SpotifyImage[],
+              addedAt?: Date,
               tracks?: ITrack[])
   {
     this.id = id;
@@ -59,6 +71,7 @@ export class Album implements IAlbum
     this.releaseDate = releaseDate;
     this.releaseDatePrecision = releaseDatePrecision;
     this.artists = artists;
+    this.images = images;
     this.addedAt = addedAt;
 
     if (tracks)
@@ -75,5 +88,4 @@ export class Album implements IAlbum
   {
     ArrayUtils.pushIfMissing(this.tracks, track, areIdentifiedObjectsSame);
   }
-
 }

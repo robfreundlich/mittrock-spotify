@@ -529,7 +529,6 @@ export class TrackLoaderController
 
                            artist_ids: album.artists.map((artist: SimplifiedArtist) => artist.id),
                            track_ids: [],
-                           image_ids: [],
                            inclusionReasons: [INCLUSION_REASON_FAVORITE]
                          };
 
@@ -620,7 +619,6 @@ export class TrackLoaderController
                          const partialPlaylist: PartialPlaylist = makePartialPlaylist(apiPlaylist);
                          const playlist: DBPlaylist = {
                            ...partialPlaylist,
-                           image_ids: [],
                            track_ids: [],
 
                            inclusionReasons: [INCLUSION_REASON_FAVORITE]
@@ -751,7 +749,6 @@ export class TrackLoaderController
           const partialArtist: PartialArtist = makePartialArtist(spotifyArtist);
           const dbArtist: DBArtist = {
             ...partialArtist,
-            image_ids: spotifyArtist.images.map((image) => image.url),
             inclusionReasons: this._artistInclusionReasons.get(partialArtist.id)!
           };
 
