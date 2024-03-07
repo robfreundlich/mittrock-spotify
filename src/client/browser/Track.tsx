@@ -14,6 +14,7 @@ interface TrackProps
   track: ITrack;
   controller: BrowserController;
   type: ItemDisplayType;
+  track_num?: number | undefined;
 }
 
 export function Track(props: TrackProps)
@@ -23,7 +24,7 @@ export function Track(props: TrackProps)
   const image: SpotifyImage | undefined = ModelUtils.getImageNearSize(images, 64);
 
   return <div className="track item" key={props.track.id}>
-    <div className="track-number">{props.track.track_number}</div>
+    <div className="track-number">{props.track_num ?? props.track.track_number}</div>
     <div className="track-image">
       {image && <img width={image.width + "px"}
                      height={image.height + "px"}

@@ -6,7 +6,7 @@ import {useState} from 'react';
 
 export class AccordionProps
 {
-  header: string;
+  header: React.ReactNode;
   children: any;
   open?: boolean;
   className?: string;

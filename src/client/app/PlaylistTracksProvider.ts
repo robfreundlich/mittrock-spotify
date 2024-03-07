@@ -10,10 +10,15 @@ import {ITrack} from "../model/Track";
 import {isTrackFavorite} from "app/client/model/TrackSource";
 import {ArrayUtils} from "app/client/utils/ArrayUtils";
 import {areIdentifiedObjectsSame, IdentifiedObject} from "app/client/model/IdentifiedObject";
-import {BrowserObjectProvider, BrowserProvider, BrowserProviderType} from "app/client/browser/Browser";
+import {
+  AllTracksProvider,
+  BrowserObjectProvider,
+  BrowserProvider,
+  BrowserProviderType
+} from "app/client/browser/Browser";
 import {AppServices} from "app/client/app/AppServices";
 
-export class PlaylistTracksProvider implements BrowserProvider, BrowserObjectProvider
+export class PlaylistTracksProvider implements BrowserProvider, BrowserObjectProvider, AllTracksProvider
 {
   public browserProviderType: BrowserProviderType = "playlist";
 
@@ -103,4 +108,12 @@ export class PlaylistTracksProvider implements BrowserProvider, BrowserObjectPro
     return this._tracks.filter((track) => isTrackFavorite(track));
   }
 
+  public getAllTracks(): ITrack[]
+  {
+    let tracks: ITrack[] = (this._playlist?.tracks ?? []).slice();
+
+    tracks = tracks.sort(this.compareTracks);
+
+    return tracks;
+  }
 }

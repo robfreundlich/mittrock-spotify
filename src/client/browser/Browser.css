@@ -188,3 +188,8 @@
 .browser .genres .item-container.cards .genre .name {
   font-size: 1.5rem;
 }
+
+.browser .tracks-header .tracks-option-all-label {
+  font-size: 1rem;
+  padding-left: 1rem;
+}

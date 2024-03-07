@@ -15,7 +15,7 @@ export type ItemDisplayType = "cards" | "rows";
 export interface BrowserSectionProps<T extends IGenre | IdentifiedObject>
 {
   className: string;
-  headerText: string;
+  header: string | React.ReactNode;
   controller: BrowserController;
   objects: T[];
   compare: (a: T, B: T) => number;
@@ -38,8 +38,12 @@ function BrowserSection<T extends IGenre | IdentifiedObject>(props: BrowserSecti
 
   const isRows: boolean = (props.type === "rows");
 
+  const header = (typeof(props.header) === "string")
+    ? `${props.header}(${props.objects.length})`
+    : props.header;
+
   return <Accordion className={`${props.className}`}
-                    header={`${props.headerText}(${props.objects.length})`}
+                    header={header}
                     open={isAll}>
     <div className={`item-container ${props.type ?? "cards"}`}>
       {props.controller.getFirstN(props.objects,

@@ -38,6 +38,11 @@ export interface BrowserProvider
   compareTracks?: (a: ITrack, b: ITrack) => number;
 }
 
+export interface AllTracksProvider
+{
+  getAllTracks(): ITrack[];
+}
+
 export interface BrowserObjectProvider
 {
   getObject(): IdentifiedObject | IGenre | undefined;

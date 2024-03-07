@@ -4,7 +4,7 @@
 
 import * as React from "react";
 import {useState} from "react";
-import BrowserSection, {ItemDisplayType} from "app/client/browser/BrowserSection";
+import BrowserSection from "app/client/browser/BrowserSection";
 import {compareByAddedAtDesc, compareByName} from "app/client/model/ComparisonFunctions";
 import {ITrack} from "app/client/model/Track";
 import {BrowserController} from "app/client/browser/BrowserController";
@@ -18,6 +18,7 @@ import {Playlist} from "app/client/browser/Playlist";
 import {Artist} from "app/client/browser/Artist";
 import {Genre} from "app/client/browser/Genre";
 import {Track} from "app/client/browser/Track";
+import {TracksSection} from "app/client/browser/TracksSection";
 
 export interface BrowserBodyProps
 {
@@ -64,7 +65,7 @@ export function BrowserBody(props: BrowserBodyProps)
 
   const renderFavorites = () => {
     return <BrowserSection className={"favorites"}
-                           headerText={"Favorites"}
+                           header={"Favorites"}
                            key={"favorites"}
                            controller={props.controller}
                            objects={props.provider.getFavorites()}
@@ -80,7 +81,7 @@ export function BrowserBody(props: BrowserBodyProps)
 
   const renderAlbums = () => {
     return <BrowserSection className={"albums"}
-                           headerText={"Albums"}
+                           header={"Albums"}
                            key={"albums"}
                            controller={props.controller}
                            objects={props.provider.albums}
@@ -105,7 +106,7 @@ export function BrowserBody(props: BrowserBodyProps)
 
   const renderArtists = () => {
     return <BrowserSection className={"artists"}
-                           headerText={"Artists"}
+                           header={"Artists"}
                            key={"artists"}
                            controller={props.controller}
                            objects={props.provider.artists.filter((artist: IArtist) => artist.name !== "")}
@@ -129,7 +130,7 @@ export function BrowserBody(props: BrowserBodyProps)
 
   const renderGenres = () => {
     return <BrowserSection className={"genres"}
-                           headerText={"Genres"}
+                           header={"Genres"}
                            key={"genres"}
                            controller={props.controller}
                            objects={props.provider.genres}
@@ -153,7 +154,7 @@ export function BrowserBody(props: BrowserBodyProps)
 
   const renderPlaylists = () =>  {
     return <BrowserSection className={"playlists"}
-                           headerText={"Playlists"}
+                           header={"Playlists"}
                            key={"playlists"}
                            controller={props.controller}
                            objects={props.provider.playlists}
@@ -171,23 +172,11 @@ export function BrowserBody(props: BrowserBodyProps)
     </div>;
   }
 
+  const renderTracks = () => <TracksSection isPlaylist={isPlaylist}
+                                            controller={props.controller}
+                                            provider={props.provider}
+                                            isAlbum={isAlbum}/>;
 
-  const renderTracks = () => {
-    const type: ItemDisplayType = isAlbum || isPlaylist
-      ? "rows"
-      : "cards";
-
-    return <BrowserSection className={"tracks"}
-                           type={type}
-                           headerText={"Tracks"}
-                           key={"tracks"}
-                           controller={props.controller}
-                           objects={props.provider.tracks}
-                           compare={props.provider.compareTracks ?? compareByName}
-                           render={(track: ITrack) => <Track track={track}
-                                                             controller={props.controller}
-                                                             type={type}/>}/>;
-  }
 
   return <div className="browser">
     {isAlbum && renderAlbum()}
