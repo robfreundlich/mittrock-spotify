@@ -70,9 +70,20 @@
 }
 
 .browser .item-container.cards {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+@media screen and (min-width: 900px) {
+  .browser .item-container.cards {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+}
+
+@media screen and (min-width: 1200px) {
+  .browser .item-container.cards {
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+  }
 }
 
 .browser .item-container.rows {
@@ -83,20 +94,28 @@
   display: table-row;
 }
 
-.browser .item-container.rows .item .track-image,
-.browser .item-container.rows .item .track-name,
-.browser .item-container.rows .item .album-name,
-.browser .item-container.rows .item .genres {
+.browser .item-container.rows .item > div {
+  font-family: sans-serif;
   display: table-cell;
-  padding-right: 1em;
+  /*padding: 0.5rem;*/
+  padding-top: 0.5rem;
+  padding-right: 0.5rem;
+  border-bottom: 1px solid black;
+  vertical-align: middle;
 }
 
+.browser .item-container.rows .item:first-child > div {
+  border-top: 1px solid black;
+}
 
 .browser .item-container.cards .item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: stretch;
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  grid-column-gap: 0.5em;
+  justify-items: start;
+  /*flex-direction: column;*/
+  /*align-items: center;*/
+  /*justify-content: stretch;*/
 
   flex-grow: 0;
   flex-shrink: 0;
@@ -115,20 +134,38 @@
   cursor: pointer;
 }
 
+.browser .item-container.cards .item .track-image {
+  grid-column: 1;
+  grid-row: 1 / 4;
+}
+
+.browser .item-container.cards .item .track-number {
+  grid-column: 2;
+  grid-row: 3;
+}
+
+.browser .item-container.cards .item .track-number::before {
+  content: "Track #";
+}
+
 .browser .item-container.cards .item .track-name {
+  grid-column: 2;
+  grid-row: 1;
   font-family: sans-serif;
-  font-size: 1.5rem;
+  font-size: 1rem;
   font-variant: small-caps;
 }
 
-.browser .item-container.cards .item .album-name {
-  font-family: var(--album-name-font);
-  flex-grow: 1;
-}
-
 .browser .item-container.cards .item .artist-name {
+  grid-column: 2;
+  grid-row: 2;
   font-family: var(--artist-name-font);
   font-size: 1.25rem;
+}
+
+.browser .item-container.cards .item .genres {
+  grid-column: 2;
+  grid-row: 4;
 }
 
 .browser .item-container.cards .item .playlist-name {

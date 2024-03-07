@@ -196,6 +196,11 @@ export class ModelUtils {
 
   public static getImageNearSize(images: SpotifyImage[], size: number): SpotifyImage | undefined
   {
+    if (!images)
+    {
+      return undefined;
+    }
+
     let result: SpotifyImage | undefined = undefined;
     let distance:  number = Infinity;
 

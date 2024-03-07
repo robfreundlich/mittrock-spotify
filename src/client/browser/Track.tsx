@@ -20,19 +20,19 @@ export function Track(props: TrackProps)
 {
   const images: SpotifyImage[] = props.track.images ?? [];
 
-  const image: SpotifyImage | undefined = ModelUtils.getImageNearSize(images,
-                                                                      props.type === "rows" ? 64 : 300);
+  const image: SpotifyImage | undefined = ModelUtils.getImageNearSize(images, 64);
 
   return <div className="track item" key={props.track.id}>
+    <div className="track-number">{props.track.track_number}</div>
     <div className="track-image">
       {image && <img width={image.width + "px"}
                      height={image.height + "px"}
                      src={image.url}
-                     alt={props.track.name}
+                     alt={props.track.album?.name}
       />}
     </div>
     <div className="track-name">{props.track.name}</div>
-    <div className="album-name">{props.track.album?.name}</div>
+    <div className={"track-artist"}>{props.track.artists.map((artist) => artist.name).join(",")}</div>
     <GenresSection genres={props.track.genres}
                    controller={props.controller}
                    type={props.type}/>
