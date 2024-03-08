@@ -108,15 +108,21 @@
   border-top: 1px solid black;
 }
 
-.browser .item-container.cards .item {
+.browser .favorites .item-container.cards .item,
+.browser .tracks .item-container.cards .item {
   display: grid;
   grid-template-columns: 64px 1fr;
   grid-column-gap: 0.5em;
-  justify-items: start;
-  /*flex-direction: column;*/
-  /*align-items: center;*/
-  /*justify-content: stretch;*/
+}
 
+.browser .item-container.cards .item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: stretch;
+}
+
+.browser .item-container.cards .item {
   flex-grow: 0;
   flex-shrink: 0;
   max-width: 320px;
