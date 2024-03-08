@@ -10,6 +10,7 @@ import * as React from "react";
 import {useState} from "react";
 import {BrowserController} from "app/client/browser/BrowserController";
 import {AllTracksProvider, BrowserProvider} from "app/client/browser/Browser";
+import {ToggleButton} from "app/client/controls/ToggleButton";
 
 interface TracksSectionProps
 {
@@ -27,9 +28,9 @@ export function TracksSection(props: TracksSectionProps)
     ? "rows"
     : "cards";
 
-  const onTracksOptionAllClicked = (event: React.MouseEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
+  const onTracksOptionAllChanged = (/*event: React.MouseEvent*/) => {
+    // event.preventDefault();
+    // event.stopPropagation();
     setIsShowAllTracks(!isShowAllTracks);
   };
 
@@ -40,14 +41,21 @@ export function TracksSection(props: TracksSectionProps)
   const tracksHeader = <span className={"tracks-header"}>
       <span>Tracks({tracks.length})</span>
     {((props.provider as any)["getAllTracks"] !== undefined) &&
-        <label className={"tracks-option-all-label"}>
-            <input className="tracks-option-all-checkbox"
-                   type="checkbox"
-                   checked={isShowAllTracks}
-                   onClick={onTracksOptionAllClicked}
-                   name="tracks-option-all"/>
-            Show all tracks
-        </label>}
+        // <label className={"tracks-option-all-label"}>
+        //     <input className="tracks-option-all-checkbox"
+        //            type="checkbox"
+        //            checked={isShowAllTracks}
+        //            onClick={onTracksOptionAllClicked}
+        //            name="tracks-option-all"/>
+        //     Show all tracks
+        // </label>
+        <div className="tracks-option-container">
+            <ToggleButton className="tracks-option-all-label"
+                          content={"Show All"}
+                          value={isShowAllTracks}
+                          onValueChanged={onTracksOptionAllChanged}/>
+        </div>
+    }
     </span>;
 
   return <BrowserSection className={"tracks"}

@@ -5,6 +5,7 @@
 @import url("client/app/App.css");
 @import url("client/browser/Browser.css");
 @import url("client/controls/Accordion.css");
+@import url("client/controls/ToggleButton.css");
 @import url("client/libs/Popup.css");
 @import url("client/db/TrackLoader.css");
 
@@ -16,6 +17,7 @@
   --color-spotify-green-lighter: #91eeb1;
   --color-spotify-white: #FFFFFF;
   --color-spotify-black: #191414;
+  --color-spotify-black-lighter: #575555;
 
   --default-border-radius: 4px;
   --default-border-color: var(--color-spotify-black);
