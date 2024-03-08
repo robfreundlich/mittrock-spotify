@@ -35,7 +35,16 @@ export class ModelUtils {
   }
 
   public static async makeTrack(db: DexieDB, dataStore: DataStore, dbTrack: DBTrack): Promise<Track> {
-    const album: Album | undefined = await ModelUtils.makeAlbum(db, dataStore, dbTrack.album_id);
+    let album: Album | undefined;
+    if (dbTrack.album)
+    {
+      album = await ModelUtils.makeAlbumFromDBAlbum(db, dataStore, dbTrack.album);
+    }
+    else
+    {
+      album = await ModelUtils.makeAlbum(db, dataStore, dbTrack.album_id);
+    }
+
     const artists: Artist[] = await ModelUtils.makeArtists(db, dataStore, dbTrack.artist_ids);
 
     const sources: TrackSource[] = await Promise.all(dbTrack.inclusionReasons.map(async (reason: InclusionReason) => {
@@ -91,6 +100,31 @@ export class ModelUtils {
     return track;
   }
 
+  public static async makeAlbumFromDBAlbum(db: DexieDB, dataStore: DataStore, dbAlbum: DBAlbum): Promise<Album>
+  {
+    const existingAlbum: IAlbum | undefined = dataStore.getAlbum(dbAlbum.id);
+
+    if (existingAlbum)
+    {
+      return existingAlbum as Album;
+    }
+
+    const artists: Artist[] = await ModelUtils.makeArtists(db, dataStore, dbAlbum.artist_ids);
+
+    const album: Album = new Album(
+      dbAlbum.id,
+      dbAlbum.name,
+      dbAlbum.type,
+      dbAlbum.release_date,
+      dbAlbum.release_date_precision,
+      artists,
+      dbAlbum.images,
+      new Date()
+    );
+
+    return album;
+  }
+
   public static async makeAlbum(db: DexieDB, dataStore: DataStore, album_id?: string): Promise<Album | undefined> {
     if (!album_id)
     {
@@ -98,13 +132,24 @@ export class ModelUtils {
     }
 
     const existingAlbum: IAlbum | undefined = dataStore.getAlbum(album_id);
-    
+
+    if (album_id === '4kdOH3s9cRL9YykvHFpSlD')
+    {
+      console.log("***** existing album: ", existingAlbum);
+    }
+
+
     if (existingAlbum)
     {
       return existingAlbum as Album;
     }
     
     const dbAlbum: DBAlbum | undefined = await db.albums.get(album_id);
+
+    if (album_id === '4kdOH3s9cRL9YykvHFpSlD')
+    {
+      console.log("***** db album: ", dbAlbum);
+    }
 
     if (!dbAlbum)
     {

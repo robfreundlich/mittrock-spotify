@@ -5,7 +5,7 @@
 import {UIRouterReact} from "@uirouter/react";
 import {browserState} from "app/client/app/states";
 import {DexieStoreLoadFailure} from "app/client/db/DataStoreDexieLoader";
-import {DBAlbum, makePartialAlbum, PartialAlbum} from "app/client/db/DBAlbum";
+import {DBAlbum, makePartialAlbum, makePartialSimplifiedAlbum, PartialAlbum} from "app/client/db/DBAlbum";
 import {DBArtist, makePartialArtist, PartialArtist} from "app/client/db/DBArtist";
 import {DBPlaylist, makePartialPlaylist, PartialPlaylist} from "app/client/db/DBPlaylist";
 import {DBTrack, makePartialTrack, PartialTrack} from "app/client/db/DBTrack";
@@ -43,6 +43,7 @@ export type LoadingDatabaseStatus =
     | "loading_albums"
     | "loading_playlists"
     | "loading_playlist_tracks"
+    // | "loading_playlist_albums"
     | "loading_artists"
     | "saving_to_database"
     | "loaded"
@@ -139,6 +140,8 @@ export class TrackLoaderController
   private _playlistsById: Map<string/*id*/, DBPlaylist> = new Map();
 
   private _genres: Set<string> = new Set();
+
+  private _albumInclusionReasons: Map<string, InclusionReason[]> = new Map();
 
   constructor(dataStore: DataStore, router: UIRouterReact, onStatusChanged: (status: TrackLoaderStatus) => void)
   {
@@ -301,14 +304,16 @@ export class TrackLoaderController
     }
     else if (this.status?.status === "loading_playlists")
     {
-      // // Temp
-      // this.setStatus({status: "saving_to_database"});
       this.loadPlaylists();
     }
     else if (this.status?.status === "loading_playlist_tracks")
     {
       this.loadPlaylistTracks(this.status?.currentPlaylist);
     }
+    // else if (this.status?.status === "loading_playlist_albums")
+    // {
+    //   this.loadPlaylistAlbums();
+    // }
     else if (this.status?.status === "loading_artists")
     {
       this.loadArtists();
@@ -466,6 +471,23 @@ export class TrackLoaderController
                                                           track.album.id,
                                                           track.artists,
                                                           inclusionReasons);
+
+    if (dbTrack)
+    {
+      const partialAlbum: PartialAlbum = makePartialSimplifiedAlbum(track.album);
+      const dbAlbum: DBAlbum = {
+        ...partialAlbum,
+
+        artist_ids: [],
+        track_ids: [],
+        inclusionReasons: [track],
+      };
+
+      dbTrack.album = dbAlbum;
+
+      this.addAlbumInclusionReason(dbAlbum.id, track);
+    }
+
     // TrackLoaderController.log(`-loadSavedTrack ${track.id}`);
     return dbTrack;
   }
@@ -504,6 +526,46 @@ export class TrackLoaderController
     return dbTrack;
   }
 
+  private addAlbumInclusionReason(id: string, inclusionReason: InclusionReason): void
+  {
+    let reasons: InclusionReason[] = this._albumInclusionReasons.get(id) ?? [];
+    if (reasons.indexOf(inclusionReason) === -1)
+    {
+      reasons.push(inclusionReason);
+    }
+    this._albumInclusionReasons.set(id, reasons);
+  }
+
+  private async loadAlbum(album: SpotifyObjects.Album, inclusionReasons: InclusionReason[]): Promise<void>
+  {
+    const partialAlbum: PartialAlbum = makePartialAlbum(album);
+    const dbAlbum: DBAlbum = {
+      ...partialAlbum,
+
+      artist_ids: album.artists.map((artist: SimplifiedArtist) => artist.id),
+      track_ids: [],
+      inclusionReasons: inclusionReasons
+    };
+
+    this.addAlbumInclusionReason(dbAlbum.id, dbAlbum.inclusionReasons[0]);
+
+    const tracks: DBTrack[] = await this.loadAlbumTracks(album, dbAlbum);
+
+    const albumInclusion: InclusionReason = {type: "album", id: dbAlbum.id};
+
+    tracks.forEach((track: DBTrack) => {
+      this.addOrUpdateTrack(track, albumInclusion, dbAlbum.id);
+    });
+
+    this._albumsById.set(dbAlbum.id, dbAlbum);
+    this.setStatus({
+                     status: this.status?.status,
+                     offset: this.status?.offset!,
+                     subprogress: this.status?.subprogress! + tracks.length,
+                     currentAlbum: this._albumsById.size
+                   });
+  }
+
   private async loadAlbums(): Promise<void>
   {
     if (this.status.stopped)
@@ -522,31 +584,7 @@ export class TrackLoaderController
 
       await pMapSeries(results.items.map((savedAlbum: SavedAlbum) => savedAlbum.album),
                        async (album: SpotifyObjects.Album) => {
-
-                         const partialAlbum: PartialAlbum = makePartialAlbum(album);
-                         const dbAlbum: DBAlbum = {
-                           ...partialAlbum,
-
-                           artist_ids: album.artists.map((artist: SimplifiedArtist) => artist.id),
-                           track_ids: [],
-                           inclusionReasons: [INCLUSION_REASON_FAVORITE]
-                         };
-
-                         const tracks: DBTrack[] = await this.loadAlbumTracks(album, dbAlbum);
-
-                         const albumInclusion: InclusionReason = {type: "album", id: dbAlbum.id};
-
-                         tracks.forEach((track: DBTrack) => {
-                           this.addOrUpdateTrack(track, albumInclusion, dbAlbum.id);
-                         });
-
-                         this._albumsById.set(dbAlbum.id, dbAlbum);
-                         this.setStatus({
-                                          status: this.status?.status,
-                                          offset: this.status?.offset!,
-                                          subprogress: this.status?.subprogress! + tracks.length,
-                                          currentAlbum: this._albumsById.size
-                                        });
+                         this.loadAlbum(album, [INCLUSION_REASON_FAVORITE]);
                        });
 
       this.loaderItemCount += results.items.length;
@@ -554,6 +592,8 @@ export class TrackLoaderController
       if (this.loaderItemCount === results.total)
       {
         this.loaderItemCount = 0;
+
+        // this.setStatus({status: "loading_playlists", offset: 0, limit: 5, subprogress: 0});
         this.setStatus({status: "loading_playlists", offset: 0, limit: 50, subprogress: 0});
       }
       else
@@ -629,6 +669,9 @@ export class TrackLoaderController
                        });
 
 
+      // this.loaderItemCount = 0;
+      // this.setStatus({status: "loading_playlist_tracks", offset: 0, limit: 100, subprogress: 0});
+
       this.loaderItemCount += results.items.length;
 
       if (this.loaderItemCount === results.total)
@@ -663,6 +706,8 @@ export class TrackLoaderController
       const playlist = this._playlists[playlistIndex];
       const playListId = playlist.id;
 
+      // Get this chunk of playlist tracks
+
       const results: GetPlaylistItemsResponse = await this.callSpotify(() => this.spotify.playlists.getPlaylistItems(playListId,
                                                                                                                      {
                                                                                                                        limit: this.status?.limit!,
@@ -671,6 +716,7 @@ export class TrackLoaderController
                                                                        `getPlaylistItems ${this.status?.offset}`,
                                                                        this.status?.offset! > 0);
 
+      // Load each track
       const tracksEtc: (null | DBTrack)[] = results.items.map((item: PlaylistItem) => {
         const apiTrack: SpotifyObjects.Track | Episode = item.track;
         if (apiTrack.type === "episode")
@@ -682,20 +728,40 @@ export class TrackLoaderController
         const partialTrack: PartialTrack = makePartialTrack(apiTrack);
 
         const dbTrack: DBTrack | null = this.loadPartialTrack(partialTrack,
-                                                              "",
+                                                              apiTrack.album.id,
                                                               apiTrack.artists,
                                                               [playlist]);
+
+        if (dbTrack)
+        {
+          const partialAlbum: PartialAlbum = makePartialSimplifiedAlbum(apiTrack.album);
+          const dbAlbum: DBAlbum = {
+            ...partialAlbum,
+
+            artist_ids: [],
+            track_ids: [],
+            inclusionReasons: [playlist],
+          };
+
+          dbTrack.album = dbAlbum;
+
+          this.addAlbumInclusionReason(dbAlbum.id, playlist);
+        }
+
         return dbTrack;
       });
 
+      // Store the track ids in the playlist
       const tracks: DBTrack[] = (tracksEtc.filter((t) => t !== null)) as DBTrack[];
 
       playlist.track_ids.push(...tracks.map((track) => track.id));
 
+      // Add the track to the system
       tracks.forEach((track: DBTrack) => {
         this.addOrUpdateTrack(track, {type: "playlist", id: playlist.id}, "");
       });
 
+      // Figure out the new status
 
       this._currentPlaylistTotalTracks += results.items.length;
 
@@ -734,6 +800,31 @@ export class TrackLoaderController
       this.setStatus({...this.status, status: "error", error: (err as Error).stack!});
     }
   }
+
+  // private async loadPlaylistAlbums(): Promise<void>
+  // {
+  //   if (this.status.stopped)
+  //   {
+  //     return Promise.reject();
+  //   }
+  //
+  //   const album_ids: string[] = [ ... this._albumInclusionReasons.keys() ].filter((id) => !this._albumsById.has(id));
+  //   const idChunks: string[][] = ArrayUtils.splitIntoChunks(album_ids, 20);
+  //
+  //   await Promise.all(idChunks.map(async (ids: string[]) => {
+  //     const albums: Array<SpotifyObjects.Album | null> = await this.callSpotify(() => this.spotify.albums.getAlbums(ids),
+  //                                                                               `Get albums ${ids.join(",")}`);
+  //
+  //     albums.forEach((spotifyAlbum: SpotifyObjects.Album | null) => {
+  //       if (spotifyAlbum !== null)
+  //       {
+  //         this.loadAlbum(spotifyAlbum, this._albumInclusionReasons.get(spotifyAlbum.id)!);
+  //       }
+  //     });
+  //   }));
+  //
+  //   this.setStatus({status: "loading_artists"});
+  // }
 
   private async loadArtists(): Promise<void>
   {

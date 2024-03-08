@@ -27,14 +27,10 @@ export function TracksSection(props: TracksSectionProps)
     ? "rows"
     : "cards";
 
-  const onTracksOptionAllChanged = (event: React.ChangeEvent) => {
-    event.stopPropagation();
-    setIsShowAllTracks(!isShowAllTracks);
-  };
-
   const onTracksOptionAllClicked = (event: React.MouseEvent) => {
     event.preventDefault();
     event.stopPropagation();
+    setIsShowAllTracks(!isShowAllTracks);
   };
 
   const tracks: ITrack[] = isShowAllTracks
@@ -49,7 +45,6 @@ export function TracksSection(props: TracksSectionProps)
                    type="checkbox"
                    checked={isShowAllTracks}
                    onClick={onTracksOptionAllClicked}
-                   onChange={onTracksOptionAllChanged}
                    name="tracks-option-all"/>
             Show all tracks
         </label>}
