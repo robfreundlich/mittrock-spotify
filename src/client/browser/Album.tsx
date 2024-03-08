@@ -27,7 +27,7 @@ export function Album(props: AlbumProps)
 
   const image: SpotifyImage | undefined = ModelUtils.getImageNearSize(props.album.images, 300);
 
-  return <div className="album item"
+  return <div className={`album item ${props.album.tracks.length > 0 ? "favorite-album" : ""}`}
               key={props.album.id}
               onClick={props.onAlbumClicked ? props.onAlbumClicked(props.album) : undefined}
               title={props.album.name}>

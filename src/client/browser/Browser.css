@@ -205,3 +205,8 @@
   font-size: 1rem;
   /*padding-left: 1rem;*/
 }
+
+.browser .item-container .album.favorite-album,
+.browser .item-container .track.favorite-track {
+  background-color: var(--color-spotify-green-lighter-more);
+}

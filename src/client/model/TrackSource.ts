@@ -39,4 +39,3 @@ export const isFavorites = (trackSource: TrackSource): trackSource is IFavorites
 export const isTrackFavorite = (track: ITrack): boolean => {
   return track.sources.some((source) => isFavorites(source));
 }
-

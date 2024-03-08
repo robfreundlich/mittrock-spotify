@@ -8,6 +8,7 @@ import {BrowserController} from "app/client/browser/BrowserController";
 import {ITrack} from "app/client/model/Track";
 import {SpotifyImage} from "spotify-web-api-ts/types/types/SpotifyObjects";
 import {ModelUtils} from "app/client/utils/ModelUtils";
+import {isTrackFavorite} from "app/client/model/TrackSource";
 
 interface TrackProps
 {
@@ -23,7 +24,7 @@ export function Track(props: TrackProps)
 
   const image: SpotifyImage | undefined = ModelUtils.getImageNearSize(images, 64);
 
-  return <div className="track item" key={props.track.id}>
+  return <div className={`track item ${isTrackFavorite(props.track) ? "favorite-track" : ""}`} key={props.track.id}>
     <div className="track-number">{props.track_num ?? props.track.track_number}</div>
     <div className="track-image">
       {image && <img width={image.width + "px"}
