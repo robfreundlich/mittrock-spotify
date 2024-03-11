@@ -19,11 +19,11 @@ function Accordion(props: AccordionProps) {
     setOpen(!open);
   };
 
-  return <div className={`accordion ${open ? "open" : "closed"} ${props.className}`}>
+  return <div className={`accordion ${open ? "open" : "closed"} ${props.className ?? ""}`}>
     <h1 onClick={onHeaderClicked}>{props.header}</h1>
-    <div className="accordion-content">
+    {open && <div className="accordion-content">
       {props.children}
-    </div>
+    </div>}
   </div>;
 }
 

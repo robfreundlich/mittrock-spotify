@@ -212,3 +212,4 @@ package-lock.json
 !/src/router.config.ts
 !/src/client/app/states.ts
 *.sh~
+/cypress/fixtures/example.json
