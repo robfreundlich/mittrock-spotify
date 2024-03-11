@@ -3,7 +3,7 @@
  */
 
 import BrowserSection, {ItemDisplayType} from "app/client/browser/BrowserSection";
-import {compareByName} from "app/client/model/ComparisonFunctions";
+import {compareByName} from "app/client/utils/ComparisonFunctions";
 import {ITrack} from "app/client/model/Track";
 import {Track} from "app/client/browser/Track";
 import * as React from "react";

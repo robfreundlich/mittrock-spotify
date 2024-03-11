@@ -5,7 +5,7 @@
 import * as React from "react";
 import {useState} from "react";
 import BrowserSection from "app/client/browser/BrowserSection";
-import {compareByAddedAtDesc, compareByName} from "app/client/model/ComparisonFunctions";
+import {compareByAddedAtDesc, compareByName} from "app/client/utils/ComparisonFunctions";
 import {ITrack} from "app/client/model/Track";
 import {BrowserController} from "app/client/browser/BrowserController";
 import {BrowserProvider} from "app/client/browser/Browser";

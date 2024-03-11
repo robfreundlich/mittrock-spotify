@@ -7,7 +7,7 @@ import {IdentifiedObject} from "app/client/model/IdentifiedObject";
 import {areGenresSame, IGenre} from "app/client/model/Genre";
 import Accordion from "app/client/controls/Accordion";
 import {BrowserController} from "app/client/browser/BrowserController";
-import {compareByName} from "app/client/model/ComparisonFunctions";
+import {compareByName} from "app/client/utils/ComparisonFunctions";
 import {ArrayUtils} from "app/client/utils/ArrayUtils";
 
 export type ItemDisplayType = "cards" | "rows";
