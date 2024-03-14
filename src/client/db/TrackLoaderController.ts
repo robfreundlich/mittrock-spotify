@@ -519,7 +519,6 @@ export class TrackLoaderController
     const artistInclusionReasons: InclusionReason[] = inclusionReasons.filter((inclusionReason) => inclusionReason !== "favorite");
 
     // TrackLoaderController.log(`  calling loadMisssingArtists ${artistIds.join(",")}, ${inclusionReasons.join(",")}`);
-    // TODO: need correct inclusion reason type
     this.createMissingArtists(artistIds, [...artistInclusionReasons, {type: artistInclusionReasonType, id: partialTrack.id}]);
 
     let dbTrack: DBTrack = {
