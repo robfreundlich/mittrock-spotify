@@ -33,7 +33,7 @@ describe("Load tests the DataStore", () => {
   it("Heavily populates the DataStore to look at the memory footprint", () => {
     // Generate 100 genres
     const genres: Genre[] = loremIpsum({p: 100, avgSentencesPerParagraph: 1, avgWordsPerSentence: 1})
-        .map((name: string) => new Genre(name));
+        .map((name: string) => new Genre(name, []));
 
     const artists: Artist[] = loremIpsum({p: 100, avgSentencesPerParagraph: 1, avgWordsPerSentence: 2})
         .map((name: string) => new Artist(ModelUtils.generateId(),

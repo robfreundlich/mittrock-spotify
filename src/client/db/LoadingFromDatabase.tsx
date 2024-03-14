@@ -14,6 +14,8 @@ import {DBAlbum} from "app/client/db/DBAlbum";
 import {Album} from "app/client/model/Album";
 import {Playlist} from "app/client/model/Playlist";
 import {DBPlaylist} from "app/client/db/DBPlaylist";
+import {DBGenre} from "app/client/db/DBGenre";
+import {Genre} from "app/client/model/Genre";
 
 export interface LoadingFromDatabaseProps
 {
@@ -79,6 +81,10 @@ export class LoadingFromDatabase extends React.Component<LoadingFromDatabaseProp
       const albumPromises: Promise<void>[] = [];
       const playlistPromises: Promise<void>[] = [];
 
+      const makeGenre = (dbGenre: DBGenre): Genre => {
+        return ModelUtils.makeGenre(AppServices.db, this.props.dataStore, dbGenre);
+      };
+
       const makeTrack = (dbTrack: DBTrack): Promise<Track> => {
         return ModelUtils.makeTrack(AppServices.db, this.props.dataStore, dbTrack)
           .then((track) => {
@@ -127,9 +133,14 @@ export class LoadingFromDatabase extends React.Component<LoadingFromDatabaseProp
       };
       
       await AppServices.db.transaction("r",
-                                       "tracks", "artists", "albums", "playlists",
+                                       "tracks", "artists", "albums", "playlists", "genres",
                                        async (/*trans: Transaction*/) => {
 
+                                         // Make genres. Note that this is not a Promise, because
+                                         // it doesn't need to do anything async for each genre
+                                         await AppServices.db.genres.each(async (genre: DBGenre) => {
+                                           makeGenre(genre);
+                                         });
 
                                          // let i: number = 0;
                                          await AppServices.db.tracks.each(async (track: DBTrack) => {

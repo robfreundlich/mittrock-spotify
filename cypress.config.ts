@@ -12,14 +12,18 @@ export default defineConfig({
     specPattern: [
       ".//src/client/**/*.spec.ts",
       ".//src/test/cypress/integration/**/*.spec.ts",
+      ".//src/client/**/*.spec.tsx",
+      ".//src/test/cypress/integration/**/*.spec.tsx",
     ],
   },
 
   component: {
     setupNodeEvents(on, config) {},
     specPattern: [
-      "src/test/cypress/folders/src/client/**/*.spec.ts",
-      "src/test/cypress/folders/src/test/cypress/integration/**/*.spec.ts",
+      "src/test/cypress/folders/src/client/**/*.cy.ts",
+      "src/test/cypress/folders/src/test/cypress/integration/**/*.cy.ts",
+      "src/test/cypress/folders/src/client/**/*.cy.tsx",
+      "src/test/cypress/folders/src/test/cypress/integration/**/*.cy.tsx",
     ],
   },
 

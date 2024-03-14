@@ -16,6 +16,8 @@ import {DBPlaylist} from "app/client/db/DBPlaylist";
 import {DataStore} from "app/client/model/DataStore";
 import {TrackSource} from "app/client/model/TrackSource";
 import {SpotifyImage} from "spotify-web-api-ts/types/types/SpotifyObjects";
+import {DBGenre} from "app/client/db/DBGenre";
+import {Genre} from "app/client/model/Genre";
 
 export class ModelUtils {
   private static readonly BASE62 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -57,7 +59,7 @@ export class ModelUtils {
       }
       else
       {
-        if (reason.type === "album")
+        if ((reason.type === "favorite_album") || (reason.type === "playlist_track_album"))
         {
           source = album!;
         }
@@ -71,22 +73,20 @@ export class ModelUtils {
       return source;
     }));
 
-      const track: Track = new Track(
-        dbTrack.id,
-        dbTrack.name,
-        dbTrack.explicit ? "explicit" : "clean",
-        dbTrack.duration_ms,
-        dbTrack.popularity,
-        "streaming",
-        dbTrack.disc_number,
-        dbTrack.track_number,
-        sources,
-        [...dbTrack.genres].map((name: string) => {
-          return {name: name};
-        }),
-        artists,
-        album,
-        new Date());
+    const track: Track = new Track(
+      dbTrack.id,
+      dbTrack.name,
+      dbTrack.explicit ? "explicit" : "clean",
+      dbTrack.duration_ms,
+      dbTrack.popularity,
+      "streaming",
+      dbTrack.disc_number,
+      dbTrack.track_number,
+      sources,
+      [...dbTrack.genre_ids].map((id: string) => dataStore.genres.find((genre) => genre.id === id)!),
+      artists,
+      album,
+      new Date());
 
     // if (album)
     // {
@@ -197,9 +197,7 @@ export class ModelUtils {
         dbArtist.id,
         dbArtist.name,
         dbArtist.popularity,
-        [...dbArtist.genres].map((name: string) => {
-          return {name: name};
-        }),
+        [...dbArtist.genres].map((name: string) => dataStore.genres.find((genre) => genre.name === name)!),
         dbArtist.images
       );
 
@@ -258,5 +256,12 @@ export class ModelUtils {
     });
 
     return result;
+  }
+
+  public static makeGenre(db: DexieDB, dataStore: DataStore, dbGenre: DBGenre): Genre
+  {
+    const genre: Genre = new Genre(dbGenre.name, dbGenre.inclusionReasons);
+    dataStore.genres.push(genre);
+    return genre;
   }
 }

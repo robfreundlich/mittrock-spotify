@@ -115,7 +115,7 @@ describe("Tests the internal consistency of the Title object", () => {
 
   describe("Tests genre consistency", () => {
     it("Verifies that a track with an existing genre does not double it up", () => {
-      when(mockedTrack.genres).thenReturn([new Genre("classic rock")]);
+      when(mockedTrack.genres).thenReturn([new Genre("classic rock", [])]);
 
       const track: Track = instance(mockedTrack);
 
@@ -128,7 +128,7 @@ describe("Tests the internal consistency of the Title object", () => {
       // The track is going to be in the "blues" genre
 
       // Set up a new Genre
-      const blues: Genre = new Genre("blues");
+      const blues: Genre = new Genre("blues", []);
 
       // Set up a new mock track, with a new id and the new album
       const mockedTrack2: Track = mock(Track);

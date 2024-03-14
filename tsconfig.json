@@ -125,6 +125,7 @@
   "include": [
     "./src/**/*",
     "./test/**/*",
-    "node_modules/cypress/types/cypress-expect.d.ts"
+    "node_modules/cypress/types/cypress-expect.d.ts",
+    "./cypress/**/*"
   ]
 }

@@ -8,6 +8,7 @@ import {DBAlbum} from "app/client/db/DBAlbum";
 import {DBArtist} from "app/client/db/DBArtist";
 import {DBPlaylist} from "app/client/db/DBPlaylist";
 import {DBTrack} from "app/client/db/DBTrack";
+import {DBGenre} from "app/client/db/DBGenre";
 
 export class DexieLoader
 {
@@ -25,13 +26,13 @@ export class DexieLoader
 
   private playlists: Map<string/*id*/, DBPlaylist> = new Map();
 
-  private genres: Set<string> = new Set();
+  private genres: Map<string/*id*/, DBGenre> = new Map();
 
   constructor(tracks: Map<string, DBTrack>,
               albums: Map<string, DBAlbum>,
               playlists: Map<string, DBPlaylist>,
               artists: Map<string, DBArtist>,
-              genres: Set<string>)
+              genres: Map<string, DBGenre>)
   {
     this.tracks = tracks;
     this.albums = albums;
@@ -141,13 +142,13 @@ export class DexieLoader
   {
     this.reportProgress("Loading genres");
     return Promise.all([...this.genres.values()]
-                           .map((dbGenre: string) => AppServices.db
+                           .map((dbGenre: DBGenre) => AppServices.db
                                                                 .transaction("rw",
                                                                              AppServices.db.genres,
                                                                              async () => {
                                                                                try
                                                                                {
-                                                                                 AppServices.db.genres.add({name: dbGenre});
+                                                                                 AppServices.db.genres.add(dbGenre);
                                                                                }
                                                                                catch (error)
                                                                                {

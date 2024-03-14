@@ -14,7 +14,7 @@ describe('Genre', () => {
     });
 
     it('should return false when one of the genres is null or undefined', () => {
-      const genre: IGenre = { name: 'Pop' };
+      const genre: IGenre = { id: "Pop", name: 'Pop', inclusionReasons: [] };
       // @ts-ignore
       expect(areGenresSame(genre, null)).to.equal(false);
       // @ts-ignore
@@ -26,14 +26,14 @@ describe('Genre', () => {
     });
 
     it('should return true when the names of the genres are the same', () => {
-      const genre1: IGenre = { name: 'Rock' };
-      const genre2: IGenre = { name: 'Rock' };
+      const genre1: IGenre = { id: "Rock", name: 'Rock', inclusionReasons: [] };
+      const genre2: IGenre = { id: "Rock", name: 'Rock', inclusionReasons: [] };
       expect(areGenresSame(genre1, genre2)).to.equal(true);
     });
 
     it('should return false when the names of the genres are different', () => {
-      const genre1: IGenre = { name: 'Jazz' };
-      const genre2: IGenre = { name: 'Blues' };
+      const genre1: IGenre = { id: "Jazz", name: 'Jazz', inclusionReasons: [] };
+      const genre2: IGenre = { id: "Blues", name: 'Blues', inclusionReasons: [] };
       expect(areGenresSame(genre1, genre2)).to.equal(false);
     });
   });

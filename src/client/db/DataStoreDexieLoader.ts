@@ -125,7 +125,7 @@ export class DataStoreDexieLoader
                                                                                 .transaction("rw",
                                                                                              AppServices.db.genres,
                                                                                              async () => {
-                                                                                               AppServices.db.genres.add(genre);
+                                                                                               // AppServices.db.genres.add(genre);
                                                                                              }).catch(Dexie.DexieError, (error) => {
           this._loadFailures.push({
                                     valueType: "genre",

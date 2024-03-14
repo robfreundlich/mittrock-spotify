@@ -13,7 +13,12 @@ import {DexieLoader} from "app/client/db/DexieLoader";
 import {DataStore} from "app/client/model/DataStore";
 import {ArrayUtils} from "app/client/utils/ArrayUtils";
 import {TimeUtils} from "app/client/utils/TimeUtils";
-import {InclusionReason, INCLUSION_REASON_FAVORITE} from "app/client/utils/Types";
+import {
+  areInclusionReasonsSame,
+  INCLUSION_REASON_FAVORITE,
+  InclusionReason,
+  InclusionReasonType
+} from "app/client/utils/Types";
 import pMapSeries from "p-map-series";
 import {SpotifyWebApi} from "spotify-web-api-ts";
 import * as SpotifyObjects from "spotify-web-api-ts/types/types/SpotifyObjects";
@@ -34,6 +39,7 @@ import {
   GetSavedAlbumsResponse,
   GetSavedTracksResponse
 } from "spotify-web-api-ts/types/types/SpotifyResponses";
+import {DBGenre} from "app/client/db/DBGenre";
 
 
 export type LoadingDatabaseStatus =
@@ -139,7 +145,7 @@ export class TrackLoaderController
 
   private _playlistsById: Map<string/*id*/, DBPlaylist> = new Map();
 
-  private _genres: Set<string> = new Set();
+  private _genresById: Map<string /*id*/, DBGenre> = new Map();
 
   private _albumInclusionReasons: Map<string, InclusionReason[]> = new Map();
 
@@ -148,7 +154,7 @@ export class TrackLoaderController
     this._dataStore = dataStore;
     this._router = router;
     this._onStatusChanged = onStatusChanged;
-    this._dbLoader = new DexieLoader(this._tracksById, this._albumsById, this._playlistsById, this._artistsById, this._genres);
+    this._dbLoader = new DexieLoader(this._tracksById, this._albumsById, this._playlistsById, this._artistsById, this._genresById);
 
     this._dbLoader.onProgress = (message) => {
       this.setStatus({...this.status, subStatus: message});
@@ -190,9 +196,9 @@ export class TrackLoaderController
     return [...this._artistsById.values()];
   }
 
-  public get genres(): Set<string>
+  public get genres(): DBGenre[]
   {
-    return new Set(this._genres);
+    return [... this._genresById.values()];
   }
 
   public onAuthTokenChanged(currentAuthToken: string | undefined, previousAuthToken: string | undefined): void
@@ -470,7 +476,8 @@ export class TrackLoaderController
     const dbTrack: DBTrack | null = this.loadPartialTrack(partialTrack,
                                                           track.album.id,
                                                           track.artists,
-                                                          inclusionReasons);
+                                                          inclusionReasons,
+                                                          "favorite_track");
 
     if (dbTrack)
     {
@@ -480,12 +487,13 @@ export class TrackLoaderController
 
         artist_ids: [],
         track_ids: [],
-        inclusionReasons: [track],
+        inclusionReasons: [{type: "favorite_track", id: dbTrack.id}],
       };
 
       dbTrack.album = dbAlbum;
 
-      this.addAlbumInclusionReason(dbAlbum.id, track);
+      // Is this needed? Look up a few lines...
+      this.addAlbumInclusionReason(dbAlbum.id, {type: "favorite_track", id: dbTrack.id});
     }
 
     // TrackLoaderController.log(`-loadSavedTrack ${track.id}`);
@@ -495,7 +503,8 @@ export class TrackLoaderController
   private loadPartialTrack(partialTrack: PartialTrack,
                            album_id: string,
                            artists: SimplifiedArtist[],
-                           inclusionReasons: InclusionReason[]): DBTrack | null
+                           inclusionReasons: InclusionReason[],
+                           artistInclusionReasonType: InclusionReasonType): DBTrack | null
   {
     if (this.status.stopped)
     {
@@ -510,14 +519,15 @@ export class TrackLoaderController
     const artistInclusionReasons: InclusionReason[] = inclusionReasons.filter((inclusionReason) => inclusionReason !== "favorite");
 
     // TrackLoaderController.log(`  calling loadMisssingArtists ${artistIds.join(",")}, ${inclusionReasons.join(",")}`);
-    this.createMissingArtists(artistIds, [...artistInclusionReasons, {type: "track", id: partialTrack.id}]);
+    // TODO: need correct inclusion reason type
+    this.createMissingArtists(artistIds, [...artistInclusionReasons, {type: artistInclusionReasonType, id: partialTrack.id}]);
 
     let dbTrack: DBTrack = {
       ...partialTrack,
 
       album_id: album_id,
       artist_ids: new Set(artistIds),
-      genres: new Set(),    // Will be filled in later when we do the massive artist fetch
+      genre_ids: new Set(),    // Will be filled in later when we do the massive artist fetch
 
       inclusionReasons: inclusionReasons
     };
@@ -529,7 +539,8 @@ export class TrackLoaderController
   private addAlbumInclusionReason(id: string, inclusionReason: InclusionReason): void
   {
     let reasons: InclusionReason[] = this._albumInclusionReasons.get(id) ?? [];
-    if (reasons.indexOf(inclusionReason) === -1)
+
+    if (reasons.find((reason) => areInclusionReasonsSame(reason, inclusionReason)) === undefined)
     {
       reasons.push(inclusionReason);
     }
@@ -551,7 +562,7 @@ export class TrackLoaderController
 
     const tracks: DBTrack[] = await this.loadAlbumTracks(album, dbAlbum);
 
-    const albumInclusion: InclusionReason = {type: "album", id: dbAlbum.id};
+    const albumInclusion: InclusionReason = {type: "favorite_album", id: dbAlbum.id};
 
     tracks.forEach((track: DBTrack) => {
       this.addOrUpdateTrack(track, albumInclusion, dbAlbum.id);
@@ -593,8 +604,9 @@ export class TrackLoaderController
       {
         this.loaderItemCount = 0;
 
-        // this.setStatus({status: "loading_playlists", offset: 0, limit: 5, subprogress: 0});
-        this.setStatus({status: "loading_playlists", offset: 0, limit: 50, subprogress: 0});
+        // CHANGE TO LIMIT PLAYLIST LOADING
+        this.setStatus({status: "loading_playlists", offset: 0, limit: 5, subprogress: 0});
+        // this.setStatus({status: "loading_playlists", offset: 0, limit: 50, subprogress: 0});
       }
       else
       {
@@ -619,7 +631,8 @@ export class TrackLoaderController
     {
       existingTrack = {
         ...track,
-        inclusionReasons: (existingTrack.inclusionReasons.indexOf(inclusionReason) === -1)
+        inclusionReasons: (existingTrack.inclusionReasons.find((reason) =>
+                                                                 areInclusionReasonsSame(reason, inclusionReason)) === undefined)
                           ? [...existingTrack.inclusionReasons, inclusionReason]
                           : existingTrack.inclusionReasons,
         album_id: existingTrack.album_id ?? album_id
@@ -669,23 +682,25 @@ export class TrackLoaderController
                        });
 
 
-      // this.loaderItemCount = 0;
-      // this.setStatus({status: "loading_playlist_tracks", offset: 0, limit: 100, subprogress: 0});
+      // CHANGE TO LIMIT PLAYLIST LOADING
 
-      this.loaderItemCount += results.items.length;
+      this.loaderItemCount = 0;
+      this.setStatus({status: "loading_playlist_tracks", offset: 0, limit: 100, subprogress: 0});
 
-      if (this.loaderItemCount === results.total)
-      {
-        this.loaderItemCount = 0;
-        this.setStatus({status: "loading_playlist_tracks", offset: 0, limit: 100, subprogress: 0});
-      }
-      else
-      {
-        this.setStatus({
-                         ...this.status,
-                         offset: this.status?.offset! + results.items.length
-                       });
-      }
+      // this.loaderItemCount += results.items.length;
+      //
+      // if (this.loaderItemCount === results.total)
+      // {
+      //   this.loaderItemCount = 0;
+      //   this.setStatus({status: "loading_playlist_tracks", offset: 0, limit: 100, subprogress: 0});
+      // }
+      // else
+      // {
+      //   this.setStatus({
+      //                    ...this.status,
+      //                    offset: this.status?.offset! + results.items.length
+      //                  });
+      // }
     }
     catch (err)
     {
@@ -730,7 +745,8 @@ export class TrackLoaderController
         const dbTrack: DBTrack | null = this.loadPartialTrack(partialTrack,
                                                               apiTrack.album.id,
                                                               apiTrack.artists,
-                                                              [playlist]);
+                                                              [playlist],
+                                                              "playlist_track");
 
         if (dbTrack)
         {
@@ -847,7 +863,30 @@ export class TrackLoaderController
 
           tracks.filter((track: DBTrack) => (track.artist_ids.has(dbArtist.id)))
                 .forEach((track: DBTrack) => {
-                  track.genres = new Set(dbArtist.genres);
+                  const isFavorite: boolean = track.inclusionReasons.some((reason) => reason === INCLUSION_REASON_FAVORITE);
+                  track.genre_ids = new Set(dbArtist.genres);
+
+                  const reason: InclusionReason = {
+                    id: track.id,
+                    type: isFavorite ? "favorite_track" : "playlist_track_album"
+                  };
+
+                  dbArtist.genres.forEach((genre) => {
+                    if (!this._genresById.has(genre))
+                    {
+                      this._genresById.set(genre,
+                                           {
+                                             id: genre,
+                                             name: genre,
+                                             inclusionReasons: [reason],
+                                           });
+                    }
+                    else
+                    {
+                      this._genresById.get(genre)!.inclusionReasons.push(reason);
+                    }
+                  });
+
                 });
         }
       });
@@ -877,7 +916,8 @@ export class TrackLoaderController
         const dbTrack: DBTrack | null = this.loadPartialTrack(partialTrack,
                                                               album.id,
                                                               album.artists,
-                                                              [{type: "album", id: dbAlbum.id}]);
+                                                              [{type: "favorite_album", id: dbAlbum.id}],
+                                                              "favorite_album");
         if (dbTrack != null)
         {
           tracks.push(dbTrack);
@@ -922,7 +962,7 @@ export class TrackLoaderController
   {
     allIds.forEach((id: string) => {
       const existingInclusionReasons: InclusionReason[] = this._artistInclusionReasons.get(id) ?? [];
-      ArrayUtils.pushAllMissing(existingInclusionReasons, inclusionReasons);
+      ArrayUtils.pushAllMissing(existingInclusionReasons, inclusionReasons, areInclusionReasonsSame);
       this._artistInclusionReasons.set(id, existingInclusionReasons);
     });
   }

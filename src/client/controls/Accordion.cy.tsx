@@ -1,5 +1,7 @@
-import React from 'react'
-import Accordion from './Accordion'
+/// <reference types="cypress"/>
+
+import React from 'react';
+import Accordion from './Accordion';
 import "app/client/controls/Accordion.css";
 
 describe('<Accordion />', () => {

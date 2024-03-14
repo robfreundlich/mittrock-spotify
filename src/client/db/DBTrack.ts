@@ -20,7 +20,7 @@ export interface DBTrack extends IncludedObject, IdentifiedObject, PartialTrack
 
   artist_ids: Set<string/*id*/>;
 
-  genres: Set<string/*id*/>;
+  genre_ids: Set<string/*id*/>;
 
   album?: DBAlbum;
 }
