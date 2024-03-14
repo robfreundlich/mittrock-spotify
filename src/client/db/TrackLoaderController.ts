@@ -603,6 +603,7 @@ export class TrackLoaderController
       {
         this.loaderItemCount = 0;
 
+        // TODO: Put this back
         // CHANGE TO LIMIT PLAYLIST LOADING
         this.setStatus({status: "loading_playlists", offset: 0, limit: 5, subprogress: 0});
         // this.setStatus({status: "loading_playlists", offset: 0, limit: 50, subprogress: 0});
@@ -681,6 +682,7 @@ export class TrackLoaderController
                        });
 
 
+      // TODO: Put this back
       // CHANGE TO LIMIT PLAYLIST LOADING
 
       this.loaderItemCount = 0;
