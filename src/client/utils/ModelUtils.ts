@@ -73,6 +73,10 @@ export class ModelUtils {
       return source;
     }));
 
+    const genres = dbTrack.genre_ids
+    ? [...dbTrack.genre_ids].map((id: string) => dataStore.genres.find((genre) => genre.id === id)!)
+      : [];
+
     const track: Track = new Track(
       dbTrack.id,
       dbTrack.name,
@@ -83,7 +87,7 @@ export class ModelUtils {
       dbTrack.disc_number,
       dbTrack.track_number,
       sources,
-      [...dbTrack.genre_ids].map((id: string) => dataStore.genres.find((genre) => genre.id === id)!),
+      genres,
       artists,
       album,
       new Date());

@@ -746,7 +746,7 @@ export class TrackLoaderController
         const dbTrack: DBTrack | null = this.loadPartialTrack(partialTrack,
                                                               apiTrack.album.id,
                                                               apiTrack.artists,
-                                                              [playlist],
+                                                              [{ type: "playlist", id: playlist.id }],
                                                               "playlist_track");
 
         if (dbTrack)
