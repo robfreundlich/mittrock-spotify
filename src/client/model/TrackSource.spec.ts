@@ -2,39 +2,29 @@
  * Copyright (c) 2024. Rob Freundlich <rob@freundlichs.com> - All rights reserved.
  */
 
-import {
-  isAlbum,
-  isFavorites,
-  isPlaylist,
-  isTrackAlbum,
-  isTrackFavorite,
-  isTrackPlaylist,
-  TrackSource
-} from './TrackSource';
+import {isAlbum, isFavorites, isTrackAlbum, isTrackFavorite, isTrackPlaylist} from './TrackSource';
 import {ITrack} from "app/client/model/Track";
-import {INCLUSION_REASON_FAVORITE} from "app/client/utils/Types";
+import {INCLUSION_REASON_FAVORITE, InclusionReason} from "app/client/utils/Types";
 
 describe("Tests functions in TrackSource", () => {
   describe('isAlbum function', () => {
     it('should return true when the source type is album', () => {
-      const trackSource: TrackSource = {
-        sourceType: 'album',
+      const inclusionReason: InclusionReason = {
+        type: 'favorite_album',
         id: '1',
-        name: 'Album 1',
       };
 
-      const result = isAlbum(trackSource);
+      const result = isAlbum(inclusionReason);
       expect(result).to.equal(true);
     });
 
     it('should return false when the source type is not an album', () => {
-      const trackSource: TrackSource = {
-        sourceType: 'playlist',
+      const reason: InclusionReason = {
+        type: 'playlist',
         id: '2',
-        name: 'Playlist 1',
       };
 
-      const result = isAlbum(trackSource);
+      const result = isAlbum(reason);
       expect(result).to.equal(false);
     });
   });
@@ -52,7 +42,7 @@ describe("Tests functions in TrackSource", () => {
         track_number: 1,
         album: undefined,
         playlists: [],
-        sources: [{id: "1", sourceType: 'album'}],
+        inclusionReasons: [{id: "1", type: 'favorite_album'}],
         genres: [],
         artists: [],
         addedAt: new Date(),
@@ -75,7 +65,7 @@ describe("Tests functions in TrackSource", () => {
         track_number: 2,
         album: undefined,
         playlists: [],
-        sources: [{id: "1", sourceType: 'playlist'}],
+        inclusionReasons: [{id: "1", type: 'playlist'}],
         genres: [],
         artists: [],
         addedAt: new Date(),
@@ -83,30 +73,6 @@ describe("Tests functions in TrackSource", () => {
       };
 
       const result = isTrackAlbum(track);
-      expect(result).to.equal(false);
-    });
-  });
-
-  describe('isPlaylist function', () => {
-    it('should return true when the source type is playlist', () => {
-      const trackSource: TrackSource = {
-        sourceType: 'playlist',
-        id: '1',
-        name: 'Playlist 1',
-      };
-
-      const result = isPlaylist(trackSource);
-      expect(result).to.equal(true);
-    });
-
-    it('should return false when the source type is not a playlist', () => {
-      const trackSource: TrackSource = {
-        sourceType: 'album',
-        id: '2',
-        name: 'Album 1',
-      };
-
-      const result = isPlaylist(trackSource);
       expect(result).to.equal(false);
     });
   });
@@ -124,7 +90,7 @@ describe("Tests functions in TrackSource", () => {
         track_number: 1,
         album: undefined,
         playlists: [],
-        sources: [{id: "1", sourceType: 'playlist'}],
+        inclusionReasons: [{id: "1", type: 'playlist'}],
         genres: [],
         artists: [],
         addedAt: new Date(),
@@ -147,7 +113,7 @@ describe("Tests functions in TrackSource", () => {
         track_number: 2,
         album: undefined,
         playlists: [],
-        sources: [{id: "1", sourceType: 'album'}],
+        inclusionReasons: [{id: "1", type: 'favorite_album'}],
         genres: [],
         artists: [],
         addedAt: new Date(),
@@ -161,22 +127,19 @@ describe("Tests functions in TrackSource", () => {
 
   describe('isFavorite function', () => {
     it('should return true when the source type is favorite', () => {
-      const trackSource: TrackSource = {
-        sourceType: INCLUSION_REASON_FAVORITE,
-      };
+      const reason: InclusionReason = INCLUSION_REASON_FAVORITE;
 
-      const result = isFavorites(trackSource);
+      const result = isFavorites(reason);
       expect(result).to.equal(true);
     });
 
     it('should return false when the source type is not favorite', () => {
-      const trackSource: TrackSource = {
-        sourceType: 'playlist',
+      const reason: InclusionReason = {
+        type: 'playlist',
         id: '2',
-        name: 'Playlist 1',
       };
 
-      const result = isFavorites(trackSource);
+      const result = isFavorites(reason);
       expect(result).to.equal(false);
     });
   });
@@ -194,7 +157,7 @@ describe("Tests functions in TrackSource", () => {
         track_number: 1,
         album: undefined,
         playlists: [],
-        sources: [{sourceType: INCLUSION_REASON_FAVORITE}],
+        inclusionReasons: [INCLUSION_REASON_FAVORITE],
         genres: [],
         artists: [],
         addedAt: new Date(),
@@ -217,7 +180,7 @@ describe("Tests functions in TrackSource", () => {
         track_number: 2,
         album: undefined,
         playlists: [],
-        sources: [{id: "1", sourceType: 'playlist'}],
+        inclusionReasons: [{id: "1", type: 'playlist'}],
         genres: [],
         artists: [],
         addedAt: new Date(),

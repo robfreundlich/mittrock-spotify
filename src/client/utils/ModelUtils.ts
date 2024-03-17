@@ -9,12 +9,9 @@ import {DBAlbum} from "app/client/db/DBAlbum";
 import {Album, IAlbum} from "app/client/model/Album";
 import {Artist, IArtist} from "app/client/model/Artist";
 import {DBArtist} from "app/client/db/DBArtist";
-import {INCLUSION_REASON_FAVORITE, InclusionReason} from "app/client/utils/Types";
-import {Favorites, IFavorites} from "app/client/model/Favorites";
-import {IPlaylist, Playlist} from "app/client/model/Playlist";
+import {Playlist} from "app/client/model/Playlist";
 import {DBPlaylist} from "app/client/db/DBPlaylist";
 import {DataStore} from "app/client/model/DataStore";
-import {TrackSource} from "app/client/model/TrackSource";
 import {SpotifyImage} from "spotify-web-api-ts/types/types/SpotifyObjects";
 import {DBGenre} from "app/client/db/DBGenre";
 import {Genre} from "app/client/model/Genre";
@@ -49,29 +46,29 @@ export class ModelUtils {
 
     const artists: Artist[] = await ModelUtils.makeArtists(db, dataStore, dbTrack.artist_ids);
 
-    const sources: TrackSource[] = await Promise.all(dbTrack.inclusionReasons.map(async (reason: InclusionReason) => {
-      let playlist: Playlist | undefined;
-
-      let source: IAlbum | IPlaylist | IFavorites;
-      if (reason === INCLUSION_REASON_FAVORITE)
-      {
-        source = Favorites.favorites;
-      }
-      else
-      {
-        if ((reason.type === "favorite_album") || (reason.type === "playlist_track_album"))
-        {
-          source = album!;
-        }
-        else
-        {
-          playlist = await ModelUtils.makePlaylist(db, dataStore, reason.id);
-          source = playlist!;
-        }
-      }
-
-      return source;
-    }));
+    // const sources: TrackSource[] = await Promise.all(dbTrack.inclusionReasons.map(async (reason: InclusionReason) => {
+    //   let playlist: Playlist | undefined;
+    //
+    //   let source: IAlbum | IPlaylist | IFavorites;
+    //   if (reason === INCLUSION_REASON_FAVORITE)
+    //   {
+    //     source = Favorites.favorites;
+    //   }
+    //   else
+    //   {
+    //     if ((reason.type === "favorite_album") || (reason.type === "playlist_track_album"))
+    //     {
+    //       source = album!;
+    //     }
+    //     else
+    //     {
+    //       playlist = await ModelUtils.makePlaylist(db, dataStore, reason.id);
+    //       source = playlist!;
+    //     }
+    //   }
+    //
+    //   return source;
+    // }));
 
     const genres = dbTrack.genre_ids
     ? [...dbTrack.genre_ids].map((id: string) => dataStore.genres.find((genre) => genre.id === id)!)
@@ -86,7 +83,7 @@ export class ModelUtils {
       "streaming",
       dbTrack.disc_number,
       dbTrack.track_number,
-      sources,
+      dbTrack.inclusionReasons,
       genres,
       artists,
       album,
@@ -212,22 +209,8 @@ export class ModelUtils {
       }) as unknown as Artist[];
   }
 
-  private static async makePlaylist(db: DexieDB, dataStore: DataStore, id: string): Promise<Playlist | undefined> {
-    const existingPlaylist: IPlaylist | undefined = dataStore.getPlaylist(id);
-
-    if (existingPlaylist)
-    {
-      return existingPlaylist as Playlist;
-    }
-
-    const dbPlaylist: DBPlaylist | undefined = await db.playlists.get(id);
-
-    if (!dbPlaylist)
-    {
-      return undefined;
-    }
-
-    return new Playlist(
+  public static makePlaylist(dataStore: DataStore, dbPlaylist: DBPlaylist): Playlist {
+    const playlist = new Playlist(
       dbPlaylist.id,
       dbPlaylist.name,
       dbPlaylist.description ?? "",
@@ -237,6 +220,10 @@ export class ModelUtils {
       dbPlaylist.snapshot_id,
       dbPlaylist.images,
       []);
+
+    dataStore.playlists.push(playlist);
+
+    return playlist;
   }
 
   public static getImageNearSize(images: SpotifyImage[], size: number): SpotifyImage | undefined

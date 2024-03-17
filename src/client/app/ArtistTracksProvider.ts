@@ -26,6 +26,7 @@ export class ArtistTracksProvider implements BrowserProvider, BrowserObjectProvi
     this._tracks = tracks.filter((track) => track.artists.map((p) => p.id).indexOf(id) !== -1);
   }
 
+
   get playlists(): IPlaylist[]
   {
     const result: IPlaylist[] = [];

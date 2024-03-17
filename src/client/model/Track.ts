@@ -4,15 +4,24 @@
 
 import {IAlbum} from "app/client/model/Album";
 import {IArtist} from "app/client/model/Artist";
-import {IFavorites} from "app/client/model/Favorites";
 import {IGenre} from "app/client/model/Genre";
 import {IdentifiedObject} from "app/client/model/IdentifiedObject";
-import {IPlaylist} from "app/client/model/Playlist";
-import {isAlbum, isPlaylist, TrackSource} from "app/client/model/TrackSource";
-import {Explicitness, TrackStorageOrigin} from "app/client/utils/Types";
+import {TrackSource} from "app/client/model/TrackSource";
+import {
+  areInclusionReasonsSame,
+  Explicitness,
+  INCLUSION_REASON_FAVORITE,
+  InclusionReason,
+  InclusionReasonObject,
+  TrackStorageOrigin
+} from "app/client/utils/Types";
 import {SpotifyImage} from "spotify-web-api-ts/types/types/SpotifyObjects";
+import {IncludedObject} from "app/client/model/IncludedObject";
+import {ArrayUtils} from "app/client/utils/ArrayUtils";
+import {IPlaylist} from "app/client/model/Playlist";
+import {AppServices} from "app/client/app/AppServices";
 
-export interface ITrack extends IdentifiedObject
+export interface ITrack extends IdentifiedObject, IncludedObject
 {
   id: string;
 
@@ -33,8 +42,6 @@ export interface ITrack extends IdentifiedObject
   album: IAlbum | undefined;
 
   playlists: IPlaylist[];
-
-  sources: TrackSource[];
 
   genres: IGenre[];
 
@@ -62,9 +69,12 @@ export class Track implements ITrack
   public readonly genres: IGenre[];
   public readonly artists: IArtist[];
   public readonly sources: TrackSource[] = [];
+  public readonly inclusionReasons: InclusionReason[];
+
   public addedAt: Date;
   private _album: IAlbum | undefined;
-  private _playlists: IPlaylist[] = [];
+
+  private _playlists: IPlaylist[];
 
   constructor(id: string,
               name: string,
@@ -74,7 +84,7 @@ export class Track implements ITrack
               local: TrackStorageOrigin,
               discNumber: number,
               trackNumber: number,
-              sources: (IAlbum | IPlaylist | IFavorites)[],
+              inclusionReasons: InclusionReason[],
               genres: IGenre[],
               artists: IArtist[],
               album?: IAlbum,
@@ -89,45 +99,45 @@ export class Track implements ITrack
     this.disc_number = discNumber;
     this.track_number = trackNumber;
 
-    this.sources = sources;
-    sources.forEach((source) => {
-      if (isAlbum(source))
-      {
-        this._album = source;
-      }
-      else if (isPlaylist(source))
-      {
-        this._playlists.push(source);
-        if (album)
-        {
-          this._album = album;
-        }
-      }
-      else
-      {
-        if (album)
-        {
-          this._album = album;
-        }
-        if (addedAt)
-        {
-          this.addedAt = addedAt;
-        }
-      }
-    });
+    this.inclusionReasons = inclusionReasons;
+    if (album)
+    {
+      this._album = album;
+    }
+    if (addedAt)
+    {
+      this.addedAt = addedAt;
+    }
 
     this.genres = genres.slice();
     this.artists = artists.slice();
-  }
 
-  get album(): IAlbum | undefined
-  {
-    return this._album;
+    this._playlists = [];
+    this.inclusionReasons
+      .filter((reason) => (reason !== INCLUSION_REASON_FAVORITE) && reason.type === "playlist")
+      .forEach((reason) => {
+        const playlist_id: string = (reason as InclusionReasonObject).id;
+        const playlist: IPlaylist | undefined = AppServices.dataStore.getPlaylist(playlist_id);
+        if (playlist)
+        {
+          this._playlists.push(playlist);
+        }
+      });
   }
 
   public get playlists(): IPlaylist[]
   {
     return this._playlists.slice();
+  }
+
+  public addIncludedReason(reason: InclusionReason): void
+  {
+    ArrayUtils.pushIfMissing(this.inclusionReasons, reason, areInclusionReasonsSame);
+  }
+
+  get album(): IAlbum | undefined
+  {
+    return this._album;
   }
 
   public get images(): SpotifyImage[]

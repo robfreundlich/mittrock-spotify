@@ -71,7 +71,7 @@ describe("Load tests the DataStore", () => {
                                        "streaming",
                                        1,
                                        i,
-                                       [album],
+                                       [{id: album.id, type: "favorite_album"}],
                                        albumGenres,
                                        album.artists);
         album.addTrack(track);

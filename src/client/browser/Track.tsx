@@ -10,6 +10,7 @@ import {SpotifyImage} from "spotify-web-api-ts/types/types/SpotifyObjects";
 import {ModelUtils} from "app/client/utils/ModelUtils";
 import {isTrackFavorite} from "app/client/model/TrackSource";
 import Popup from "reactjs-popup";
+import {inclusionReasonObjectName} from "app/client/utils/Types";
 
 interface TrackProps
 {
@@ -50,9 +51,9 @@ export function Track(props: TrackProps)
         <input type="text" readOnly={true} name="artist" value={props.track.artists.map((a) => a.name).join(",")}/>
 
         <label htmlFor="inclusionReasons">InclusionReasons</label>
-        {/*<textarea name="inclusionReasons" readOnly={true} rows={3} cols={40}>*/}
-        {/*  {props.track.inclusionReasons.map((reason) => inclusionReasonObjectName(reason, props.controller.dataStore))}*/}
-        {/*</textarea>*/}
+        <textarea name="inclusionReasons" readOnly={true} rows={3} cols={40}>
+          {props.track.inclusionReasons.map((reason) => inclusionReasonObjectName(reason, props.controller.dataStore))}
+        </textarea>
       </form>
     </Popup>
   </div>;

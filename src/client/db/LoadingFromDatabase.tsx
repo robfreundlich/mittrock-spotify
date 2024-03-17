@@ -85,6 +85,10 @@ export class LoadingFromDatabase extends React.Component<LoadingFromDatabaseProp
         return ModelUtils.makeGenre(AppServices.db, this.props.dataStore, dbGenre);
       };
 
+      const makePlaylist = (dbPlaylist: DBPlaylist): Playlist => {
+        return ModelUtils.makePlaylist(this.props.dataStore, dbPlaylist);
+      };
+
       const makeTrack = (dbTrack: DBTrack): Promise<Track> => {
         return ModelUtils.makeTrack(AppServices.db, this.props.dataStore, dbTrack)
           .then((track) => {
@@ -114,20 +118,17 @@ export class LoadingFromDatabase extends React.Component<LoadingFromDatabaseProp
       };
 
       const addPlaylistTracks = (dbPlaylist: DBPlaylist): Promise<void> => {
-        const playlist: Playlist | undefined = this.props.dataStore.getPlaylist(dbPlaylist.id) as (Playlist | undefined);
+        const playlist: Playlist = this.props.dataStore.getPlaylist(dbPlaylist.id)! as Playlist;
 
-        if (playlist)
-        {
-          this.setState({status: "loading", playlist: playlist, album: undefined, track: undefined});
-          dbPlaylist.track_ids.forEach((track_id) => {
-            const track: ITrack | undefined = this.props.dataStore.getTrack(track_id);
+        this.setState({status: "loading", playlist: playlist, album: undefined, track: undefined});
+        dbPlaylist.track_ids.forEach((track_id) => {
+          const track: ITrack | undefined = this.props.dataStore.getTrack(track_id);
 
-            if (track)
-            {
-              playlist.addTrack(track);
-            }
-          });
-        }
+          if (track)
+          {
+            playlist.addTrack(track);
+          }
+        });
 
         return Promise.resolve();
       };
@@ -140,6 +141,10 @@ export class LoadingFromDatabase extends React.Component<LoadingFromDatabaseProp
                                          // it doesn't need to do anything async for each genre
                                          await AppServices.db.genres.each(async (genre: DBGenre) => {
                                            makeGenre(genre);
+                                         });
+
+                                         await AppServices.db.playlists.each(async (playlist: DBPlaylist) => {
+                                           makePlaylist(playlist);
                                          });
 
                                          // let i: number = 0;
