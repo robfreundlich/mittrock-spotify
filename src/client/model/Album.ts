@@ -7,10 +7,11 @@ import {areIdentifiedObjectsSame, IdentifiedObject} from "app/client/model/Ident
 import {ITrack} from "app/client/model/Track";
 import {ITrackSource, TrackSourceType} from "app/client/model/TrackSource";
 import {ArrayUtils} from "app/client/utils/ArrayUtils";
-import {AlbumType, ReleaseDatePrecision} from "app/client/utils/Types";
+import {AlbumType, areInclusionReasonsSame, InclusionReason, ReleaseDatePrecision} from "app/client/utils/Types";
 import {SpotifyImage} from "spotify-web-api-ts/types/types/SpotifyObjects";
+import {IncludedObject} from "app/client/model/IncludedObject";
 
-export interface IAlbum extends IdentifiedObject, ITrackSource
+export interface IAlbum extends IdentifiedObject, ITrackSource, IncludedObject
 {
   id: string;
 
@@ -55,6 +56,8 @@ export class Album implements IAlbum
 
   public readonly images: SpotifyImage[];
 
+  public readonly inclusionReasons: InclusionReason[];
+
   constructor(id: string,
               name: string,
               type: AlbumType,
@@ -62,6 +65,7 @@ export class Album implements IAlbum
               releaseDatePrecision: ReleaseDatePrecision,
               artists: IArtist[],
               images: SpotifyImage[],
+              inclusionReasons: InclusionReason[],
               addedAt?: Date,
               tracks?: ITrack[])
   {
@@ -82,6 +86,13 @@ export class Album implements IAlbum
     {
       this.tracks = [];
     }
+
+    this.inclusionReasons = inclusionReasons;
+  }
+
+  public addIncludedReason(reason: InclusionReason): void
+  {
+    ArrayUtils.pushIfMissing(this.inclusionReasons, reason, areInclusionReasonsSame);
   }
 
   public addTrack(track: ITrack): void

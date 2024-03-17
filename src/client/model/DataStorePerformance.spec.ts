@@ -50,6 +50,7 @@ describe("Load tests the DataStore", () => {
                                          "year",
                                          pickRandom(artists, 1, 3),
                                          [],
+                                         ["favorite"],
                                          new Date()));
 
     const trackNames: string[] = loremIpsum({p: 1000, avgSentencesPerParagraph: 1, avgWordsPerSentence: 5});

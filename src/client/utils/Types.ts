@@ -2,6 +2,9 @@
  * Copyright (c) 2022. Rob Freundlich <rob@freundlichs.com> - All rights reserved.
  */
 
+import {DataStore} from "app/client/model/DataStore";
+import {IdentifiedObject} from "app/client/model/IdentifiedObject";
+
 export type AlbumType = "album" | "single" | "compilation";
 
 export type ReleaseDatePrecision = "year" | "month" | "day";
@@ -52,4 +55,45 @@ export const compareInclusionReasons = (a: InclusionReason, b: InclusionReason) 
 
 export const areInclusionReasonsSame = (a: InclusionReason, b: InclusionReason) => {
   return compareInclusionReasons(a, b) === 0;
+}
+
+export const inclusionReasonObject = (reason: InclusionReason, dataStore: DataStore): InclusionReasonFavorite | IdentifiedObject | undefined => {
+  if (reason === INCLUSION_REASON_FAVORITE)
+  {
+    return INCLUSION_REASON_FAVORITE;
+  }
+
+  switch (reason.type)
+  {
+    case "playlist":
+      return dataStore.getPlaylist(reason.id);
+
+    case "favorite_track":
+      return dataStore.getTrack(reason.id);
+
+    case "playlist_track":
+      return dataStore.getTrack(reason.id);
+
+    case "favorite_album":
+      return dataStore.getAlbum(reason.id);
+
+    case "playlist_track_album":
+      return dataStore.getAlbum(reason.id);
+  }
+}
+
+export const inclusionReasonObjectName = (reason: InclusionReason, dataStore: DataStore): string => {
+  const object: "favorite" | IdentifiedObject | undefined = inclusionReasonObject(reason, dataStore);
+
+  if (!object)
+  {
+    return "Unknown";
+  }
+
+  if (object === "favorite")
+  {
+    return object;
+  }
+
+  return `${(reason as InclusionReasonObject).type}: ${object.name}`;
 }

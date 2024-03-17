@@ -43,3 +43,8 @@ body {
 #app-root {
   height: 100%;
 }
+
+form {
+  display: grid;
+  grid-template-columns: 150px 1fr;
+}

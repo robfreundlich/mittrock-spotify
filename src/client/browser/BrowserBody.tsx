@@ -5,7 +5,7 @@
 import * as React from "react";
 import {useState} from "react";
 import BrowserSection from "app/client/browser/BrowserSection";
-import {compareByAddedAtDesc, compareByName} from "app/client/utils/ComparisonFunctions";
+import {compareByName} from "app/client/utils/ComparisonFunctions";
 import {ITrack} from "app/client/model/Track";
 import {BrowserController} from "app/client/browser/BrowserController";
 import {BrowserProvider} from "app/client/browser/Browser";
@@ -19,6 +19,7 @@ import {Artist} from "app/client/browser/Artist";
 import {Genre} from "app/client/browser/Genre";
 import {Track} from "app/client/browser/Track";
 import {TracksSection} from "app/client/browser/TracksSection";
+import AlbumsSection from "app/client/browser/AlbumsSection";
 
 export interface BrowserBodyProps
 {
@@ -29,14 +30,6 @@ export interface BrowserBodyProps
 
 export function BrowserBody(props: BrowserBodyProps)
 {
-/*
-    {renderFavorites()}
-    {renderAlbums()}
-    {renderArtists()}
-    {renderGenres()}
-    {renderPlaylists()}
-    {renderTracks()}
- */
   const [isAlbum, setIsAlbum] = useState(props.provider.browserProviderType === "album");
   const [isPlaylist, setIsPlaylist] = useState(props.provider.browserProviderType === "playlist");
   const [isArtist, setIsArtist] = useState(props.provider.browserProviderType === "artist");
@@ -69,7 +62,7 @@ export function BrowserBody(props: BrowserBodyProps)
                            key={"favorites"}
                            controller={props.controller}
                            objects={props.provider.getFavorites()}
-                           compare={compareByAddedAtDesc}
+                           compare={compareByName}
                            render={(track: ITrack) => <Track track={track}
                                                              controller={props.controller}
                                                              type="cards"/>}/>;
@@ -80,16 +73,12 @@ export function BrowserBody(props: BrowserBodyProps)
   };
 
   const renderAlbums = () => {
-    return <BrowserSection className={"albums"}
-                           header={"Albums"}
-                           key={"albums"}
-                           controller={props.controller}
-                           objects={props.provider.albums}
-                           compare={compareByAddedAtDesc}
-                           render={(album: IAlbum) => <Album album={album}
-                                                             controller={props.controller}
-                                                             onAlbumClicked={onAlbumClicked}/>
-                           }/>;
+    return <AlbumsSection className={"albums"}
+                          key={"albums"}
+                          controller={props.controller}
+                          provider={props.provider}
+                          onAlbumClicked={onAlbumClicked}
+                          />;
 
   }
 

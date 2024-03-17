@@ -115,16 +115,15 @@ export class ModelUtils {
 
     const artists: Artist[] = await ModelUtils.makeArtists(db, dataStore, dbAlbum.artist_ids);
 
-    const album: Album = new Album(
-      dbAlbum.id,
-      dbAlbum.name,
-      dbAlbum.type,
-      dbAlbum.release_date,
-      dbAlbum.release_date_precision,
-      artists,
-      dbAlbum.images,
-      new Date()
-    );
+    const album: Album = new Album(dbAlbum.id,
+                                   dbAlbum.name,
+                                   dbAlbum.type,
+                                   dbAlbum.release_date,
+                                   dbAlbum.release_date_precision,
+                                   artists,
+                                   dbAlbum.images,
+                                   dbAlbum.inclusionReasons,
+                                   new Date());
 
     return album;
   }
@@ -162,16 +161,15 @@ export class ModelUtils {
 
     const artists: Artist[] = await ModelUtils.makeArtists(db, dataStore, dbAlbum.artist_ids);
 
-    const album: Album = new Album(
-      dbAlbum.id,
-      dbAlbum.name,
-      dbAlbum.type,
-      dbAlbum.release_date,
-      dbAlbum.release_date_precision,
-      artists,
-      dbAlbum.images,
-      new Date()
-    );
+    const album: Album = new Album(dbAlbum.id,
+                                   dbAlbum.name,
+                                   dbAlbum.type,
+                                   dbAlbum.release_date,
+                                   dbAlbum.release_date_precision,
+                                   artists,
+                                   dbAlbum.images,
+                                   dbAlbum.inclusionReasons,
+                                   new Date());
 
     return album;
   }
