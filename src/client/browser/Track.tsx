@@ -42,7 +42,8 @@ export function Track(props: TrackProps)
                    type={props.type}/>
     <Dialog trigger={<button>Details</button>}
             title="Details"
-            className="details-dialog">
+            className="details-dialog"
+            ok={true}>
       <form className="details">
         <label htmlFor="name">Name</label>
         <input type="text" readOnly={true} name="name" value={props.track.name}/>

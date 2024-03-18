@@ -3,8 +3,11 @@
  */
 
 .popup-content {
+  --default-border-radius: 10px;
+
   background-color: white;
-  border: var(--default-border);
   border-radius: var(--default-border-radius);
-  box-shadow: var(--default-box-shadow);
+  /*box-shadow: var(--default-box-shadow);*/
+  box-shadow:  0 0 #0000, 0 0 #0000, 0 25px 50px 20px rgb(0 0 0 / 54%);
+  /*border: var(--default-border);*/
 }

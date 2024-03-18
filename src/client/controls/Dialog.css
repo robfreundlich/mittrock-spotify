@@ -2,19 +2,39 @@
  * Copyright (c) 2024. Rob Freundlich <rob@freundlichs.com> - All rights reserved.
  */
 
-.popup-content.dialog-content .header {
+.dialog-content .header {
   display: flex;
   flex-direction: row;
   font-size: 1.25rem;
   font-family: sans-serif;
-  border-bottom: 1px solid black;
+  border-bottom: 2px groove #dddddd;
+  border-top-left-radius: var(--default-border-radius);
+  border-top-right-radius: var(--default-border-radius);
+  margin-bottom: 0.5rem;
+  /*background-color: var(--color-spotify-green-lighter);*/
 }
 
-.popup-content.dialog-content .header .header-title {
+.dialog-content .header .header-title {
   flex-grow: 1;
   flex-shrink: 1;
+  padding-left: 0.25rem;
 }
 
-.popup-content.dialog-content .header .header-close {
+.dialog-content .header .header-close {
   cursor: pointer;
+}
+
+.dialog-content .content {
+  padding: 0.5rem;
+}
+
+.dialog-content .footer {
+  display: flex;
+  flex-direction: row;
+
+  border-top: 2px groove #dddddd;
+  justify-content: flex-end;
+
+  margin-top: 0.5rem;
+  padding: 0.5rem;
 }

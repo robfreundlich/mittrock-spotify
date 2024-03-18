@@ -10,8 +10,8 @@ import * as React from "react";
 import {BrowserController} from "app/client/browser/BrowserController";
 import {SpotifyImage} from "spotify-web-api-ts/types/types/SpotifyObjects";
 import {ModelUtils} from "app/client/utils/ModelUtils";
-import Popup from "reactjs-popup";
 import {inclusionReasonObjectName} from "app/client/utils/Types";
+import Dialog from "app/client/controls/Dialog";
 
 export interface AlbumProps
 {
@@ -40,9 +40,10 @@ export function Album(props: AlbumProps)
     />}
     {!image && <div className={"album-name"}>{props.album.name}</div>}
     <GenresSection genres={[...genres]} controller={props.controller}/>
-    <Popup trigger={<button>Details</button>}
-           modal={true}
-           className="popup details-popup">
+    <Dialog trigger={<button>Details</button>}
+            title="Details"
+            className="details-dialog"
+            ok={true}>
       <form className="details">
         <label htmlFor="name">Name</label>
         <input type="text" readOnly={true} name="name" value={props.album.name}/>
@@ -57,6 +58,6 @@ export function Album(props: AlbumProps)
             .join("\n")}
         </textarea>
       </form>
-    </Popup>
+    </Dialog>
   </div>;
 }
