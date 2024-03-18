@@ -7,7 +7,7 @@ import "app/client/controls/Accordion.css";
 describe('<Accordion />', () => {
   it('Initially closed (default)', () => {
     // see: https://on.cypress.io/mounting-react
-    cy.mount(<Accordion header="Test accordion">
+    cy.mount(<Accordion label="Test accordion">
       <div className="content">
         <div className="hello">Hello</div>
         <div className="world">World</div>
@@ -25,7 +25,7 @@ describe('<Accordion />', () => {
 
   it('Initially closed (explicit)', () => {
     // see: https://on.cypress.io/mounting-react
-    cy.mount(<Accordion header="Test accordion" open={false}>
+    cy.mount(<Accordion label="Test accordion" open={false}>
       <div className="content">
         <div className="hello">Hello</div>
         <div className="world">World</div>
@@ -43,7 +43,7 @@ describe('<Accordion />', () => {
 
   it('Initially open', () => {
     // see: https://on.cypress.io/mounting-react
-    cy.mount(<Accordion header="Test accordion" open={true}>
+    cy.mount(<Accordion label="Test accordion" open={true}>
       <div className="content">
         <div className="hello">Hello</div>
         <div className="world">World</div>
@@ -61,8 +61,9 @@ describe('<Accordion />', () => {
 
   it('React content in header', () => {
     // see: https://on.cypress.io/mounting-react
-    cy.mount(<Accordion header={<span>The header <button>click me</button></span>}
-                          open={true}>
+    cy.mount(<Accordion label="The header"
+                        header={<button>click me</button>}
+                        open={true}>
       <div className="content">
         <div className="hello">Hello</div>
         <div className="world">World</div>
@@ -73,7 +74,7 @@ describe('<Accordion />', () => {
   });
 
   it('Clicking opens and closes it', () => {
-    cy.mount(<Accordion header="Test accordion" open={true}>
+    cy.mount(<Accordion label="Test accordion" open={true}>
       <div className="content">
         <div className="hello">Hello</div>
         <div className="world">World</div>

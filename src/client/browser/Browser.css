@@ -196,7 +196,7 @@
 }
 
 .browser .tracks-header .tracks-option-container {
-  display: inline;
+  display: flex;
   height: 100%;
   vertical-align: top;
 }

@@ -58,7 +58,7 @@ export function BrowserBody(props: BrowserBodyProps)
 
   const renderFavorites = () => {
     return <BrowserSection className={"favorites"}
-                           header={"Favorites"}
+                           label={"Favorites"}
                            key={"favorites"}
                            controller={props.controller}
                            objects={props.provider.getFavorites()}
@@ -95,7 +95,7 @@ export function BrowserBody(props: BrowserBodyProps)
 
   const renderArtists = () => {
     return <BrowserSection className={"artists"}
-                           header={"Artists"}
+                           label={"Artists"}
                            key={"artists"}
                            controller={props.controller}
                            objects={props.provider.artists.filter((artist: IArtist) => artist.name !== "")}
@@ -119,7 +119,7 @@ export function BrowserBody(props: BrowserBodyProps)
 
   const renderGenres = () => {
     return <BrowserSection className={"genres"}
-                           header={"Genres"}
+                           label={"Genres"}
                            key={"genres"}
                            controller={props.controller}
                            objects={props.provider.genres}
@@ -143,7 +143,7 @@ export function BrowserBody(props: BrowserBodyProps)
 
   const renderPlaylists = () =>  {
     return <BrowserSection className={"playlists"}
-                           header={"Playlists"}
+                           label={"Playlists"}
                            key={"playlists"}
                            controller={props.controller}
                            objects={props.provider.playlists}

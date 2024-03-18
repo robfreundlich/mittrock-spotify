@@ -23,12 +23,12 @@ function AlbumsSection(props: AlbumsSectionProps)
   // const favorites = props.provider.albums.filter((album) => album.sourceType
 
 //    <ToggleButton content={`Favorites (${props.provider.albums.length})`} value={} onValueChanged={}
-  const header = <span className={"albums-header"}>
-    <span>{`Albums (${props.provider.albums.length})`}</span>
-  </span>;
+//   const header = <span className={"albums-header"}>
+//     <span>{`Albums (${props.provider.albums.length})`}</span>
+//   </span>;
 
   return <BrowserSection className={`albums ${props.className ?? ""}`}
-                         header={header}
+                         label={"Albums"}
                          controller={props.controller}
                          objects={props.provider.albums}
                          compare={compareByName}

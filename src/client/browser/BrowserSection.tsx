@@ -9,28 +9,27 @@ import Accordion from "app/client/controls/Accordion";
 import {BrowserController} from "app/client/browser/BrowserController";
 import {compareByName} from "app/client/utils/ComparisonFunctions";
 import {ArrayUtils} from "app/client/utils/ArrayUtils";
+import DelayedTextInput from "app/client/controls/DelayedTextInput";
+import {doesObjectMatch} from "app/client/model/doesObjectMatch";
 
 export type ItemDisplayType = "cards" | "rows";
 
-export interface BrowserSectionProps<T extends IGenre | IdentifiedObject>
+export interface BrowserSectionProps<T extends IdentifiedObject>
 {
   className: string;
-  header: string | React.ReactNode;
+  label: string;
   controller: BrowserController;
   objects: T[];
   compare: (a: T, B: T) => number;
   render: (object: T) => React.ReactNode;
   type?: ItemDisplayType;
+  header?: React.ReactNode;
 }
 
 function BrowserSection<T extends IGenre | IdentifiedObject>(props: BrowserSectionProps<T>)
 {
   const [isAll, setIsAll] = useState(false);
-
-  if (props.objects.length === 0)
-  {
-    return null;
-  }
+  const [objects, setObjects] = useState(props.objects);
 
   const onMoreClicked = () => {
     setIsAll(!isAll);
@@ -38,20 +37,35 @@ function BrowserSection<T extends IGenre | IdentifiedObject>(props: BrowserSecti
 
   const isRows: boolean = (props.type === "rows");
 
-  const header = (typeof(props.header) === "string")
-    ? `${props.header}(${props.objects.length})`
-    : props.header;
+  const label = `${props.label}(${objects.length})`;
 
-  return <Accordion className={`${props.className}`}
+  const onSearchValueChanged = (value: string) => {
+    if (value === "")
+    {
+      setObjects(props.objects);
+    }
+    else
+    {
+      setObjects(props.objects.filter((object) => doesObjectMatch(value, object)));
+    }
+  };
+
+  const header: React.ReactNode = <div className="browser-section-header">
+    <DelayedTextInput onChange={onSearchValueChanged}/>
+    {props.header}
+  </div>;
+
+  return <Accordion className={`browser-section ${props.className}`}
+                    label={label}
                     header={header}
                     open={isAll}>
     <div className={`item-container ${props.type ?? "cards"}`}>
-      {props.controller.getFirstN(props.objects,
+      {props.controller.getFirstN(objects,
                                  props.compare,
-                                  (isRows || isAll) ? props.objects.length : BrowserController.PREVIEW_COUNT)
+                                  (isRows || isAll) ? objects.length : BrowserController.PREVIEW_COUNT)
         .map((object: T) => props.render(object))}
 
-      {!isRows && props.controller.hasMore(props.objects) &&
+      {!isRows && props.controller.hasMore(objects) &&
           <div className="more" key="more" onClick={onMoreClicked}>{isAll ? "Less" : "More"}...</div>}
     </div>
   </Accordion>;

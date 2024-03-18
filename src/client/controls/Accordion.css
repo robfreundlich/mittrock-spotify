@@ -14,14 +14,24 @@
     border-radius: 0.5rem;
 }
 
-.accordion.open h1::before {
+
+.accordion > h1 {
+    display: flex;
+    align-items: center;
+}
+
+.accordion.open > h1::before {
     content: "ᐁ";
     padding-right: 0.5rem;
 }
 
-.accordion.closed h1::before {
+.accordion.closed > h1::before {
     content: "ᐅ";
     padding-right: 0.5rem;
+}
+
+.accordion > h1 .accordion-header-extra {
+    margin-left: 1rem;
 }
 
 .accordion.closed .accordion-content {

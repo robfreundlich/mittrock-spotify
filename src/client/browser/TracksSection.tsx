@@ -37,7 +37,6 @@ export function TracksSection(props: TracksSectionProps)
     : props.provider.tracks;
 
   const tracksHeader = <span className={"tracks-header"}>
-      <span>Tracks({tracks.length})</span>
     {((props.provider as any)["getAllTracks"] !== undefined)
       && ((props.provider as any)["getAllTracks"]().length > 0)
       && <div className="tracks-option-container">
@@ -51,6 +50,7 @@ export function TracksSection(props: TracksSectionProps)
 
   return <BrowserSection className={"tracks"}
                          type={type}
+                         label={"Tracks"}
                          header={tracksHeader}
                          key={"tracks"}
                          controller={props.controller}
