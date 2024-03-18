@@ -41,8 +41,8 @@ export function Album(props: AlbumProps)
     {!image && <div className={"album-name"}>{props.album.name}</div>}
     <GenresSection genres={[...genres]} controller={props.controller}/>
     <Popup trigger={<button>Details</button>}
-           position={"center center"}
-           className="details-popup">
+           modal={true}
+           className="popup details-popup">
       <form className="details">
         <label htmlFor="name">Name</label>
         <input type="text" readOnly={true} name="name" value={props.album.name}/>

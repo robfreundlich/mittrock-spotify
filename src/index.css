@@ -6,6 +6,7 @@
 @import url("client/browser/Browser.css");
 @import url("client/browser/BrowserSection.css");
 @import url("client/controls/Accordion.css");
+@import url("client/controls/Dialog.css");
 @import url("client/controls/ToggleButton.css");
 @import url("client/libs/Popup.css");
 @import url("client/db/TrackLoader.css");

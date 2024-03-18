@@ -9,8 +9,8 @@ import {ITrack} from "app/client/model/Track";
 import {SpotifyImage} from "spotify-web-api-ts/types/types/SpotifyObjects";
 import {ModelUtils} from "app/client/utils/ModelUtils";
 import {isTrackFavorite} from "app/client/model/TrackSource";
-import Popup from "reactjs-popup";
 import {inclusionReasonObjectName} from "app/client/utils/Types";
+import Dialog from "app/client/controls/Dialog";
 
 interface TrackProps
 {
@@ -40,9 +40,9 @@ export function Track(props: TrackProps)
     <GenresSection genres={props.track.genres}
                    controller={props.controller}
                    type={props.type}/>
-    <Popup trigger={<button>Details</button>}
-           position={"center center"}
-           className="details-popup">
+    <Dialog trigger={<button>Details</button>}
+            title="Details"
+            className="details-dialog">
       <form className="details">
         <label htmlFor="name">Name</label>
         <input type="text" readOnly={true} name="name" value={props.track.name}/>
@@ -57,6 +57,6 @@ export function Track(props: TrackProps)
             .join("\n")}
         </textarea>
       </form>
-    </Popup>
+    </Dialog>
   </div>;
 }

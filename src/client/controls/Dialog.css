@@ -1,0 +1,20 @@
+/*
+ * Copyright (c) 2024. Rob Freundlich <rob@freundlichs.com> - All rights reserved.
+ */
+
+.popup-content.dialog-content .header {
+  display: flex;
+  flex-direction: row;
+  font-size: 1.25rem;
+  font-family: sans-serif;
+  border-bottom: 1px solid black;
+}
+
+.popup-content.dialog-content .header .header-title {
+  flex-grow: 1;
+  flex-shrink: 1;
+}
+
+.popup-content.dialog-content .header .header-close {
+  cursor: pointer;
+}
