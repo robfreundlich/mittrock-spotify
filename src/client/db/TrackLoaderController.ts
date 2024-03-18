@@ -603,10 +603,9 @@ export class TrackLoaderController
       {
         this.loaderItemCount = 0;
 
-        // TODO: Put this back
         // CHANGE TO LIMIT PLAYLIST LOADING
-        this.setStatus({status: "loading_playlists", offset: 0, limit: 5, subprogress: 0});
-        // this.setStatus({status: "loading_playlists", offset: 0, limit: 50, subprogress: 0});
+        // this.setStatus({status: "loading_playlists", offset: 0, limit: 5, subprogress: 0});
+        this.setStatus({status: "loading_playlists", offset: 0, limit: 50, subprogress: 0});
       }
       else
       {
@@ -682,26 +681,25 @@ export class TrackLoaderController
                        });
 
 
-      // TODO: Put this back
       // CHANGE TO LIMIT PLAYLIST LOADING
 
-      this.loaderItemCount = 0;
-      this.setStatus({status: "loading_playlist_tracks", offset: 0, limit: 100, subprogress: 0});
+      // this.loaderItemCount = 0;
+      // this.setStatus({status: "loading_playlist_tracks", offset: 0, limit: 100, subprogress: 0});
 
-      // this.loaderItemCount += results.items.length;
-      //
-      // if (this.loaderItemCount === results.total)
-      // {
-      //   this.loaderItemCount = 0;
-      //   this.setStatus({status: "loading_playlist_tracks", offset: 0, limit: 100, subprogress: 0});
-      // }
-      // else
-      // {
-      //   this.setStatus({
-      //                    ...this.status,
-      //                    offset: this.status?.offset! + results.items.length
-      //                  });
-      // }
+      this.loaderItemCount += results.items.length;
+
+      if (this.loaderItemCount === results.total)
+      {
+        this.loaderItemCount = 0;
+        this.setStatus({status: "loading_playlist_tracks", offset: 0, limit: 100, subprogress: 0});
+      }
+      else
+      {
+        this.setStatus({
+                         ...this.status,
+                         offset: this.status?.offset! + results.items.length
+                       });
+      }
     }
     catch (err)
     {

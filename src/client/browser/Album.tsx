@@ -52,7 +52,9 @@ export function Album(props: AlbumProps)
 
         <label htmlFor="inclusionReasons">InclusionReasons</label>
         <textarea name="inclusionReasons" readOnly={true} rows={3} cols={40}>
-          {props.album.inclusionReasons.map((reason) => inclusionReasonObjectName(reason, props.controller.dataStore))}
+          {props.album.inclusionReasons
+            .map((reason) => inclusionReasonObjectName(reason, props.controller.dataStore))
+            .join("\n")}
         </textarea>
       </form>
     </Popup>
