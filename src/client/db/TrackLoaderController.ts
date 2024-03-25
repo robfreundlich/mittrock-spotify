@@ -102,7 +102,9 @@ export class TrackLoaderController
 
   private static apiDelay(condition: boolean): Promise<void>
   {
-    return TimeUtils.delay(TrackLoaderController.apiDelayTimeMsec, condition);
+     return Promise.resolve();
+    // TrackLoaderController.log(`apiDelay: ${TrackLoaderController.apiDelayTimeMsec}`);
+    // return TimeUtils.delay(TrackLoaderController.apiDelayTimeMsec, condition);
   }
 
   private static log(s: string): void
@@ -594,7 +596,7 @@ export class TrackLoaderController
 
       await pMapSeries(results.items.map((savedAlbum: SavedAlbum) => savedAlbum.album),
                        async (album: SpotifyObjects.Album) => {
-                         this.loadAlbum(album, [INCLUSION_REASON_FAVORITE]);
+                         await this.loadAlbum(album, [INCLUSION_REASON_FAVORITE]);
                        });
 
       this.loaderItemCount += results.items.length;
@@ -688,7 +690,7 @@ export class TrackLoaderController
 
       this.loaderItemCount += results.items.length;
 
-      if (this.loaderItemCount === results.total)
+      if ((this.loaderItemCount === results.total) || (results.items.length === 0))
       {
         this.loaderItemCount = 0;
         this.setStatus({status: "loading_playlist_tracks", offset: 0, limit: 100, subprogress: 0});
@@ -755,7 +757,7 @@ export class TrackLoaderController
 
             artist_ids: [],
             track_ids: [],
-            inclusionReasons: [playlist],
+            inclusionReasons: [{type: "playlist_track", id: dbTrack.id}],
           };
 
           dbTrack.album = dbAlbum;

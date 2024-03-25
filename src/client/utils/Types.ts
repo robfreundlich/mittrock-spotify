@@ -19,11 +19,11 @@ type InclusionReasonFavorite = "favorite";
 
 export const INCLUSION_REASON_FAVORITE: InclusionReasonFavorite = "favorite";
 
-export type InclusionReasonType = "playlist"
-  | "favorite_track"
-  | "playlist_track"
-  | "favorite_album"
-  | "playlist_track_album";
+export type InclusionReasonType = "playlist"  // album, track
+  | "favorite_track"                          // album
+  | "playlist_track"                          // album?, artist
+  | "favorite_album"                          // track
+  | "playlist_track_album";                   // track
 
 export type InclusionReasonObject = { type: InclusionReasonType, id: string };
 

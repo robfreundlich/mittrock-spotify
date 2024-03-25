@@ -42,3 +42,18 @@ export const isObjectFavorite = (object: IncludedObject): boolean => {
   return object.inclusionReasons.some((reason) => isFavorites(reason));
 }
 
+export const isFavoriteTrack = (reason: InclusionReason): boolean => {
+  return (reason !== INCLUSION_REASON_FAVORITE) && (reason.type === "favorite_track");
+};
+
+export const isObjectFromFavoriteTrack = (object: IncludedObject): boolean => {
+  return object.inclusionReasons.some((source) => isFavoriteTrack(source));
+}
+
+export const isPlaylistTrack = (reason: InclusionReason): boolean => {
+  return (reason !== INCLUSION_REASON_FAVORITE) && (reason.type === "playlist_track");
+};
+
+export const isObjectFromPlaylistTrack = (object: IncludedObject): boolean => {
+  return object.inclusionReasons.some((source) => isPlaylistTrack(source));
+}

@@ -9,7 +9,7 @@ import {IAlbum} from "app/client/model/Album";
 import {BrowserController} from "app/client/browser/BrowserController";
 import {BrowserProvider} from "app/client/browser/Browser";
 import {Album} from "app/client/browser/Album";
-import {isObjectFavorite, isObjectFromPlaylist} from "app/client/model/TrackSource";
+import {isObjectFavorite, isObjectFromFavoriteTrack, isObjectFromPlaylistTrack} from "app/client/model/TrackSource";
 import {ToggleButton} from "app/client/controls/ToggleButton";
 
 interface AlbumsSectionProps
@@ -23,10 +23,12 @@ interface AlbumsSectionProps
 function AlbumsSection(props: AlbumsSectionProps)
 {
   const [includeFavorites, setIncludeFavorites] = useState(true);
-  const [includePlaylists, setIncludePlaylists] = useState(true);
+  const [includePlaylistTracks, setIncludePlaylistTracks] = useState(true);
+  const [includeFavoriteTracks, setIncludeFavoriteTracks] = useState(true)
 
   const favorites = props.provider.albums.filter((album) => isObjectFavorite(album));
-  const fromPlaylists = props.provider.albums.filter((album) => isObjectFromPlaylist(album));
+  const fromPlaylists = props.provider.albums.filter((album) => isObjectFromPlaylistTrack(album));
+  const fromFavoriteTracks = props.provider.albums.filter((album) => isObjectFromFavoriteTrack(album));
 
   const filteredAlbums: IAlbum[] = props.provider.albums.filter((album: IAlbum) => {
     if (includeFavorites && (favorites.indexOf(album) !== -1))
@@ -34,7 +36,12 @@ function AlbumsSection(props: AlbumsSectionProps)
       return true;
     }
 
-    if (includePlaylists && (fromPlaylists.indexOf(album) !== -1))
+    if (includePlaylistTracks && (fromPlaylists.indexOf(album) !== -1))
+    {
+      return true;
+    }
+
+    if (includeFavoriteTracks && (fromFavoriteTracks.indexOf(album) !== -1))
     {
       return true;
     }
@@ -43,14 +50,18 @@ function AlbumsSection(props: AlbumsSectionProps)
   });
 
   const header: React.ReactNode = <div className="albums-header">
-    <ToggleButton className="albums-option-favorites-label"
+    <ToggleButton className="albums-option-favorites"
                   content={`Favorites (${favorites.length})`}
                   value={includeFavorites}
                   onValueChanged={(value) => setIncludeFavorites(value)}/>
-    <ToggleButton className="albums-option-favorites-label"
-                  content={`From Playlists (${fromPlaylists.length})`}
-                  value={includePlaylists}
-                  onValueChanged={(value) => setIncludePlaylists(value)}/>
+    <ToggleButton className="albums-option-favorite-tracks"
+                  content={`From favorite tracks (${fromFavoriteTracks.length})`}
+                  value={includeFavoriteTracks}
+                  onValueChanged={(value) => setIncludeFavoriteTracks(value)}/>
+    <ToggleButton className="albums-option-playlists"
+                  content={`From playlist tracks (${fromPlaylists.length})`}
+                  value={includePlaylistTracks}
+                  onValueChanged={(value) => setIncludePlaylistTracks(value)}/>
   </div>;
 
   return <BrowserSection className={`albums ${props.className ?? ""}`}

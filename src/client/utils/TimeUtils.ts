@@ -10,7 +10,7 @@ export class TimeUtils
     {
       return Promise.resolve();
     }
-    return new Promise((res => setTimeout(res, msec)));
+    return new Promise((res) => setTimeout(res, msec));
   }
 
   public static getElapsedTime(start: number | Date, end: number | Date): string

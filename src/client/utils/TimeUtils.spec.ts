@@ -5,6 +5,38 @@
 import {TimeUtils} from "app/client/utils/TimeUtils";
 
 describe("Tests the time utilities", () => {
+  describe("Tests the delay function", () => {
+    it("delays for 1000 ms", async () =>
+    {
+      const start: number = Date.now();
+
+      await TimeUtils.delay(1000);
+
+      expect(Date.now() - start).to.be.greaterThan(999);
+      expect(Date.now() - start).to.be.lessThan(1500);
+    });
+
+    it("delays for 100 ms", async () =>
+    {
+      const start: number = Date.now();
+
+      await TimeUtils.delay(100);
+
+      expect(Date.now() - start).to.be.greaterThan(99);
+      expect(Date.now() - start).to.be.lessThan(150);
+    });
+
+    it("delays for 1 ms", async () =>
+    {
+      const start: number = Date.now();
+
+      await TimeUtils.delay(1);
+
+      expect(Date.now() - start).to.be.greaterThan(0);
+      expect(Date.now() - start).to.be.lessThan(5);
+    });
+  });
+
   describe("Tests the getElapsedTime function", () => {
     const start: number = Date.now();
 
