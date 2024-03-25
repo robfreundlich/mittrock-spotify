@@ -7,7 +7,7 @@ import {ITrack} from "app/client/model/Track";
 import {AppServices} from "app/client/app/AppServices";
 import {BrowserProvider} from "app/client/browser/Browser";
 import {BrowserController} from "app/client/browser/BrowserController";
-import {isTrackFavorite} from "app/client/model/TrackSource";
+import {isObjectFavorite} from "app/client/model/TrackSource";
 import {AlbumTracksProvider} from "app/client/app/AlbumTracksProvider";
 import {PlaylistTracksProvider} from "app/client/app/PlaylistTracksProvider";
 import {ArtistTracksProvider} from "app/client/app/ArtistTracksProvider";
@@ -46,7 +46,7 @@ export class BrowserProviderFactory
     }
     else if (pathPart === "favorites")
     {
-      return new TracksProvider("favorites", tracks.filter((track) => isTrackFavorite(track)));
+      return new TracksProvider("favorites", tracks.filter((track) => isObjectFavorite(track)));
     }
     else if (pathPart === "albums")
     {

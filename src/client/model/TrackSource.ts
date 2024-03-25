@@ -5,8 +5,8 @@
 import {IAlbum} from "app/client/model/Album";
 import {IFavorites} from "app/client/model/Favorites";
 import {IPlaylist} from "app/client/model/Playlist";
-import {ITrack} from "app/client/model/Track";
 import {INCLUSION_REASON_FAVORITE, InclusionReason} from "app/client/utils/Types";
+import {IncludedObject} from "app/client/model/IncludedObject";
 
 export type TrackSource = IAlbum | IPlaylist | IFavorites;
 
@@ -22,23 +22,23 @@ export const isAlbum = (reason: InclusionReason): boolean => {
     && ((reason.type === "favorite_album") || (reason.type === "playlist_track_album"));
 };
 
-export const isTrackAlbum = (track: ITrack): boolean => {
-  return track.inclusionReasons.some((reason) => isAlbum(reason));
+export const isObjectFromAlbum = (object: IncludedObject): boolean => {
+  return object.inclusionReasons.some((reason) => isAlbum(reason));
 }
 
 export const isPlaylist = (reason: InclusionReason): boolean => {
   return (reason !== INCLUSION_REASON_FAVORITE) && (reason.type === "playlist");
 };
 
-export const isTrackPlaylist = (track: ITrack): boolean => {
-  return track.inclusionReasons.some((source) => isPlaylist(source));
+export const isObjectFromPlaylist = (object: IncludedObject): boolean => {
+  return object.inclusionReasons.some((source) => isPlaylist(source));
 }
 
 export const isFavorites = (reason: InclusionReason): boolean => {
   return reason === INCLUSION_REASON_FAVORITE;
 };
 
-export const isTrackFavorite = (track: ITrack): boolean => {
-  return track.inclusionReasons.some((reason) => isFavorites(reason));
+export const isObjectFavorite = (object: IncludedObject): boolean => {
+  return object.inclusionReasons.some((reason) => isFavorites(reason));
 }
 

@@ -2,7 +2,7 @@
  * Copyright (c) 2024. Rob Freundlich <rob@freundlichs.com> - All rights reserved.
  */
 
-import {isAlbum, isFavorites, isTrackAlbum, isTrackFavorite, isTrackPlaylist} from './TrackSource';
+import {isAlbum, isFavorites, isObjectFromAlbum, isObjectFavorite, isObjectFromPlaylist} from './TrackSource';
 import {ITrack} from "app/client/model/Track";
 import {INCLUSION_REASON_FAVORITE, InclusionReason} from "app/client/utils/Types";
 
@@ -49,7 +49,7 @@ describe("Tests functions in TrackSource", () => {
         images: [],
       };
 
-      const result = isTrackAlbum(track);
+      const result = isObjectFromAlbum(track);
       expect(result).to.equal(true);
     });
 
@@ -72,7 +72,7 @@ describe("Tests functions in TrackSource", () => {
         images: [],
       };
 
-      const result = isTrackAlbum(track);
+      const result = isObjectFromAlbum(track);
       expect(result).to.equal(false);
     });
   });
@@ -97,7 +97,7 @@ describe("Tests functions in TrackSource", () => {
         images: [],
       };
 
-      const result = isTrackPlaylist(track);
+      const result = isObjectFromPlaylist(track);
       expect(result).to.equal(true);
     });
 
@@ -120,7 +120,7 @@ describe("Tests functions in TrackSource", () => {
         images: [],
       };
 
-      const result = isTrackPlaylist(track);
+      const result = isObjectFromPlaylist(track);
       expect(result).to.equal(false);
     });
   });
@@ -164,7 +164,7 @@ describe("Tests functions in TrackSource", () => {
         images: [],
       };
 
-      const result = isTrackFavorite(track);
+      const result = isObjectFavorite(track);
       expect(result).to.equal(true);
     });
 
@@ -187,7 +187,7 @@ describe("Tests functions in TrackSource", () => {
         images: [],
       };
 
-      const result = isTrackFavorite(track);
+      const result = isObjectFavorite(track);
       expect(result).to.equal(false);
     });
   });

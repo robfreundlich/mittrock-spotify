@@ -39,12 +39,12 @@ export function TracksSection(props: TracksSectionProps)
   const tracksHeader = <span className={"tracks-header"}>
     {((props.provider as any)["getAllTracks"] !== undefined)
       && ((props.provider as any)["getAllTracks"]().length > 0)
-      && <div className="tracks-option-container">
+      &&
             <ToggleButton className="tracks-option-all-label"
                           content={"Show All"}
                           value={isShowAllTracks}
                           onValueChanged={onTracksOptionAllChanged}/>
-        </div>
+
     }
     </span>;
 

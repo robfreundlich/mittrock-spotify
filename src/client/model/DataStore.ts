@@ -12,7 +12,7 @@ import {ArrayUtils} from "app/client/utils/ArrayUtils";
 import {ModelUtils} from "app/client/utils/ModelUtils";
 import {Explicitness, TrackStorageOrigin} from "app/client/utils/Types";
 import {areIdentifiedObjectsSame, IdentifiedObject} from "./IdentifiedObject";
-import {isTrackAlbum, isTrackFavorite, isTrackPlaylist} from "app/client/model/TrackSource";
+import {isObjectFromAlbum, isObjectFavorite, isObjectFromPlaylist} from "app/client/model/TrackSource";
 import {BrowserProvider, BrowserProviderType} from "app/client/browser/Browser";
 
 
@@ -62,7 +62,7 @@ export class DataStore implements IdentifiedObject, BrowserProvider
 
   public get numAlbumTracks(): number
   {
-    return this._tracks.filter((track) => isTrackAlbum(track)).length;
+    return this._tracks.filter((track) => isObjectFromAlbum(track)).length;
   }
 
   public get playlists(): IPlaylist[]
@@ -122,7 +122,7 @@ export class DataStore implements IdentifiedObject, BrowserProvider
 
   public get numPlaylistTracks(): number
   {
-    return this._tracks.filter((track) => isTrackPlaylist(track)).length;
+    return this._tracks.filter((track) => isObjectFromPlaylist(track)).length;
   }
 
   public addTrack(track: ITrack): void
@@ -182,7 +182,7 @@ export class DataStore implements IdentifiedObject, BrowserProvider
 
   public getFavorites(): ITrack[]
   {
-    return this._tracks.filter((track) => isTrackFavorite(track));
+    return this._tracks.filter((track) => isObjectFavorite(track));
   }
 
   private addToStore(track: ITrack,

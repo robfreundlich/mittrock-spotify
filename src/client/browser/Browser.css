@@ -195,13 +195,12 @@
   font-size: 1.5rem;
 }
 
-.browser .tracks-header .tracks-option-container {
+.browser .albums-header {
   display: flex;
-  height: 100%;
-  vertical-align: top;
 }
 
-.browser .tracks-header .tracks-option-all-label {
+.browser .tracks-header .toggle-button,
+.browser .albums-header .toggle-button {
   font-size: 1rem;
   /*padding-left: 1rem;*/
 }

@@ -10,7 +10,7 @@ import {IPlaylist} from "../model/Playlist";
 import {ITrack} from "../model/Track";
 import {ArrayUtils} from "app/client/utils/ArrayUtils";
 import {areIdentifiedObjectsSame} from "app/client/model/IdentifiedObject";
-import {isTrackFavorite, isTrackPlaylist} from "app/client/model/TrackSource";
+import {isObjectFavorite, isObjectFromPlaylist} from "app/client/model/TrackSource";
 
 export class TracksProvider implements BrowserProvider
 {
@@ -49,12 +49,12 @@ export class TracksProvider implements BrowserProvider
     this._playlists = [];
 
     this._tracks
-      .filter((track: ITrack) => isTrackPlaylist(track))
+      .filter((track: ITrack) => isObjectFromPlaylist(track))
       .map((track: ITrack) => track.playlists)
       .forEach((playlists) => ArrayUtils.pushAllMissing(this._playlists, playlists, areIdentifiedObjectsSame));
 
     this._favorites = this._tracks
-      .filter((track: ITrack) => isTrackFavorite(track));
+      .filter((track: ITrack) => isObjectFavorite(track));
   }
 
   get playlists(): IPlaylist[]

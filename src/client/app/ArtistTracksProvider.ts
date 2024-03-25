@@ -7,7 +7,7 @@ import {IArtist} from "../model/Artist";
 import {areGenresSame, IGenre} from "../model/Genre";
 import {IPlaylist} from "../model/Playlist";
 import {ITrack} from "../model/Track";
-import {isTrackFavorite} from "app/client/model/TrackSource";
+import {isObjectFavorite} from "app/client/model/TrackSource";
 import {ArrayUtils} from "app/client/utils/ArrayUtils";
 import {areIdentifiedObjectsSame, IdentifiedObject} from "app/client/model/IdentifiedObject";
 import {BrowserObjectProvider, BrowserProvider, BrowserProviderType} from "app/client/browser/Browser";
@@ -94,6 +94,6 @@ export class ArtistTracksProvider implements BrowserProvider, BrowserObjectProvi
 
   public getFavorites(): ITrack[]
   {
-    return this._tracks.filter((track) => isTrackFavorite(track));
+    return this._tracks.filter((track) => isObjectFavorite(track));
   }
 }

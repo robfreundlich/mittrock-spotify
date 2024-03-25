@@ -2,7 +2,7 @@
  * Copyright (c) 2024. Rob Freundlich <rob@freundlichs.com> - All rights reserved.
  */
 
-import React, {MouseEvent, useState} from 'react';
+import React, {MouseEvent, useEffect, useState} from 'react';
 import {IdentifiedObject} from "app/client/model/IdentifiedObject";
 import {areGenresSame, IGenre} from "app/client/model/Genre";
 import Accordion from "app/client/controls/Accordion";
@@ -30,6 +30,10 @@ function BrowserSection<T extends IGenre | IdentifiedObject>(props: BrowserSecti
 {
   const [isAll, setIsAll] = useState(false);
   const [objects, setObjects] = useState(props.objects);
+
+  useEffect(() => {
+    setObjects(props.objects);
+  }, [props.objects]);
 
   const onMoreClicked = () => {
     setIsAll(!isAll);
