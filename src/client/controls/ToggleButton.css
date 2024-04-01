@@ -13,10 +13,10 @@
 
 .toggle-button.toggle-button-on {
     border-style: inset;
-    background-color: var(--color-spotify-black-lighter);
+    background-color: var(--color-spotify-black);
 }
 
 .toggle-button.toggle-button-off {
     border-style: outset;
-    background-color: var(--color-spotify-black);
+    background-color: var(--color-spotify-black-lighter);
 }

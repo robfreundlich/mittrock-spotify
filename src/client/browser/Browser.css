@@ -34,6 +34,7 @@
 .browser .accordion h1 {
   background-color: var(--color-spotify-green-darker);
   color: var(--color-spotify-white);
+  font-size: 1.5rem;
 }
 
 .browser .accordion > *:first-child h1 {

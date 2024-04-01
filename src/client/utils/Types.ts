@@ -19,9 +19,9 @@ type InclusionReasonFavorite = "favorite";
 
 export const INCLUSION_REASON_FAVORITE: InclusionReasonFavorite = "favorite";
 
-export type InclusionReasonType = "playlist"  // album, track
-  | "favorite_track"                          // album
-  | "playlist_track"                          // album?, artist
+export type InclusionReasonType = "playlist"  // track
+  | "favorite_track"                          // album, artist
+  | "playlist_track"                          // album, artist
   | "favorite_album"                          // track
   | "playlist_track_album";                   // track
 
